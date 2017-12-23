@@ -1,0 +1,9 @@
+{
+  "title": "我是laeo —— 垂死病中惊坐起，谈笑风生又一年",
+  "author": "laeo",
+  "description": "漫步搬砖路，工头一鞭子，赶紧往前挪 —— laeo博客",
+  "keyword": "laeo.me,laeo博客,php,golang,vuejs",
+  "default": "sources/default.md",
+  "reverse": false,
+  "license": "CC BY-NC-SA 3.0"
+}
