@@ -29,8 +29,10 @@ body {
 
 aside {
     width: 24vw;
-    background: rgba(238, 238, 238, 0.15);
+    /* background: rgba(238, 238, 238, 0.15); */
+    background: #f6f8fa;
     padding: 0 1rem;
+    min-height: 100vh;
 }
 
 main {
@@ -79,6 +81,7 @@ aside #togglable a.active {
     aside {
         width: 100%;
         padding: 0;
+        min-height: unset;
     }
     aside h1 {
         border-bottom: 1px solid rgba(0, 0, 0, 0.15);
