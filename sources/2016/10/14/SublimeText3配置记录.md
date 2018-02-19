@@ -19,32 +19,13 @@
 ```
 {
     "always_show_minimap_viewport": true,
-    "auto_close_tags": true,
-    "bold_folder_labels": true,
-    "close_windows_when_empty": true,
+    "auto_find_in_selection": true,
     "color_scheme": "Packages/Material Theme/schemes/Material-Theme.tmTheme",
     "default_line_ending": "unix",
-    "ensure_newline_at_eof_on_save": true,
-    "folder_exclude_patterns":
-    [
-        ".svn",
-        ".git",
-        ".hg",
-        "CVS",
-        ".phpintel",
-        ".idea"
-    ],
-    "font_face": "YaHei-Consolas-Hybrid",
-    "font_options":
-    [
-        "gray_antialias"
-    ],
-    "font_size": 12,
-    "highlight_line": true,
-    "highlight_modified_tabs": true,
+    "font_face": "DejaVu Sans Mono",
+    "font_size": 10,
     "ignored_packages":
     [
-        "Nodejs",
         "Vintage"
     ],
     "indent_guide_options":
@@ -53,55 +34,49 @@
         "draw_active"
     ],
     "indent_to_bracket": true,
-    "line_padding_bottom": 1,
-    "line_padding_top": 1,
+    "line_padding_bottom": 3,
+    "line_padding_top": 3,
+    "match_brackets_angle": true,
     "material_theme_tree_headings": true,
     "overlay_scroll_bars": "enabled",
-    "reveal-on-activate": false,
-    "scroll_past_end": true,
     "shift_tab_unindent": true,
     "show_encoding": true,
-    "show_full_path": true,
     "show_line_endings": true,
     "theme": "Material-Theme.sublime-theme",
     "translate_tabs_to_spaces": true,
-    "trim_trailing_white_space_on_save": true,
-    "update_check": false
+    "trim_trailing_white_space_on_save": true
 }
 ```
 
 可以看出字体方面我选择的是 `YaHei-Consolas-Hybrid`，大体上还不错。之前一直使用的 `Source-Code-Pro Yahei Hybrid`，不是对称字体，效果不怎么好。
 
+> 2018/2/19 更新后字体选择了 DejaVu Sans Mono，本来用的是 Droid Sans Mono 的，但是发现中英文不等高，所以选择了它。
+
 ## 插件
 
 因为个人职业和爱好的原因，我选择了以下插件：
 
-- Autoprefixer
+- A File Icon
 - Babel
 - CodeFormatter
-- ConvertToUTF8
 - DocBlockr
 - Dockerfile Syntax Highlighting
-- Generic Config
-- Git Config
 - GitGutter
-- JSX
-- Laravel 5 Snippets
+- Gitignore
 - Laravel Blade Highlighter
-- LESS
-- MarkdownEditing
-- Minify
-- Nodejs
-- PHP Completions kit
-- PHPIntel
+- Material Theme
+- Material Theme - Appbar
+- Package Control
+- PHP Completions Kit
 - SublimeCodeIntel
 - SublimeLinter
-- SublimeLinter-contrib-eslint
-- SublimeLinter-jslint
 - SublimeLinter-json
 - SublimeLinter-php
-- SyncedSideBar
 - VAlign
+- Vue Syntax Highlight
+- Vuejs Snippets
+
+> 2018/2/19 删减部分插件
 
 上述插件是我在之前不小心 `rm -rf` 了自己的个人目录之后重新摸索安装的，有的插件功能是有重复的，但是我没有去细心折腾。
 
