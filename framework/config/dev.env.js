@@ -3,6 +3,6 @@ var prodEnv = require('./prod.env')
 
 module.exports = merge(prodEnv, {
   NODE_ENV: '"development"',
-  MAPI: '"https://laeo.me"',
+  // MAPI: '"https://laeo.me"',
   MODE: '"hash"'
 })

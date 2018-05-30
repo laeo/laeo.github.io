@@ -21,7 +21,7 @@ marked.setOptions({
 })
 
 Vue.use(VueProgressBar, {
-  color: 'rgb(143, 255, 199)',
+  color: '#009876',
   failedColor: 'red',
   height: '2px'
 })
@@ -29,15 +29,24 @@ Vue.use(VueProgressBar, {
 Vue.component('icon', Icon)
 Vue.config.productionTip = false
 
-Vue.prototype.marked = function(raw) {
-  document.getElementById('article').innerHTML = marked(raw)
+Vue.prototype.marked = function(raw, fn) {
+  if (raw) {
+    fn(marked(raw))
+  }
 };
 
-Vue.prototype.fetch = function(uri) {
-  fetch(`${process.env.MAPI}/sources/${uri}`)
-  .then(res => {
+Vue.prototype.fetch = async function(path) {
+  this.$Progress.start()
+
+  try {
+    let res = await fetch(`${process.env.MAPI}/posts/${path}`)
 
     if (res.ok) {
+      this.$Progress.finish()
+      if (res.headers.get('content-type').indexOf('json') !== -1) {
+        return res.json()
+      }
+
       return res.text()
     }
 
@@ -45,22 +54,14 @@ Vue.prototype.fetch = function(uri) {
       this.$router.push({name: "NotFound"})
     }
 
-    throw new Error(res.statusText)
-
-  })
-  .then(ret => this.marked(ret))
-  .catch(e => {
-    // alert(e)
-  })
+    this.$Progress.fail()
+  } catch(e) {
+    console.log('突然断网~')
+  }
 };
 
 new Vue({
   el: '#app',
-  data() {
-    return {
-      data: {}
-    }
-  },
   router,
   render: h => h(App),
 })

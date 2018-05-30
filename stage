@@ -7,7 +7,7 @@ const fs   = require('fs');
 const exec = require('child_process').execSync;
 
 let metadata = require('./metadata.json')
-  ,sources  = require('./sources.json');
+  ,posts  = require('./posts/posts.json');
 
 let args     = process.argv.slice(2);
 let options  = args.filter(op => { return op.indexOf('-') === 0; });
@@ -26,7 +26,7 @@ switch (op) {
                  + '/'
                  + ('0' + datetime.getDate()).slice(-2);
 
-    let dest     = path.join(__dirname, 'sources', today);
+    let dest     = path.join(__dirname, 'posts', today);
 
     if (PostName === null || PostName === undefined) {
       console.warn('Missing post name.');
@@ -34,7 +34,7 @@ switch (op) {
       process.exit(1);
     }
 
-    if(sources[PostName] !== undefined && options.indexOf('-f') === -1) {
+    if(posts[PostName] !== undefined && options.indexOf('-f') === -1) {
       console.warn('The same article already exists.')
       process.exit(1);
     }
@@ -55,17 +55,17 @@ switch (op) {
 
       console.log('File created at: '+ PostFile);
 
-      sources[PostName] = path.join(today, PostFileName);
-      fs.writeFileSync(path.join(__dirname, 'sources.json'), JSON.stringify(sources));
+      posts[PostName] = path.join(today, PostFileName);
+      fs.writeFileSync(path.join(__dirname, 'posts.json'), JSON.stringify(posts));
     });
 
     break;
   case 'del':
     PostName = commands.shift().trim();
-    if(sources[PostName] !== undefined) {
-      exec('rm -f ' + path.join(__dirname, 'sources', sources[PostName]));
-      delete sources[PostName];
-      fs.writeFileSync(path.join(__dirname, 'sources.json'), JSON.stringify(sources));
+    if(posts[PostName] !== undefined) {
+      exec('rm -f ' + path.join(__dirname, 'posts', posts[PostName]));
+      delete posts[PostName];
+      fs.writeFileSync(path.join(__dirname, 'posts.json'), JSON.stringify(posts));
       console.log('Article removed.');
     } else {
       console.log('No article found.');
