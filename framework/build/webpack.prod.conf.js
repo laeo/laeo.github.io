@@ -64,7 +64,7 @@ var webpackConfig = merge(baseWebpackConfig, {
       chunksSortMode: 'dependency'
     }),
     new HtmlWebpackPlugin({
-      filename: config.build.notfound,
+      filename: config.build.notFound,
       template: 'index.html',
       inject: true,
       minify: {

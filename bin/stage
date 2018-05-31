@@ -1,0 +1,168 @@
+#!/usr/bin/env node
+
+const path = require('path');
+const fs   = require('fs');
+const exec = require('child_process').execSync;
+
+function Context() {
+  this.sendStack = [];
+  this.flushed = false;
+}
+
+Context.prototype.write = function(data = null) {
+  this.sendStack.push(data);
+};
+
+Context.prototype.writeLine = function(data = null) {
+  this.write(data + "\r\n");
+};
+
+Context.prototype.blank = function() {
+  this.writeLine('')
+};
+
+Context.prototype.info = function(info) {
+  this.writeLine("\033[32m" + info + "\033[0m");
+};
+
+Context.prototype.warn = function(warn) {
+  this.writeLine("\033[31m" + warn + "\033[0m");
+};
+
+Context.prototype.flush = function() {
+  if (!this.flushed) {
+    process.stdout.write(this.sendStack.join(''));
+    this.flushed = true;
+  }
+};
+
+/**
+ * [CLI OP] 显示帮助信息
+ *
+ * @param  {Context} ctx
+ *
+ * @return {void}
+ */
+function opGuide(ctx) {
+  ctx.blank();
+  ctx.info('USAGE:\tstage [command] [...arguments]');
+  ctx.info('Commands:');
+  ctx.info('\tstart\t[name]\tStart new post');
+  ctx.info('\ttrash\t[name]\tDelete the post');
+  ctx.info('Options:');
+  ctx.info('\t-h\tShow this message');
+  ctx.info('\t-f\tForce to create new post');
+  ctx.blank();
+}
+
+/**
+ * [CLI OP] 开始编写文章
+ *
+ * @param  {Context} ctx
+ * @param  {string} name    命令行参数：文章名称
+ * @param  {Object} options 创建文章时所加参数
+ *
+ * @return {void}
+ */
+function opStart(ctx, name, options = {}) {
+  let dest = path.join(__dirname, 'posts', date('yyyy/mm/dd'));
+
+  if (name === null || name === undefined) {
+    return ctx.warn('Missing post name.');
+  }
+
+  if(posts[name] !== undefined && options.indexOf('-f') === -1) {
+    return ctx.warn('The same article already exists.')
+  }
+
+  exec('mkdir -p ' + dest);
+
+  let PostFileName = name + '.md';
+  let PostFile     = path.join(dest, PostFileName);
+  let metainfo     = `# ${name}\r\n\r\n`;
+      metainfo    += `> Author : ${app.author}\r\n\r\n`;
+      metainfo    += `> Date   : ${date('yyyy/mm/dd')}\r\n\r\n`;
+      metainfo    += `> License: ${app.license}\r\n\r\n`;
+
+  fs.writeFile(PostFile, metainfo, 'utf8', function(err) {
+    if(err) {
+      throw err;
+    }
+
+    console.log('File created at: '+ PostFile);
+
+    posts[name] = path.join(date('yyyy/mm/dd'), PostFileName);
+    fs.writeFileSync(path.join(__dirname, 'posts.json'), JSON.stringify(posts));
+  });
+}
+
+/**
+ * [CLI OP] 删除已有文章
+ *
+ * @param  {Context} ctx
+ * @param  {String} name 文章名称
+ *
+ * @return {void}
+ */
+function opTrash(ctx, name) {
+  if(posts[name] !== undefined) {
+    exec('rm -f ' + path.join(__dirname, 'posts', posts[name]));
+    delete posts[name];
+    fs.writeFileSync(path.join(__dirname, 'posts.json'), JSON.stringify(posts));
+    console.log('Article removed.');
+  } else {
+    console.log('No article found.');
+  }
+}
+
+/**
+ * Simple Date formatter
+ *
+ * @param  {string} format yyyy-mm-dd
+ *
+ * @return {string}
+ */
+function date(format = 'yyyy-mm-dd', moment = Date.now()) {
+  moment = moment instanceof Date ? moment : new Date(moment);
+
+  let year  = moment.getFullYear();
+  let month = ('0' + (moment.getMonth() + 1)).slice(-2);
+  let day   = ('0' + moment.getDate()).slice(-2);
+
+  return format.replace('yyyy', year).replace('mm', month).replace('dd', day);
+}
+
+/**
+ *
+ *
+ * Main Logic
+ *
+ *
+ */
+
+let app   = require('../app.json');
+let posts = require('../posts/posts.json');
+
+let args     = process.argv.slice(2);
+let options  = args.filter(op => { return op[0] === '-'; });
+let commands = args.filter(op => { return op[0] !== '-'; })
+
+let context = new Context()
+
+try {
+  switch (commands.shift()) {
+  case 'start':
+    opStart(context, commands.shift().trim());
+    break;
+  case 'trash':
+    opTrash(context, commands.shift().trim());
+    break;
+  case '-h':
+  default:
+    opGuide(context);
+  }
+} catch (e) {
+
+}
+
+context.flush();
