@@ -3,5 +3,6 @@
   "author": "laeo",
   "description": "漫步搬砖路，工头一鞭子，赶紧往前挪 —— laeo博客",
   "keyword": "laeo.me,laeo博客,php,golang,vuejs",
-  "license": "CC BY-NC-SA 3.0"
+  "license": "CC BY-NC-SA 3.0",
+  "theme": "kasol"
 }

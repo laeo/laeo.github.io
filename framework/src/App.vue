@@ -1,13 +1,13 @@
 <template>
   <div id="app">
     <aside>
-      <h1>{{ title }}<icon name="bars" @click.native="show = !show"></icon></h1>
+      <h1>{{ title }}<icon name="bars" @click.native="changeBookshelfState"></icon></h1>
 
       <transition name="fade">
-        <div id="togglable" v-show="show">
-          <router-link key="#/" :to="{name: 'Home'}">首页</router-link>
-          <router-link v-for="(path, title) in posts" :key="path" :to="{'path': '/posts/'+path}">
-            {{ title }}
+        <div id="togglable" v-show="canShowBookshelf">
+          <router-link key="home" :to="{name: 'Home'}" exact>首页</router-link>
+          <router-link v-for="draft in sortedDrafts" :key="draft.title" :to="{'path': '/posts/'+draft.path}">
+            {{ draft.title }}
           </router-link>
         </div>
       </transition>
@@ -26,23 +26,43 @@ export default {
   data() {
     return {
       title: process.env.title,
-      posts: {},
-      show: window.outerWidth > 640,
+      drafts: [],
+      innerWidth: window.innerWidth,
+      showBookshelf: true
     }
   },
-  watch: {
-    show(to) {
-      if (to) {
-        this.$router.beforeEach((to, from, next) => {
-          this.show = false
-          this.$router.beforeHooks.pop()
-          next()
-        })
+  computed: {
+    isDesktopDevice() {
+      return this.innerWidth > 640;
+    },
+    canShowBookshelf() {
+      return this.isDesktopDevice || this.showBookshelf;
+    },
+    sortedDrafts() {
+      return this.drafts.sort((a, b) => {
+        return a.id > b.id;
+      });
+    }
+  },
+  methods: {
+    updateWindowSize() {
+      this.innerWidth = window.innerWidth;
+      this.changeBookshelfState();
+    },
+    changeBookshelfState() {
+      if (this.isDesktopDevice) {
+        this.showBookshelf = true;
+      } else {
+        this.showBookshelf = !this.showBookshelf;
       }
     }
   },
   beforeMount() {
-    this.fetch('posts.json').then(res => this.posts = res)
+    this.fetch('index.json').then(res => this.drafts = res);
+    this.changeBookshelfState();
   },
+  mounted() {
+    window.addEventListener('resize', this.updateWindowSize);
+  }
 }
 </script>

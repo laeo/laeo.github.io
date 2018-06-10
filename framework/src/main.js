@@ -39,7 +39,7 @@ Vue.prototype.fetch = async function(path) {
   this.$Progress.start()
 
   try {
-    let res = await fetch(`${process.env.MAPI}/posts/${path}`)
+    let res = await fetch(`${process.env.MAPI}/drafts/${path}`)
 
     if (res.ok) {
       this.$Progress.finish()
