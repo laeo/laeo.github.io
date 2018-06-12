@@ -5,7 +5,7 @@
  *
  * @return {string}
  */
-export default function date(format = 'yyyy-mm-dd', moment = Date.now()) {
+module.exports = function date(format = 'yyyy-mm-dd', moment = Date.now()) {
   moment = moment instanceof Date ? moment : new Date(moment);
 
   let year  = moment.getFullYear();

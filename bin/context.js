@@ -40,4 +40,4 @@ Context.prototype.flush = function() {
   }
 };
 
-export default Context;
+module.exports = Context;

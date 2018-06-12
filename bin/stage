@@ -2,7 +2,10 @@
 
 const Application = require('./application');
 const Context     = require('./context');
-const date        = require('./polyfill.date.js');
+
+// import Application from './application';
+// import Context from './context';
+// import date from './polyfill.date';
 
 let args     = process.argv.slice(2);
 let options  = args.filter(op => { return op[0] === '-'; });
@@ -10,21 +13,4 @@ let commands = args.filter(op => { return op[0] !== '-'; })
 
 const app = new Application(new Context());
 
-try {
-  switch (commands.shift().toLowerCase()) {
-  case 'start':
-    opStart(context, commands.shift());
-    break;
-  case 'trash':
-    opTrash(context, commands.shift());
-    break;
-  case '-h':
-  default:
-    opGuide(context);
-  }
-} catch (e) {
-  context.clear();
-  context.warn(e.message);
-}
-
-context.flush();
+app.terminate((commands.shift() || 'help').toLowerCase(), commands, options);
