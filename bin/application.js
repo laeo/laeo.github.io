@@ -48,7 +48,7 @@ Application.prototype.getDraftsPath = function(subPath = null) {
 };
 
 Application.prototype.getRelativeDraftPath = function(draftName, suffix = '.md') {
-  return path.join(this.date, draftName);
+  return path.join(this.date, draftName + suffix);
 };
 
 Application.prototype.getAbsoluteDraftPath = function(draftName, suffix = '.md') {
@@ -135,7 +135,7 @@ Application.prototype.opStart = function(name, options = {}) {
     }
 
     this.drafts.push({
-      id:    Date.now(),
+      id:    parseInt(Date.now() / 1000),
       title: name,
       path:  this.getRelativeDraftPath(name)
     });
@@ -154,7 +154,7 @@ Application.prototype.opStart = function(name, options = {}) {
  * @return {void}
  */
 Application.prototype.opTrash = function(name) {
-  if(!name || !this.drafts[name]) {
+  if(name === undefined || name === null) {
     return this.ctx.warn('ERROR: cannot found post.');
   }
 
@@ -163,10 +163,6 @@ Application.prototype.opTrash = function(name) {
     return this.ctx.warn('ERROR: post name is required.');
   }
 
-  let deleted = this.getDraftsPath(this.drafts[name]);
-
-  exec('rm -f ' + deleted);
-
   let index = this.drafts.findIndex(item => {
     return item.title == name;
   });
@@ -174,6 +170,10 @@ Application.prototype.opTrash = function(name) {
   if (index === -1) {
     return this.ctx.warn('ERROR: post not found.');
   }
+
+  let deleted = this.getDraftsPath(this.drafts[index].path);
+
+  exec('rm -f ' + deleted);
 
   this.drafts.splice(index, 1);
   this.storeDraftRecords(this.drafts);
