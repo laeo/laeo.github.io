@@ -169,7 +169,9 @@ pacman -S vim git dialog wpa_supplicant wireless_tools sudo
 
 至此，整个安装流程就基本完成了，所有操作都可以从 ARCH 官方 WIKI 中找到。
 
-## 安装桌面环境
+## 其它
+
+### 安装桌面环境
 
 重启后还是一块黑白屏，我需要图形界面！
 
@@ -179,7 +181,7 @@ pacman -S vim git dialog wpa_supplicant wireless_tools sudo
 
 安装非常简单，依照 ARCH WIKI 中的指导一步步安装就行了，懒得写了。
 
-## 英伟达“易爆炸”
+### 英伟达“易爆炸”
 
 双显卡机器安装 Linux 很容易遇到双显卡引起的各种扯淡毛病，我自己就遇到过各种各样的。
 
