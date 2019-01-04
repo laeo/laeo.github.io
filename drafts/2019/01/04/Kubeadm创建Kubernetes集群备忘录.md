@@ -83,6 +83,14 @@ docker-ce.x86_64    18.06.0.ce-3.el7         docker-ce-edge
 
 前期操作都相同，只是这里不执行 `kubeadm init`，而是使用创建主节点后输出的一条指令（类似 `kubeadm join --token <token> <master-ip>:<master-port> --discovery-token-ca-cert-hash sha256:<hash>`）来加入集群。啥？没注意记录？不用着急，官方提供了手动创建该指令的一系列命令。
 
+通过在子节点执行 `kubeadm join`，就可以在集群中增加一个节点。
+
+### 快捷创建 join 指令
+
+主节点执行 `kubeadm token create --print-join-command` 即可创建新 token 并输出完整 join 指令。
+
+### 手动创建 join 指令
+
 在主节点中执行 `kubeadm token create`，可以获取一份 `token`。然后再执行
 
 ```bash
@@ -92,4 +100,4 @@ openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outfor
 
 即可找回 `hash`。
 
-通过在子节点执行 `kubeadm join`，就可以在集群中增加一个节点。
+将上述命令输出拼装成 `kubeadm join --token <token> <master-ip>:<master-port> --discovery-token-ca-cert-hash sha256:<hash>` 格式，其中 `master-ip` 为主节点 IP，`master-port` 为 apiserver 监听端口（默认 6443）。最后在子节点中执行该指令即可。
