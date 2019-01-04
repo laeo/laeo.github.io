@@ -63,5 +63,10 @@
     "id": 1540991389,
     "title": "从MySQL的事务开始探寻锁的实现原理",
     "path": "2018/10/31/从MySQL的事务开始探寻锁的实现原理.md"
+  },
+  {
+    "id": 1546587117,
+    "title": "Kubeadm创建Kubernetes集群备忘录",
+    "path": "2019/01/04/Kubeadm创建Kubernetes集群备忘录.md"
   }
 ]
