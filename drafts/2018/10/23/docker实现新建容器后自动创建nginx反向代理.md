@@ -1,4 +1,4 @@
-# docker-proxy 实现新建容器后自动创建 nginx 代理
+# docker 实现新建容器后自动创建 nginx 反向代理.md
 
 > Author : laeo
 
@@ -6,16 +6,16 @@
 
 > License: CC BY-NC-SA 3.0
 
-## docker-proxy 介绍
+## nginx-proxy 介绍
 
-[docker-proxy](https://github.com/jwilder/nginx-proxy) 是一款开源的、根据容器自动创建 nginx 反向代理的软件，基于 docker-gen 开发。使用该软件，我们可以实现在创建 web 项目时，快速构建线上测试环境，免去手动配置 nginx 的痛苦。另外，搭配另一款软件——[letsencrypt-nginx-proxy-companion](https://github.com/JrCs/docker-letsencrypt-nginx-proxy-companion)，更能实现自动申请 let's encrypt 免费证书，轻松搭建 HTTPS 站点，可以方便的用于某些线上环境。
+[nginx-proxy](https://github.com/jwilder/nginx-proxy) 是一款开源的、根据容器自动创建 nginx 反向代理的软件，基于 docker-gen 开发。使用该软件，我们可以实现在创建 web 项目时，快速构建线上测试环境，免去手动配置 nginx 的痛苦。另外，搭配另一款软件——[letsencrypt-nginx-proxy-companion](https://github.com/JrCs/docker-letsencrypt-nginx-proxy-companion)，更能实现自动申请 let's encrypt 免费证书，轻松搭建 HTTPS 站点，可以方便的用于某些线上环境。
 
 ## 动手使用
 
 该软件使用非常简单，全程基于 docker 容器软件，只需两步即可。此处我放置的示例命令来自 letsencrypt-nginx-proxy-companion 的使用说明，推荐构建 HTTPS 站点。
 
 ```bash
-mkdir /var/certs #创建证书存放目录
+mkdir /var/certs # 创建证书存放目录
 
 docker run -d -p 80:80 -p 443:443 \
     --name nginx-proxy \
@@ -53,7 +53,22 @@ server 127.0.0.1 down;
 
 经过不断查找，我发现了[它](https://github.com/jwilder/nginx-proxy/issues/793)，阅读后才恍然大悟。
 
-我使用 docker-compose 来整体部署一个项目，但是该工具部署的容器会自有一个 network，与我们直接通过 docker 命令启动的容器不在同一个 network，所以无法直接通信。所以我在项目的 docker-compose.yml 文件中，将每一个服务都设置为 bridge 模式的 network，该问题终于解决。
+我使用 docker-compose 来整体部署一个项目，但是该工具部署的容器会自有一个 network，与我们直接通过 docker 命令启动的容器不在同一个 network，所以无法直接通信。~~所以我在项目的 docker-compose.yml 文件中，将每一个服务都设置为 bridge 模式的 network，该问题终于解决。~~
+
+经过认真查找资料并思考，终于找到最合适的办法来解决这个问题，而且没有安全隐患。
+
+首先创建一个自定义网络 `docker network create docker-proxy`，然后将 `nginx-proxy` 容器连接到该网络 `docker network connect docker-proxy nginx-proxy`，最后在 docker-compose.yml 文件中使用外部网络，加入如下 networks 定义，
+
+```yaml
+networks:
+  default:
+    external:
+      name: docker-proxy
+```
+
+docker-compose 会在创建服务默认网络时使用指定的外部网络 `docker-proxy`，这样就将 nginx-proxy 与 docker-compose 所创建的容器放置在同一网络中，所以就能正常通信了。
+
+相关资料可查看 [nginx-proxy 文档](https://github.com/jwilder/nginx-proxy#multiple-networks) 和 [compose 文档](https://docs.docker.com/compose/networking/#use-a-pre-existing-network)。
 
 ### 容器未指定 expose 端口
 

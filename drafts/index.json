@@ -56,8 +56,8 @@
   },
   {
     "id": 1540304821,
-    "title": "docker-proxy实现新建容器后自动创建nginx代理",
-    "path": "2018/10/23/docker-proxy实现新建容器后自动创建nginx代理.md"
+    "title": "docker实现新建容器后自动创建nginx反向代理.md",
+    "path": "2018/10/23/docker实现新建容器后自动创建nginx反向代理.md"
   },
   {
     "id": 1540991389,
