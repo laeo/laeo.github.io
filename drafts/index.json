@@ -78,5 +78,10 @@
     "id": 1547194424,
     "title": "helm安装chart报no route to host错误",
     "path": "2019/01/11/helm安装chart报no route to host错误.md"
+  },
+  {
+    "id": 1547277983,
+    "title": "kubernetes集群安装分布式存储组件rook-ceph",
+    "path": "2019/01/12/kubernetes集群安装分布式存储组件rook-ceph.md"
   }
 ]
