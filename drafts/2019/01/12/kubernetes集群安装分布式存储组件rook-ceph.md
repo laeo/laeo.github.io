@@ -257,11 +257,45 @@ parameters:
   clusterNamespace: rook-ceph
 ```
 
-在上述描述中，我定义了一个 CephBlockPool 的资源，查阅 rook-ceph 的有关文档，可以知道这是在存储集群中创建了一个 block 存储池，我们的 app 所需的存储空间都从该存储池中分配。
+ 在上述描述中，我  定义了一个 CephBlockPool 的资源，查阅 rook-ceph 的有关文档，可以知道这是在存储集群中创建了一个 block 存储池，我们的 app 所需的存储空间都从该存储池中分配。
 
 > “app 所需的存储空间” 指的是在资源描述文件中定义的 PVC 类型的固化存储声明。
 
 有了资源池，我们就可以根据 k8s 文档中的描述，创建一个 StorageClass 存储分类。上述资源描述文件中我创建了一个名为 `ceph` 的存储分类，该分类用于标记当 PersistVolumeClaim 中出现使用该 StorageClass 的存储声明时，从指定 pool 中获取 PersistVolume。
 
-
 到这一步，基于 rook-ceph 的存储集群就已经正式准备就绪了，可以准备开始使用咯。
+
+## 外网访问 dashboard
+
+默认的 dashboard 是无法从集群之外访问，如果要在集群之外访问它，有几种方式：
+
+1. kube-proxy
+2. NodePort
+3. LoadBalancer
+4. Ingress
+
+最简单的就是使用方式一，在本地执行 `kubectl proxy` 启动流量转发，来访问集群内部服务。
+
+为了便于使用，最佳方案是使用第四种方案，创建 Ingress 资源。
+
+```yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ceph-dashboard
+  namespace: rook-ceph
+  annotations:
+    kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+    - host: rook-ceph.example.com
+      http:
+        paths:
+          - backend:
+              serviceName: rook-ceph-mgr-dashboard
+              servicePort: 8443
+```
+
+上述资源声明了一个处于 `rook-ceph` 命名空间、 `Ingress` 类型的资源，名为 `ceph-dashboard`，使用注释语句 `kubernetes.io/ingress.class` 指明使用哪一个 Ingress 提供商，这里我指定使用 traefik 作为 Ingress 服务提供商。
+
+在 spec 字段中，通过 `host` 来指定入口域名，通过 `backend` 字段指定后端 `Service`。入口服务提供商会根据上述配置，自动创建反向代理，就能够将集群内部的服务暴露到公网。
