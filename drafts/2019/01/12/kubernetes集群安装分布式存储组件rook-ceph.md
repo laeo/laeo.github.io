@@ -261,7 +261,7 @@ parameters:
 
 > “app 所需的存储空间” 指的是在资源描述文件中定义的 PVC 类型的固化存储声明。
 
-有了资源池，我们就可以根据 k8s 文档中的描述，创建一个 StorageClass 存储分类。上述资源描述文件中我创建了一个名为 `ceph` 的存储分类，该分类用于标记当 PersistVolumeClaim 中出现使用该 StorageClass 的存储声明时，从指定 pool 中获取 PersistVolume。
+有了资源池，我们就可以根据 k8s 文档中的描述，创建一个 StorageClass 存储分类。上述资源描述文件中我创建了一个名为 `ceph` 的存储分类，该分类用于标记当 PersistentVolumeClaim 中出现使用该 StorageClass 的存储声明时，从指定 pool 中获取 PersistentVolume。
 
 到这一步，基于 rook-ceph 的存储集群就已经正式准备就绪了，可以准备开始使用咯。
 

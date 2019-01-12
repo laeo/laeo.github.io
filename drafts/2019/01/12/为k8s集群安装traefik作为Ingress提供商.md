@@ -58,7 +58,7 @@ acme:
 
 `dashboard` 字段指明需要启用仪表盘功能，并且自动以指定域名创建 Ingress 资源。
 
-`acme` 字段指明自动申请 let's encrypt 证书所需的参数，比如邮箱地址，域名认证的方式（为了方便直接使用基于 http 请求的方式）。需要特别说明的是 `acme.persistence` 字段通过指定 StorageClass 的名称以及所需存储空间的大小（100Mi）来向集群提交一份 `PersistVolumeClaim` 声明，用于为自动申请的证书提供固化存储。
+`acme` 字段指明自动申请 let's encrypt 证书所需的参数，比如邮箱地址，域名认证的方式（为了方便直接使用基于 http 请求的方式）。需要特别说明的是 `acme.persistence` 字段通过指定 StorageClass 的名称以及所需存储空间的大小（100Mi）来向集群提交一份 `PersistentVolumeClaim` 声明，用于为自动申请的证书提供固化存储。
 
 通过 helm 可以很方便的安装基于 traefik 的 Ingress 控制器，一旦操作成功，我们就可以通过 `kubectl -n kube-system get svc -o wide` 来观测 traefik 服务的创建状态。
 
