@@ -88,5 +88,10 @@
     "id": 1547294019,
     "title": "为k8s集群安装traefik作为Ingress提供商",
     "path": "2019/01/12/为k8s集群安装traefik作为Ingress提供商.md"
+  },
+  {
+    "id": 1552801818,
+    "title": "nginx-proxy将证书应用到非HTTPS容器问题处理记录",
+    "path": "2019/03/17/nginx-proxy将证书应用到非HTTPS容器问题处理记录.md"
   }
 ]
