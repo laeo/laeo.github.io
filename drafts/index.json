@@ -93,5 +93,10 @@
     "id": 1552801818,
     "title": "nginx-proxy将证书应用到非HTTPS容器问题处理记录",
     "path": "2019/03/17/nginx-proxy将证书应用到非HTTPS容器问题处理记录.md"
+  },
+  {
+    "id": 1552831390,
+    "title": "网站接入Cloudflare后静态资源加载失败问题",
+    "path": "2019/03/17/网站接入Cloudflare后静态资源加载失败问题.md"
   }
 ]
