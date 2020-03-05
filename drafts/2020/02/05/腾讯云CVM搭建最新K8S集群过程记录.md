@@ -68,3 +68,6 @@ systemctl restart network
 > 安装 Flannel 时，从 quay.io 拉取镜像也非常缓慢，使用镜像 `quay.azk8s.cn` 加速它！
 
 5. 使用 [rook](https://rook.io/docs/rook/v1.2/ceph-quickstart.html) 安装存储供应商，
+
+
+# 上面的骚操作全不需要了，因为我人傻了！腾讯云提供了一个功能叫*对等联网*，还有新提供的 *云联网* 都可以将不同账号的CVM降维打击成内网互通。虽然没有实验过，但想来不会比我上面一堆又麻烦又没用的操作更无用了。就这样吧……吐了
