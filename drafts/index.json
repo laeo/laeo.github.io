@@ -113,5 +113,10 @@
     "id": 1593870318,
     "title": "使用WireGuard搭建对等网络通道",
     "path": "2020/07/04/使用WireGuard搭建对等网络通道.md"
+  },
+  {
+    "id": 1594096047,
+    "title": "基于WireGuard虚拟局域网组建k3s集群",
+    "path": "2020/07/07/基于WireGuard虚拟局域网组建k3s集群.md"
   }
 ]

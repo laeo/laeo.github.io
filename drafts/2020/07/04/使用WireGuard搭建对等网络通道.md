@@ -84,6 +84,28 @@ peer: neFHhQdYDXhmJLhImyr0QoDCpukRMJlwMN7bpkTnjxc=
 
 可以看到列出了对等联网的节点信息，还有通信测量数据。然后可以通过 ping 另一台主机的虚拟IP，来检查网络通信是否正常。
 
+## 自动化
+
+系统重启后，WireGuard创建的网卡设备就会丢失，幸好它为我们提供了自动化的脚本
+
+```
+systemctl enable wg-quick@wg0
+```
+
+使用上述命令生成systemd守护脚本，开机会自动运行up指令。
+
+## 配置热重载
+
+wg-quick并未提供重载相关的指令，但是提供了 `strip` 指令，可以将 conf 文件转换为 wg 指令可以识别的格式。
+
+所以
+
+```
+wg syncconf wg0 <(wg-quick strip wg0)
+```
+
+即可实现热重载。
+
 ## 总结
 
 之前有段时间一直折腾腾讯云CVM组建 K8S 集群，但是由于跨地域内网不通，又因 K8S 许多组件写死了绑定网卡IP，导致最终失败了。虽然找到许多替代方案，但无疑需要加钱！
