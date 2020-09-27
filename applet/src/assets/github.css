@@ -7,11 +7,12 @@
   -ms-text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
   line-height: 1.5;
-  color: #24292e;
-  font-family: -apple-system, sans-serif;
-  font-size: 16px;
+  color: #404040;
+  font-size: 1.15rem;
   line-height: 1.5;
   word-wrap: break-word;
+  max-width: 960px;
+  margin: 0 auto;
 }
 
 .markdown-body .pl-c {

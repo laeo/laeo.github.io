@@ -1,12 +1,29 @@
 <template>
   <div id="app">
     <aside>
-      <h1>{{ title }}<icon name="bars" @click.native="changeBookshelfState"></icon></h1>
+      <div class="header">
+        <router-link
+          tag="h1"
+          style="cursor: pointer"
+          key="home"
+          :to="{ name: 'Home' }"
+          exact
+        >
+          {{ title }}
+        </router-link>
+        <icon name="bars" @click.native="changeBookshelfState"></icon>
+      </div>
 
       <transition name="fade">
         <div id="togglable" v-show="canShowBookshelf">
-          <router-link key="home" :to="{name: 'Home'}" exact>首页</router-link>
-          <router-link v-for="draft in sortedDrafts" :key="draft.title" :to="{'path': '/posts/'+draft.path}">
+          <p style="color: #aaa; font-size: 0.5rem; user-select: none">
+            · 最近文章
+          </p>
+          <router-link
+            v-for="draft in sortedDrafts"
+            :key="draft.title"
+            :to="{ path: '/posts/' + draft.path }"
+          >
             {{ draft.title }}
           </router-link>
         </div>
@@ -28,8 +45,8 @@ export default {
       title: process.env.title,
       drafts: [],
       innerWidth: window.innerWidth,
-      showBookshelf: true
-    }
+      showBookshelf: true,
+    };
   },
   computed: {
     isDesktopDevice() {
@@ -39,10 +56,8 @@ export default {
       return this.isDesktopDevice || this.showBookshelf;
     },
     sortedDrafts() {
-      return this.drafts.sort((a, b) => {
-        return a.id > b.id;
-      });
-    }
+      return this.drafts.reverse();
+    },
   },
   methods: {
     updateWindowSize() {
@@ -55,14 +70,14 @@ export default {
       } else {
         this.showBookshelf = !this.showBookshelf;
       }
-    }
+    },
   },
   beforeMount() {
-    this.fetch('index.json').then(res => this.drafts = res);
+    this.fetch("index.json").then((res) => (this.drafts = res));
     this.changeBookshelfState();
   },
   mounted() {
-    window.addEventListener('resize', this.updateWindowSize);
-  }
-}
+    window.addEventListener("resize", this.updateWindowSize);
+  },
+};
 </script>
