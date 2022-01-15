@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "compression-webpack-plugin": "^1.1.11",
-    "marked": "^0.3.6",
+    "marked": "^4.0.10",
     "vue": "^2.2.6",
     "vue-awesome": "^2.3.1",
     "vue-progressbar": "^0.7.2",
