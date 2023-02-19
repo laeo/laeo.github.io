@@ -1,3 +1,39 @@
 baseURL = 'https://laeo.me/'
+DefaultContentLanguage = 'zh'
 languageCode = 'zh-cn'
 title = 'LAEO'
+copyright = ''
+theme = 'diary'
+
+[markup]
+[markup.highlight]
+codeFences = true
+guessSyntax = false
+hl_Lines = ""
+lineNoStart = 1
+lineNos = false
+lineNumbersInTable = true
+noClasses = true
+style = "perldoc"
+tabWidth = 4
+
+[params]
+subtitle = "桀桀桀"
+favicon = "/favicon.ico"
+enableGitalk = true
+# enableOpenGraph = true
+# enableTwitterCards = true
+title = "LAEO"              # will set 'og:site_name'
+description = "LAEO's blog" # will set 'og:description'
+enableReadingTime = true
+enableAutoDarkMode = true
+
+[params.gitalk]
+owner = "laeo"
+repo = "laeo.github.io"
+client_id = "bcb3ff802edb45ae15c3"
+client_secret = "541b0675cacbdad87ef5e31dcff14d28f843b34a"
+admin = ['laeo']
+
+[taxonomies]
+tag = "tags"
