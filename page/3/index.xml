@@ -1,0 +1,535 @@
+<?xml-stylesheet href="/rss.xsl" type="text/xsl"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>LAEO</title><link>https://laeo.me/</link><description>Recent content on LAEO</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Fri, 25 Sep 2020 00:00:00 +0000</lastBuildDate><atom:link href="https://laeo.me/index.xml" rel="self" type="application/rss+xml"/><item><title>GIT修改提交者信息</title><link>https://laeo.me/misc/git%E4%BF%AE%E6%94%B9%E6%8F%90%E4%BA%A4%E8%80%85%E4%BF%A1%E6%81%AF/</link><pubDate>Tue, 03 Apr 2018 00:00:00 +0000</pubDate><guid>https://laeo.me/misc/git%E4%BF%AE%E6%94%B9%E6%8F%90%E4%BA%A4%E8%80%85%E4%BF%A1%E6%81%AF/</guid><description>LAEO https://laeo.me/misc/git%E4%BF%AE%E6%94%B9%E6%8F%90%E4%BA%A4%E8%80%85%E4%BF%A1%E6%81%AF/ -&lt;p>终端切换到项目目录，切换到需要更改的分支，执行以下 &lt;code>shell&lt;/code> 命令。&lt;/p>
+&lt;blockquote>
+&lt;p>手动修改命令中的 &lt;code>author&lt;/code> 和 &lt;code>author@example.org&lt;/code> 为目标值。&lt;/p>
+&lt;/blockquote>
+&lt;pre tabindex="0">&lt;code>git filter-branch --commit-filter &amp;#39;
+export GIT_AUTHOR_NAME=author;
+export GIT_AUTHOR_EMAIL=author@example.org;
+export GIT_COMMITTER_NAME=author;
+export GIT_COMMITTER_EMAIL=author@example.org;
+git commit-tree &amp;#34;$@&amp;#34;
+&amp;#39;
+&lt;/code>&lt;/pre>&lt;p>执行完成后，使用以下命令将改动提交到远程仓库。&lt;/p>
+&lt;pre tabindex="0">&lt;code>git push --force --tags origin &amp;#39;refs/heads/*&amp;#39;
+&lt;/code>&lt;/pre>&lt;blockquote>
+&lt;p>多人合作中改动过往记录会对提交历史产生破坏，谨慎操作！&lt;/p>
+&lt;/blockquote>
+- https://laeo.me/misc/git%E4%BF%AE%E6%94%B9%E6%8F%90%E4%BA%A4%E8%80%85%E4%BF%A1%E6%81%AF/ -</description></item><item><title>一道面试时遇到的MySQL索引题</title><link>https://laeo.me/mysql/%E4%B8%80%E9%81%93%E9%9D%A2%E8%AF%95%E6%97%B6%E9%81%87%E5%88%B0%E7%9A%84mysql%E7%B4%A2%E5%BC%95%E9%A2%98/</link><pubDate>Thu, 27 Oct 2016 00:00:00 +0000</pubDate><guid>https://laeo.me/mysql/%E4%B8%80%E9%81%93%E9%9D%A2%E8%AF%95%E6%97%B6%E9%81%87%E5%88%B0%E7%9A%84mysql%E7%B4%A2%E5%BC%95%E9%A2%98/</guid><description>LAEO https://laeo.me/mysql/%E4%B8%80%E9%81%93%E9%9D%A2%E8%AF%95%E6%97%B6%E9%81%87%E5%88%B0%E7%9A%84mysql%E7%B4%A2%E5%BC%95%E9%A2%98/ -&lt;h2 id="题目内容">题目内容&lt;/h2>
+&lt;p>假设有一个整数类型的字段 &lt;code>status&lt;/code> ，其用来存储一条记录的状态，状态的数量是有限个，这里我们就当做一共有10种不同的状态。现在因为查询速度的原因，需要对MySQL进行优化。请问，该字段是否需要加上索引？已知该字段频繁被读取和修改。&lt;/p>
+&lt;h2 id="我的回答">我的回答&lt;/h2>
+&lt;p>在我的记忆中，热点数据一般需要做缓存和索引，一遍提高查询速度。我当时一听，需要频繁读写，那肯定也是热点数据啊，那肯定要加啊，于是就回答需要加。&lt;/p>
+&lt;h2 id="面试官的回答">面试官的回答&lt;/h2>
+&lt;p>实际上是不需要的。面试官很耐心的给我解释了为什么不需要，大概意思如下：&lt;/p>
+&lt;blockquote>
+&lt;p>索引相当于书籍的目录，同样的书籍复制多少遍，目录都是一样，条目指向的文章页码都是相同的。在题目设定中，字段 &lt;code>status&lt;/code> 的数据内容是有限个，也就是不管有多少条表记录，该字段存储的值总是只有那么寥寥十个可选。如果表中有一千万条记录，那么没有加索引之前，数据库需要从一千万条记录中找到那一条。而加了索引之后，数据库可以通过索引先排除其余九种状态的记录，只留下那一种状态的记录集，然后再从里面查询。这其中节省的时间是非常小的，所以无需加上索引。&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="思考">思考&lt;/h2>
+&lt;p>在回来的路上，我是没有心情去琢磨这问题的，但是我一直牢记其结论，方便回家后做记录。因为我对数据库研究得不够深，不清楚其索引具体是怎么实现的。&lt;/p>
+&lt;p>面试官在解释的时候实际是说“可以通过索引把查询的范围缩小到一百万条记录，实际上这种情况下一千万和一百万的查询速度差距是非常小的”，但是现在仔细想想，如果是缩小到十万呢？一千万和十万，差距还是挺大的。&lt;/p>
+&lt;h2 id="总结">总结&lt;/h2>
+&lt;p>这或许就是我之前看到的一些文章里面介绍的，enum之类的类型不需要加索引的原因，因为它的数据相似度是非常高的，加了索引起到的作用微乎其微，反而会占用不少空间，所以不需要加上索引。&lt;/p>
+&lt;p>只要同字段中存储的数据的相似度足够的小，索引起到的缩小检索范围的作用就会足够大。&lt;/p>
+- https://laeo.me/mysql/%E4%B8%80%E9%81%93%E9%9D%A2%E8%AF%95%E6%97%B6%E9%81%87%E5%88%B0%E7%9A%84mysql%E7%B4%A2%E5%BC%95%E9%A2%98/ -</description></item><item><title>使用Docker快速构建Laravel开发环境</title><link>https://laeo.me/php/%E4%BD%BF%E7%94%A8docker%E5%BF%AB%E9%80%9F%E6%9E%84%E5%BB%BAlaravel%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/</link><pubDate>Fri, 21 Oct 2016 00:00:00 +0000</pubDate><guid>https://laeo.me/php/%E4%BD%BF%E7%94%A8docker%E5%BF%AB%E9%80%9F%E6%9E%84%E5%BB%BAlaravel%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/</guid><description>LAEO https://laeo.me/php/%E4%BD%BF%E7%94%A8docker%E5%BF%AB%E9%80%9F%E6%9E%84%E5%BB%BAlaravel%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/ -&lt;h2 id="docker简介">Docker简介&lt;/h2>
+&lt;p>Docker是一个虚拟化容器引擎，跟虚拟机类似，不过更加轻量级。对于开发者来说，Docker的出现无疑是种福音。借助Docker，我们可以快速批量构建相同的环境，可以更加方便的对应用进行伸缩，以便更加灵活的控制应用的负载能力。我们还可以将其应用在开发中，使用Dockerfile快速构建统一的开发环境，避免因环境问题导致的BUG。许多云服务企业提供商业化的Docker容器资源，通过可定制的Dockerfile脚本来描述你需要的环境，以便快速构建生产环境和对生产环境进行伸缩控制。&lt;/p>
+&lt;h2 id="dockerfile简介">Dockerfile简介&lt;/h2>
+&lt;p>Dockerfile是Docker容器的“说明书”，用来描述Docker容器的构建过程。在同一份Dockerfile下，只能生成同一种环境，这种 &lt;code>唯一性&lt;/code> 一定程度上保证了应用运行在容器中的可靠性。&lt;/p>
+&lt;p>Dockerfile的关键字只有寥寥几个，所以学习成本非常低。你可以很快速的学会Dockerfile的编写，但是要写出好的Dockerfile，还得多多琢磨。&lt;/p>
+&lt;p>Dockerfile中常用的关键词大概就 &lt;code>FROM&lt;/code> &lt;code>RUN&lt;/code> &lt;code>WORKDIR&lt;/code> &lt;code>CMD&lt;/code> &lt;code>ENTRY&lt;/code> ，搞清楚它们的用法就基本学会了Dockerfile的编写方法，所以说它非常简单。&lt;/p>
+&lt;h2 id="docker-compose简介">docker-compose简介&lt;/h2>
+&lt;p>&lt;code>docker-compose&lt;/code> 是一种快速整合Docker容器的辅助工具，它通过读取 &lt;code>docker-compose.yml&lt;/code> 文件来分析其中所定义的各项 &lt;code>service&lt;/code> 之间关系，然后自动关联好。这大大简化了应用运行环境的构建，使我们可以更加方便的构建出完整的应用运行环境。&lt;/p>
+&lt;blockquote>
+&lt;p>大多数情况下，一个应用所需要依赖的服务都不止一个。以一个最基础的PHP应用来说，一般情况下至少会依赖 NginX MySQL PHP 三种软件，为了充分体现出容器化应用的优势，我们一般会将这三种软件独立构建成三种服务（service），然后相互关联起来（NginX关联PHP，PHP关联MySQL），这样一旦某一服务的负载过高，我们就可以通过使用相同的Dockerfile快速生成相同的服务，提高整个系统的吞吐能力。&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="构建laravel开发环境">构建Laravel开发环境&lt;/h2>
+&lt;h3 id="需求分析">需求分析&lt;/h3>
+&lt;p>Laravel作为一个PHP应用框架，最基础的运行环境就是 &lt;code>LNMP&lt;/code> 。现代WEB应用的运行环境大多需要使用到NoSQL服务，所以一个 &lt;code>Redis&lt;/code> 服务就显得很有存在的必要了。&lt;/p>
+&lt;p>所以需要构建的服务大致如下列：&lt;/p>
+&lt;ul>
+&lt;li>Linux&lt;/li>
+&lt;li>NginX&lt;/li>
+&lt;li>MySQL&lt;/li>
+&lt;li>PHP&lt;/li>
+&lt;li>Redis&lt;/li>
+&lt;/ul>
+&lt;h3 id="软件挑选">软件挑选&lt;/h3>
+&lt;p>确定了要构建的服务，我们需要为服务所用软件挑选一个合适的版本，既不能太过”时髦“，也不能太过”守旧“。&lt;/p>
+&lt;p>为了压缩生成好的容器的大小，我选择了 &lt;code>Alpine&lt;/code> 作为容器的系统，版本则选用其最新稳定版本3.4。&lt;/p>
+&lt;blockquote>
+&lt;p>Alpine是一个非常非常小的Linux系统，非常适合作为Docker容器的操作系统，其内置的包管理器存放了大部分常用软件，强烈推荐。&lt;/p>
+&lt;/blockquote>
+&lt;p>由于系统软件仓库的限制，以及对开发环境下的具体要求的考虑，其余软件都是直接使用官方仓库最新版本。&lt;/p>
+&lt;h3 id="编写dockerfile">编写Dockerfile&lt;/h3>
+&lt;p>因为是开发环境，不要求负载和伸缩能力，所以我将PHP和NginX放在一个容器中，这样可以方便配置NginX和PHP-FPM。&lt;/p>
+&lt;p>取一个Redis容器的Dockerfile贴这方便看，当个例子吧。&lt;/p>
+&lt;pre tabindex="0">&lt;code>FROM alpine:3.4
+RUN apk -f update
+RUN apk -f add redis
+COPY redis.conf /etc/redis.conf
+EXPOSE 6379
+CMD [&amp;#34;/usr/bin/redis-server&amp;#34;, &amp;#34;/etc/redis.conf&amp;#34;]
+&lt;/code>&lt;/pre>&lt;h3 id="编写docker-composeyml">编写docker-compose.yml&lt;/h3>
+&lt;p>容器的构建脚本编写好后，我们需要将各个容器关联起来，这样才能形成一个完整的应用运行环境。&lt;/p>
+&lt;p>使用docker-compose来快速关联容器，示例如下：&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">version&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;2&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">services&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">web&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">build&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;web&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">volumes&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#cd5555">&amp;#34;..:/www&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#cd5555">&amp;#34;./web/logs:/var/log/web&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">ports&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#cd5555">&amp;#34;8080:80&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">links&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- db&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- redis&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">db&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">build&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;mysql&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">volumes&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#cd5555">&amp;#34;./mysql/data:/var/lib/mysql&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">environment&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">MYSQL_ROOT_PASSWORD&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;root&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">MYSQL_DATABASE&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;app&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">redis&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">build&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;redis&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>services&lt;/code> 节点下就是各个服务了，服务下的 &lt;code>links&lt;/code> 节点定义了依赖服务，通过它可以快速声明服务之间的依赖关系。&lt;/p>
+&lt;h3 id="生成容器并运行">生成容器并运行&lt;/h3>
+&lt;p>在docker-compose.yml所在目录下执行 &lt;code>docker-compose build&lt;/code> 命令，它会自动分析yml文件并自动构建容器。等待容器全部构建完成后，执行 &lt;code>docker-compose up&lt;/code> 就可以直接启动所有服务了。该启动方式是交互式的，方便DEBUG，如果确定没有任何问题了，可以使用 &lt;code>docker-compose up -d&lt;/code> 让其后台运行。&lt;/p>
+&lt;p>常用命令：&lt;/p>
+&lt;ul>
+&lt;li>docker-compose build 用于构建yml文件中定义的各项服务所需的容器&lt;/li>
+&lt;li>docker-compose up 交互式运行服务，方便DEBUG&lt;/li>
+&lt;li>docker-compose up -d 非交互式运行服务&lt;/li>
+&lt;li>docker-compose stop 停止yml文件中定义的服务&lt;/li>
+&lt;li>docker-compose exec [service_name] [&amp;hellip;command] 在对应服务所在容器中执行指定命令&lt;/li>
+&lt;/ul>
+&lt;h2 id="总结">总结&lt;/h2>
+&lt;p>Docker容器技术大大方便了开发者统一开发环境，也增强了应用的抗压能力。它的出现，无论是对于开发者，还是对于运维，都是一件大好事。我对Docker的认知还很浅薄，并没有系统的去查看其官方文档，也没有阅读任何有关书籍，文中内容难免有不当之处，看官请海涵。&lt;/p>
+&lt;p>我将自己写好的构建脚本开源在了Github上，如果您有兴趣，可以访问 &lt;a href="https://github.com/laeo/booster">laeo/booster&lt;/a> 进行查看。&lt;/p>
+- https://laeo.me/php/%E4%BD%BF%E7%94%A8docker%E5%BF%AB%E9%80%9F%E6%9E%84%E5%BB%BAlaravel%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/ -</description></item><item><title>SublimeText3配置记录</title><link>https://laeo.me/misc/sublimetext3%E9%85%8D%E7%BD%AE%E8%AE%B0%E5%BD%95/</link><pubDate>Fri, 14 Oct 2016 00:00:00 +0000</pubDate><guid>https://laeo.me/misc/sublimetext3%E9%85%8D%E7%BD%AE%E8%AE%B0%E5%BD%95/</guid><description>LAEO https://laeo.me/misc/sublimetext3%E9%85%8D%E7%BD%AE%E8%AE%B0%E5%BD%95/ -&lt;p>一直以来，Sublime Text 3都是我搬砖的主力工具，我实在太喜欢轻量级的软件了。使用方便、启动迅速、插件丰富、扩展性强，是我选择它的主要理由。&lt;/p>
+&lt;p>搜索一款插件的资料时，突然想到我应该将环境的配置步骤都一一记录下来，以免以后的工作中出现配置缺漏的情况，导致开发效率降低。&lt;/p>
+&lt;h2 id="设置">设置&lt;/h2>
+&lt;p>对于新安装的 &lt;code>Sublime Text 3&lt;/code> 首要安装的就是 &lt;code>Package Control&lt;/code> ，然后是选择一款自己喜爱的主题，我选择的是 &lt;code>Material Theme&lt;/code> ，它有一款扩展的 &lt;code>Appbar&lt;/code> 组件，建议同时安装，增强体（zhuang）验（13）。&lt;/p>
+&lt;p>安装完主题之后，仿照系统自身的配置文件，修改出属于自己的个性化配置文件。我的配置文件如下：&lt;/p>
+&lt;pre tabindex="0">&lt;code>{
+&amp;#34;always_show_minimap_viewport&amp;#34;: true,
+&amp;#34;auto_find_in_selection&amp;#34;: true,
+&amp;#34;color_scheme&amp;#34;: &amp;#34;Packages/Material Theme/schemes/Material-Theme.tmTheme&amp;#34;,
+&amp;#34;default_line_ending&amp;#34;: &amp;#34;unix&amp;#34;,
+&amp;#34;font_face&amp;#34;: &amp;#34;DejaVu Sans Mono&amp;#34;,
+&amp;#34;font_size&amp;#34;: 10,
+&amp;#34;ignored_packages&amp;#34;:
+[
+&amp;#34;Vintage&amp;#34;
+],
+&amp;#34;indent_guide_options&amp;#34;:
+[
+&amp;#34;draw_normal&amp;#34;,
+&amp;#34;draw_active&amp;#34;
+],
+&amp;#34;indent_to_bracket&amp;#34;: true,
+&amp;#34;line_padding_bottom&amp;#34;: 3,
+&amp;#34;line_padding_top&amp;#34;: 3,
+&amp;#34;match_brackets_angle&amp;#34;: true,
+&amp;#34;material_theme_tree_headings&amp;#34;: true,
+&amp;#34;overlay_scroll_bars&amp;#34;: &amp;#34;enabled&amp;#34;,
+&amp;#34;shift_tab_unindent&amp;#34;: true,
+&amp;#34;show_encoding&amp;#34;: true,
+&amp;#34;show_line_endings&amp;#34;: true,
+&amp;#34;theme&amp;#34;: &amp;#34;Material-Theme.sublime-theme&amp;#34;,
+&amp;#34;translate_tabs_to_spaces&amp;#34;: true,
+&amp;#34;trim_trailing_white_space_on_save&amp;#34;: true
+}
+&lt;/code>&lt;/pre>&lt;p>可以看出字体方面我选择的是 &lt;code>YaHei-Consolas-Hybrid&lt;/code> ，大体上还不错。之前一直使用的 &lt;code>Source-Code-Pro Yahei Hybrid&lt;/code> ，不是对称字体，效果不怎么好。&lt;/p>
+&lt;blockquote>
+&lt;p>2018/2/19 更新后字体选择了 DejaVu Sans Mono，本来用的是 Droid Sans Mono 的，但是发现中英文不等高，所以选择了它。&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="插件">插件&lt;/h2>
+&lt;p>因为个人职业和爱好的原因，我选择了以下插件：&lt;/p>
+&lt;ul>
+&lt;li>A File Icon&lt;/li>
+&lt;li>Babel&lt;/li>
+&lt;li>CodeFormatter&lt;/li>
+&lt;li>DocBlockr&lt;/li>
+&lt;li>Dockerfile Syntax Highlighting&lt;/li>
+&lt;li>GitGutter&lt;/li>
+&lt;li>Gitignore&lt;/li>
+&lt;li>Laravel Blade Highlighter&lt;/li>
+&lt;li>Material Theme&lt;/li>
+&lt;li>Material Theme - Appbar&lt;/li>
+&lt;li>Package Control&lt;/li>
+&lt;li>PHP Completions Kit&lt;/li>
+&lt;li>SublimeCodeIntel&lt;/li>
+&lt;li>SublimeLinter&lt;/li>
+&lt;li>SublimeLinter-json&lt;/li>
+&lt;li>SublimeLinter-php&lt;/li>
+&lt;li>VAlign&lt;/li>
+&lt;li>Vue Syntax Highlight&lt;/li>
+&lt;li>Vuejs Snippets&lt;/li>
+&lt;/ul>
+&lt;blockquote>
+&lt;p>2018/2/19 删减部分插件&lt;/p>
+&lt;/blockquote>
+&lt;p>上述插件是我在之前不小心 &lt;code>rm -rf&lt;/code> 了自己的个人目录之后重新摸索安装的，有的插件功能是有重复的，但是我没有去细心折腾。&lt;/p>
+&lt;p>之前那次配置是最完美的，可惜那时候没想到要把这些东西记录下来，于是就废了。&lt;/p>
+&lt;h3 id="docblockr">DocBlockr&lt;/h3>
+&lt;pre tabindex="0">&lt;code>{
+&amp;#34;jsdocs_spacer_between_sections&amp;#34;: true,
+&amp;#34;jsdocs_lower_case_primitives&amp;#34;: true,
+}
+&lt;/code>&lt;/pre>&lt;h2 id="未完待更">未完待更&lt;/h2>
+&lt;p>等以后有改动了，会不停修改本文，也算是增强记忆吧。&lt;/p>
+- https://laeo.me/misc/sublimetext3%E9%85%8D%E7%BD%AE%E8%AE%B0%E5%BD%95/ -</description></item><item><title>使用GO语言实现基础路由功能</title><link>https://laeo.me/golang/%E4%BD%BF%E7%94%A8go%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E5%9F%BA%E7%A1%80%E8%B7%AF%E7%94%B1%E5%8A%9F%E8%83%BD/</link><pubDate>Sun, 04 Sep 2016 00:00:00 +0000</pubDate><guid>https://laeo.me/golang/%E4%BD%BF%E7%94%A8go%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E5%9F%BA%E7%A1%80%E8%B7%AF%E7%94%B1%E5%8A%9F%E8%83%BD/</guid><description>LAEO https://laeo.me/golang/%E4%BD%BF%E7%94%A8go%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E5%9F%BA%E7%A1%80%E8%B7%AF%E7%94%B1%E5%8A%9F%E8%83%BD/ -&lt;h2 id="什么是-路由器-">什么是 “路由器” ？&lt;/h2>
+&lt;p>“路由器” 是一个抽象的描述，是对WEB框架中负责解析、管理URL的组件的统一称呼。使用 “路由器” 来方便URL的管理（生成、解析），由于现代WEB应用的复杂程度日渐加深，“路由器” 的使用变得愈加普遍。&lt;/p>
+&lt;h2 id="路由器-的基本原理">“路由器” 的基本原理&lt;/h2>
+&lt;p>“路由器” 本质上是通过对客户端请求的 &lt;code>URI&lt;/code> 进行解析，从而对系统的运行加以引导的工具。在PHP中可以使用 &lt;code>$_SERVER&lt;/code> 全局变量获取到用户请求的URI，然后通过解析该URI，执行 &lt;code>路由器&lt;/code> 中注册的对应的 &lt;code>控制器方法&lt;/code> ，到此路由器的工作就已完成。&lt;/p>
+&lt;h2 id="go语言下的-路由器-实现">GO语言下的 “路由器” 实现&lt;/h2>
+&lt;p>在实现该功能之前，我们需要先搞清楚自己到底需要做些什么，这样才不会漫无目的的 “瞎整”。&lt;/p>
+&lt;p>看看以下摘自GO语言官方文档的代码&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>http.&lt;span style="color:#008b45">HandleFunc&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;/bar&amp;#34;&lt;/span>, &lt;span style="color:#8b008b;font-weight:bold">func&lt;/span>(w http.ResponseWriter, r *http.Request) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fmt.&lt;span style="color:#008b45">Fprintf&lt;/span>(w, &lt;span style="color:#cd5555">&amp;#34;Hello, %q&amp;#34;&lt;/span>, html.&lt;span style="color:#008b45">EscapeString&lt;/span>(r.URL.Path))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>})
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>log.&lt;span style="color:#008b45">Fatal&lt;/span>(http.&lt;span style="color:#008b45">ListenAndServe&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;:8080&amp;#34;&lt;/span>, &lt;span style="color:#8b008b;font-weight:bold">nil&lt;/span>))
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>它实现了一个基本的WEB服务器功能，通过引入 &lt;code>net/http&lt;/code> 包来快速构建WEB服务器，使用 &lt;code>http.HandleFunc&lt;/code> 来注册控制器函数，使用 &lt;code>http.ListenAndServe&lt;/code> 来启动WEB服务器。&lt;/p>
+&lt;p>查看文档之后发现该方法不足以称之为 “路由器”，因为其只能简单的实现 &lt;code>URI到控制器函数&lt;/code> 的导航，并不能满足大部分WEB应用的实现需要。我们需要对它进行扩展，增强它的功能。&lt;/p>
+&lt;p>在 &lt;code>net/http&lt;/code> 包的文档中可以查找到， &lt;code>http.ListenAndServe&lt;/code> 方法支持两个参数，第一个参数接收HTTP服务监听的地址，而第二个参数接收的是一个 &lt;code>接口实例&lt;/code> 。我们要实现自己的 &lt;code>路由器&lt;/code> ，该接口是重点。&lt;/p>
+&lt;p>根据官方文档描述，开发者可以自由定义属于自己的WEB服务器，通过实现 &lt;code>ServeHTTP&lt;/code> 方法来手动分发客户端请求。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">type&lt;/span> router &lt;span style="color:#8b008b;font-weight:bold">struct&lt;/span>{}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">func&lt;/span> (r *router) &lt;span style="color:#008b45">ServeHTTP&lt;/span>(rw http.ResponseWriter, rq *http.Request) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#228b22">// 在此处分发客户端请求
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>如上述方式构建一个属于你的 &lt;code>路由器&lt;/code> 组件，通过实现 &lt;code>ServeHTTP&lt;/code> 接收者来增强其功能，比如增加URI参数提取、模糊匹配等等。&lt;/p>
+&lt;p>路由器的重点是 &lt;code>匹配URL&lt;/code> ，那么肯定需要用到 &lt;code>正则表达式&lt;/code> 。Go语言提供了处理正则表达式的支持库，所以我们只需要知道如何使用即可。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">//下述代码是不完整的代码，完整代码请查看我的github仓库，谢谢
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">//只是为了说明而截取的部分代码
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">func&lt;/span> (r *router) &lt;span style="color:#008b45">ServeHTTP&lt;/span>(rw http.ResponseWriter, rq *http.Request) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#228b22">//生成正则匹配实例，用于之后的匹配
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#228b22">//实际使用中，由于golang的编译型语言的特性，我们可以将该过程放置在路由规则的设置阶段
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#228b22">//也就相当于预先编译生成好匹配规则，方便服用，避免新请求到达后重复编译的性能损失
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span> re := regexp.&lt;span style="color:#008b45">MustCompile&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;/(?P&amp;lt;handler&amp;gt;[a-zA-z0-9]+)&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#228b22">//匹配URL，不能匹配则跳过
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> re.&lt;span style="color:#008b45">MatchString&lt;/span>(rq.URL.Path) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ns := re.&lt;span style="color:#008b45">SubexpNames&lt;/span>()[&lt;span style="color:#b452cd">1&lt;/span>:] &lt;span style="color:#228b22">//取得正则表达式中命名切片，忽略第一个
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span> vs := re.&lt;span style="color:#008b45">FindStringSubmatch&lt;/span>(rq.URL.Path)[&lt;span style="color:#b452cd">1&lt;/span>:] &lt;span style="color:#228b22">//取得匹配到的值得切片，忽略第一个
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#228b22">//检查命名子式数量是否匹配
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#228b22">//正常情况下一定是一个子匹配项对应一个匹配结果，否则不应该标记为匹配成功
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> &lt;span style="color:#658b00">len&lt;/span>(ns) != &lt;span style="color:#658b00">len&lt;/span>(vs) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#658b00">panic&lt;/span>(&lt;span style="color:#658b00">string&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;URL parameter mismatch&amp;#34;&lt;/span>))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#228b22">//循环生成键值对并存储到context变量中
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#228b22">//也就是将URL中得“变量”提取出来方便取用
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> i, k := &lt;span style="color:#8b008b;font-weight:bold">range&lt;/span> ns {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> c.Params[k] = vs[i]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#228b22">//执行对应的回调函数
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#228b22">//这个函数应该与上述编译的正则表达式相对应，也就是一个路由规则（正则表达式）至少对应一个回调函数
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#228b22">//不然你的业务逻辑该在什么地方调用呢？
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#008b45">fn&lt;/span>(rw, rq, c)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#228b22">//终止匹配
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>看起来很简单是不是？ 确实很简单。大部分“路由器”组件都是通过正则来匹配预设的规则与客户端请求的链接的，虽然会损失一些性能，但是更加灵活、方便。&lt;/p>
+&lt;p>如果需要查看详细的例子，请查看我的github仓库：&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;a href="https://github.com/laeo/gorest">laeo/gorest&lt;/a>&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="最后">最后&lt;/h2>
+&lt;p>写得或许有些浅薄，不过我学习golang也并不久，还有很多坑等着我踩，这算是预热吧。&lt;/p>
+- https://laeo.me/golang/%E4%BD%BF%E7%94%A8go%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E5%9F%BA%E7%A1%80%E8%B7%AF%E7%94%B1%E5%8A%9F%E8%83%BD/ -</description></item><item><title>Base32编码算法介绍及PHP实现</title><link>https://laeo.me/php/base32%E7%BC%96%E7%A0%81%E7%AE%97%E6%B3%95%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0/</link><pubDate>Wed, 27 Jul 2016 00:00:00 +0000</pubDate><guid>https://laeo.me/php/base32%E7%BC%96%E7%A0%81%E7%AE%97%E6%B3%95%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0/</guid><description>LAEO https://laeo.me/php/base32%E7%BC%96%E7%A0%81%E7%AE%97%E6%B3%95%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0/ -&lt;h2 id="什么是base32编码算法">什么是Base32编码算法&lt;/h2>
+&lt;p>Base32不知道，那么Base64你肯定知道吧？它们都是用于对字符串数据进行编码的一种算法。Base64比Base32更加常见，PHP只内置了Base64编码算法的实现函数。如果不是研究 &lt;code>TOTP&lt;/code> 的时候发现谷歌的两步验证软件使用到了这种算法，我都不会知道有它。&lt;/p>
+&lt;h2 id="有什么作用">有什么作用&lt;/h2>
+&lt;p>限于我个人的认知范围，目前只知道谷歌两步验证功能中使用到了它。它与Base64是差不多的，差异只在于字符集的大小。&lt;/p>
+&lt;h2 id="字符集哈希表">字符集哈希表&lt;/h2>
+&lt;blockquote>
+&lt;p>该字符集哈希表来源于算法文章 &lt;a href="https://tools.ietf.org/html/rfc4648">RFC4648&lt;/a>&lt;/p>
+&lt;/blockquote>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>index&lt;/th>
+&lt;th>value&lt;/th>
+&lt;th>index&lt;/th>
+&lt;th>value&lt;/th>
+&lt;th>index&lt;/th>
+&lt;th>value&lt;/th>
+&lt;th>index&lt;/th>
+&lt;th>value&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>0&lt;/td>
+&lt;td>A&lt;/td>
+&lt;td>8&lt;/td>
+&lt;td>I&lt;/td>
+&lt;td>16&lt;/td>
+&lt;td>Q&lt;/td>
+&lt;td>24&lt;/td>
+&lt;td>Y&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>1&lt;/td>
+&lt;td>B&lt;/td>
+&lt;td>9&lt;/td>
+&lt;td>J&lt;/td>
+&lt;td>17&lt;/td>
+&lt;td>R&lt;/td>
+&lt;td>25&lt;/td>
+&lt;td>Z&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>2&lt;/td>
+&lt;td>C&lt;/td>
+&lt;td>10&lt;/td>
+&lt;td>K&lt;/td>
+&lt;td>18&lt;/td>
+&lt;td>S&lt;/td>
+&lt;td>26&lt;/td>
+&lt;td>2&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>3&lt;/td>
+&lt;td>D&lt;/td>
+&lt;td>11&lt;/td>
+&lt;td>L&lt;/td>
+&lt;td>19&lt;/td>
+&lt;td>T&lt;/td>
+&lt;td>27&lt;/td>
+&lt;td>3&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>4&lt;/td>
+&lt;td>E&lt;/td>
+&lt;td>12&lt;/td>
+&lt;td>M&lt;/td>
+&lt;td>20&lt;/td>
+&lt;td>U&lt;/td>
+&lt;td>28&lt;/td>
+&lt;td>4&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>5&lt;/td>
+&lt;td>F&lt;/td>
+&lt;td>13&lt;/td>
+&lt;td>N&lt;/td>
+&lt;td>21&lt;/td>
+&lt;td>V&lt;/td>
+&lt;td>29&lt;/td>
+&lt;td>5&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>6&lt;/td>
+&lt;td>G&lt;/td>
+&lt;td>14&lt;/td>
+&lt;td>O&lt;/td>
+&lt;td>22&lt;/td>
+&lt;td>W&lt;/td>
+&lt;td>30&lt;/td>
+&lt;td>6&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>7&lt;/td>
+&lt;td>H&lt;/td>
+&lt;td>15&lt;/td>
+&lt;td>P&lt;/td>
+&lt;td>23&lt;/td>
+&lt;td>X&lt;/td>
+&lt;td>31&lt;/td>
+&lt;td>7&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;blockquote>
+&lt;p>ABCDEFGHIJKLMNOPQRSTUVWXYZ234567&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="算法">算法&lt;/h2>
+&lt;p>首先给定一串字符串，作为待编码的字符串。之后按字符分割该字符串，将其分割为单个字符串为一个元素的数组。接下来就是循环该数组，将其中的每个字符串转换为ASCII值。将得到的所有ASCII值分别转换为二进制值，同时要对每一次转换后的结果进行判断，保证转换后的二进制值为 &lt;code>八位&lt;/code> 二进制。&lt;/p>
+&lt;p>然后把所有的二进制值依照原字符的顺序依次拼接成字符串，现在我们得到了一个由 &lt;code>0&lt;/code> 和 &lt;code>1&lt;/code> 组成的字符串，接下来要对其进行操作。&lt;/p>
+&lt;p>将该字符串分割成五位字符一组的数组，因为二进制的 &lt;code>011111&lt;/code> 转为十进制后的值是 &lt;code>31&lt;/code> ，所以我们取五位字符为一组，这样子每组二进制的最大十进制数值就是 &lt;code>31&lt;/code> 。&lt;/p>
+&lt;blockquote>
+&lt;p>在分割二进制字符串的时候，我们可能会遇到 &lt;code>不足五位&lt;/code> 的情况，解决的办法是 &lt;code>右补零&lt;/code> 。&lt;/p>
+&lt;/blockquote>
+&lt;p>这下一切都清晰了吧？将分割好的二进制字符分别转换为十进制，然后到上述哈希表中查找对应字符，将所有对应的字符拼接起来，就成了Base32编码算法的计算结果。&lt;/p>
+&lt;blockquote>
+&lt;p>根据资料来看，我们需要保证最终的结果字符串需要保证 &lt;code>40 Bits Aligned&lt;/code> ，所以我们需要判断结果字符串是否已经对齐，如果没有对齐，就在末尾填补上 &lt;code>=&lt;/code> 。&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="php实现">PHP实现&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-php" data-lang="php">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Base32&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#cd5555">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> * @type string
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> */&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">const&lt;/span> &lt;span style="color:#00688b">ALPHABET&lt;/span> = &lt;span style="color:#cd5555">&amp;#39;ABCDEFGHIJKLMNOPQRSTUVWXYZ234567&amp;#39;&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#cd5555">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> * Base32 Encoder
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> *
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> * @param string $str
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> * @return string
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> */&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">function&lt;/span> &lt;span style="color:#008b45">encode&lt;/span>(&lt;span style="color:#00688b">$str&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b">$map&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#228b22">// Generates the chars map
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (is_null(&lt;span style="color:#00688b">$map&lt;/span>)) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$map&lt;/span> = str_split(self::&lt;span style="color:#658b00">ALPHABET&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#228b22">// Returns null if no data given
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (!&lt;span style="color:#00688b">$str&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#228b22">// Process the given str
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#00688b">$str&lt;/span> = str_split(strval(&lt;span style="color:#00688b">$str&lt;/span>));
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$str&lt;/span> = array_map(&lt;span style="color:#8b008b;font-weight:bold">function&lt;/span> (&lt;span style="color:#00688b">$char&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> str_pad(base_convert(strval(ord(&lt;span style="color:#00688b">$char&lt;/span>)), &lt;span style="color:#b452cd">10&lt;/span>, &lt;span style="color:#b452cd">2&lt;/span>), &lt;span style="color:#b452cd">8&lt;/span>, &lt;span style="color:#cd5555">&amp;#39;0&amp;#39;&lt;/span>, STR_PAD_LEFT);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }, &lt;span style="color:#00688b">$str&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$binary&lt;/span> = join(&lt;span style="color:#cd5555">&amp;#39;&amp;#39;&lt;/span>, &lt;span style="color:#00688b">$str&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$fiveBits&lt;/span> = str_split(&lt;span style="color:#00688b">$binary&lt;/span>, &lt;span style="color:#b452cd">5&lt;/span>); &lt;span style="color:#228b22">// 000000 =&amp;gt; 0 &amp;amp;&amp;amp; 011111 =&amp;gt; 31
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#00688b">$maped&lt;/span> = array_map(&lt;span style="color:#8b008b;font-weight:bold">function&lt;/span> (&lt;span style="color:#00688b">$bit&lt;/span>) &lt;span style="color:#8b008b;font-weight:bold">use&lt;/span> (&lt;span style="color:#00688b">$map&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$bit&lt;/span> = strval(&lt;span style="color:#00688b">$bit&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$bit&lt;/span> = str_pad(&lt;span style="color:#00688b">$bit&lt;/span>, &lt;span style="color:#b452cd">5&lt;/span>, &lt;span style="color:#cd5555">&amp;#39;0&amp;#39;&lt;/span>, STR_PAD_RIGHT);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$index&lt;/span> = base_convert(&lt;span style="color:#00688b">$bit&lt;/span>, &lt;span style="color:#b452cd">2&lt;/span>, &lt;span style="color:#b452cd">10&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#00688b">$map&lt;/span>[&lt;span style="color:#00688b">$index&lt;/span>];
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }, &lt;span style="color:#00688b">$fiveBits&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$encoded&lt;/span> = join(&lt;span style="color:#cd5555">&amp;#39;&amp;#39;&lt;/span>, &lt;span style="color:#00688b">$maped&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$pad&lt;/span> = strlen(&lt;span style="color:#00688b">$encoded&lt;/span>) % &lt;span style="color:#b452cd">8&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#00688b">$encoded&lt;/span> . str_repeat(&lt;span style="color:#cd5555">&amp;#39;=&amp;#39;&lt;/span>, &lt;span style="color:#00688b">$pad&lt;/span> ? &lt;span style="color:#b452cd">8&lt;/span> - &lt;span style="color:#00688b">$pad&lt;/span> : &lt;span style="color:#b452cd">0&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#cd5555">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> * Base32 Decoder
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> *
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> * @param string $str
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> * @return string
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> */&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">function&lt;/span> &lt;span style="color:#008b45">decode&lt;/span>(&lt;span style="color:#00688b">$str&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b">$map&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#228b22">// Generates the chars map
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (is_null(&lt;span style="color:#00688b">$map&lt;/span>)) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$map&lt;/span> = str_split(self::&lt;span style="color:#658b00">ALPHABET&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$map&lt;/span> = array_flip(&lt;span style="color:#00688b">$map&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#228b22">// Returns null if no data given
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (!&lt;span style="color:#00688b">$str&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$str&lt;/span> = rtrim(&lt;span style="color:#00688b">$str&lt;/span>, &lt;span style="color:#cd5555">&amp;#39;=&amp;#39;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$maped&lt;/span> = str_split(&lt;span style="color:#00688b">$str&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$fiveBits&lt;/span> = array_map(&lt;span style="color:#8b008b;font-weight:bold">function&lt;/span> (&lt;span style="color:#00688b">$char&lt;/span>) &lt;span style="color:#8b008b;font-weight:bold">use&lt;/span> (&lt;span style="color:#00688b">$map&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$index&lt;/span> = &lt;span style="color:#00688b">$map&lt;/span>[&lt;span style="color:#00688b">$char&lt;/span>]; &lt;span style="color:#228b22">// Exp: ($char = A) =&amp;gt; ($index = 0)
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> str_pad(decbin(&lt;span style="color:#00688b">$index&lt;/span>), &lt;span style="color:#b452cd">5&lt;/span>, &lt;span style="color:#cd5555">&amp;#39;0&amp;#39;&lt;/span>, STR_PAD_LEFT);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }, &lt;span style="color:#00688b">$maped&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$binary&lt;/span> = join(&lt;span style="color:#cd5555">&amp;#39;&amp;#39;&lt;/span>, &lt;span style="color:#00688b">$fiveBits&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$binary&lt;/span> = str_split(&lt;span style="color:#00688b">$binary&lt;/span>, &lt;span style="color:#b452cd">8&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$chars&lt;/span> = array_map(&lt;span style="color:#8b008b;font-weight:bold">function&lt;/span> (&lt;span style="color:#00688b">$bin&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$ascii&lt;/span> = bindec(&lt;span style="color:#00688b">$bin&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> chr(&lt;span style="color:#00688b">$ascii&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }, &lt;span style="color:#00688b">$binary&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> join(&lt;span style="color:#cd5555">&amp;#39;&amp;#39;&lt;/span>, &lt;span style="color:#00688b">$chars&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;blockquote>
+&lt;p>&lt;a href="https://github.com/laeo/base32">laeo/base32&lt;/a>&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="最后">最后&lt;/h2>
+&lt;p>代码写得比较乱，主要是方便一步步弄懂。其中各种函数的使用、闭包的使用，都是为了方便查看，顺便熟悉它们。上述代码已经经过我自己的测试，编码、解码的结果跟某在线编、解码的网站计算的结果完全相同。&lt;/p>
+&lt;p>才疏学浅，万望见谅。&lt;/p>
+- https://laeo.me/php/base32%E7%BC%96%E7%A0%81%E7%AE%97%E6%B3%95%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0/ -</description></item><item><title>TOTP原理介绍及PHP实现展示</title><link>https://laeo.me/php/totp%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0%E5%B1%95%E7%A4%BA/</link><pubDate>Tue, 26 Jul 2016 00:00:00 +0000</pubDate><guid>https://laeo.me/php/totp%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0%E5%B1%95%E7%A4%BA/</guid><description>LAEO https://laeo.me/php/totp%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0%E5%B1%95%E7%A4%BA/ -&lt;h2 id="什么是-totp">什么是 “TOTP”&lt;/h2>
+&lt;p>&lt;code>TOTP&lt;/code> 是 &lt;code>Time-based One-time Password&lt;/code> 的英文缩写，翻译为中文即“基于时间的一次性密码”。&lt;/p>
+&lt;h2 id="有什么作用">有什么作用&lt;/h2>
+&lt;p>快节奏的社会，一切讲究快捷、方便，但是安全相关，实在方便不起来， &lt;code>TOTP&lt;/code> 应运而生。使用该技术可以在降低身份认证复杂度的同时，将安全系数大幅度提高。君不见现在多少网站使用的动态口令功能，基本都是以该技术的为基础。Google Authenticator、Authy 等等软件都使用的该技术，我个人的域名注册商、服务器商也都接入了该技术。&lt;/p>
+&lt;p>使用该技术来进行身份认证，可以加快认证速度，提高安全性。每个用户的认证口令是随着时间而变化的，无疑给 “黑手党” 们加大了许多难度。&lt;/p>
+&lt;h2 id="totp-的原理">“TOTP” 的原理&lt;/h2>
+&lt;p>该技术的着重点就在于基于时间，时间是不断变化的，所以基于时间而计算出来的 “密码” 也会是不断变化的。如果我们要使用该技术来进行身份认证，那么就一定要控制好时间变化的速度，否则时间无时无刻都在变化，我们如何进行认证？连输入密码也做不到吧。&lt;/p>
+&lt;p>所以，控制时间是务必要做到的。那么，这就有点扯淡了。区区凡人还想控制时间？╭(╯^╰)╮&lt;/p>
+&lt;p>看看下面的PHP代码：&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-php" data-lang="php">&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#00688b">$time&lt;/span> = time(); &lt;span style="color:#228b22">//取得实际时间，单位秒（unix时间戳）
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#00688b">$validity&lt;/span> = &lt;span style="color:#b452cd">30&lt;/span>; &lt;span style="color:#228b22">//设置动态密码有效期，给用户输入密码的时间
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#00688b">$realtime&lt;/span> = &lt;span style="color:#00688b">$time&lt;/span> / &lt;span style="color:#00688b">$validity&lt;/span>; &lt;span style="color:#228b22">//相除得到 “真实时间”
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>发明该算法的大师们很厉害，既然无法控制时间，那么我们就换个方式，变相控制时间。什么方式呢？除法！如果把时间看做被除数，把我们设置的密码有效期看做除数，把计算的结果看做我们取到的 &lt;code>真实时间&lt;/code> 。如此一来，每当 &lt;code>实际时间&lt;/code> 走过 &lt;code>密码有效期&lt;/code> 那么久后，我们取到的 &lt;code>真实时间&lt;/code> 的数值才会 &lt;code>+1&lt;/code> 。&lt;/p>
+&lt;p>说到这里，如果我的表述没有问题的话，看官一定已经大致明白 &lt;code>TOTP&lt;/code> 到底如何实现了。使用这种方式取到的“时间”，就不必担心时间不停的流逝，毕竟只要没有超过密码有效期，该数值是不会变化的。&lt;/p>
+&lt;p>细心的朋友一定注意到了，除法可能还有小数呢，到时候小数不停变化，不也一样影响最终结果么？&lt;/p>
+&lt;p>这是肯定的，所以我推荐使用PHP内置的 &lt;code>floor()&lt;/code> 函数，该函数可以直接抹去浮点数的小数点后的部分。&lt;/p>
+&lt;blockquote>
+&lt;p>其实我自己使用的是 &lt;code>Math&lt;/code> 函数库提供的 &lt;code>intdiv()&lt;/code> 函数，效果都是一样的，甚至你可以直接 &lt;code>intval()&lt;/code> 。&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="代码实例">代码实例&lt;/h2>
+&lt;p>最主要的问题解决后，其它问题基本就不是问题了。下面附上实现代码：&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-php" data-lang="php">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">TwoFactor&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#cd5555">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> * @var integer
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> */&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#00688b">$delay&lt;/span> = &lt;span style="color:#b452cd">30&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#cd5555">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> * @var string
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> */&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#00688b">$secret&lt;/span> = &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#cd5555">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> * Create TwoFactor instance
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> *
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> * @param string $secret
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> */&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">function&lt;/span> __construct(&lt;span style="color:#00688b">$secret&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$this&lt;/span>-&amp;gt;&lt;span style="color:#658b00">secret&lt;/span> = &lt;span style="color:#00688b">$secret&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#cd5555">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> * Returns the authenticate code
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> *
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> * @return string
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> */&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">function&lt;/span> &lt;span style="color:#008b45">getCode&lt;/span>()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$atom&lt;/span> = floor(time() / &lt;span style="color:#00688b">$this&lt;/span>-&amp;gt;&lt;span style="color:#658b00">delay&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$hash&lt;/span> = sha1(&lt;span style="color:#00688b">$this&lt;/span>-&amp;gt;&lt;span style="color:#658b00">secret&lt;/span> . dechex(&lt;span style="color:#00688b">$atom&lt;/span>));
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$last&lt;/span> = substr(&lt;span style="color:#00688b">$hash&lt;/span>, -&lt;span style="color:#b452cd">1&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$pos&lt;/span> = hexdec(&lt;span style="color:#00688b">$last&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$hex&lt;/span> = substr(&lt;span style="color:#00688b">$hash&lt;/span>, &lt;span style="color:#00688b">$pos&lt;/span>, &lt;span style="color:#b452cd">8&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$code&lt;/span> = (string) hexdec(&lt;span style="color:#00688b">$hex&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> substr(&lt;span style="color:#00688b">$code&lt;/span>, -&lt;span style="color:#b452cd">6&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#cd5555">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> * Try to authenticate
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> *
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> * @param string $code
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> * @return boolean
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> */&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">function&lt;/span> &lt;span style="color:#008b45">auth&lt;/span>(&lt;span style="color:#00688b">$code&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> (boolean) (strval(&lt;span style="color:#00688b">$code&lt;/span>) === &lt;span style="color:#00688b">$this&lt;/span>-&amp;gt;&lt;span style="color:#658b00">getCode&lt;/span>());
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;blockquote>
+&lt;p>&lt;a href="https://github.com/laeo/totp">laeo/totp&lt;/a>&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="最后">最后&lt;/h2>
+&lt;p>仅个人粗浅见识，如有遗漏、误缺，还请见谅。&lt;/p>
+- https://laeo.me/php/totp%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0%E5%B1%95%E7%A4%BA/ -</description></item></channel></rss>

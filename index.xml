@@ -1,0 +1,818 @@
+<?xml-stylesheet href="/rss.xsl" type="text/xsl"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>LAEO</title><link>https://laeo.me/</link><description>Recent content on LAEO</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Fri, 25 Sep 2020 00:00:00 +0000</lastBuildDate><atom:link href="https://laeo.me/index.xml" rel="self" type="application/rss+xml"/><item><title>记一次失败到连面试题都没过去的Go语言面试</title><link>https://laeo.me/golang/%E8%AE%B0%E4%B8%80%E6%AC%A1%E5%A4%B1%E8%B4%A5%E5%88%B0%E8%BF%9E%E9%9D%A2%E8%AF%95%E9%A2%98%E9%83%BD%E6%B2%A1%E8%BF%87%E5%8E%BB%E7%9A%84go%E8%AF%AD%E8%A8%80%E9%9D%A2%E8%AF%95/</link><pubDate>Fri, 25 Sep 2020 00:00:00 +0000</pubDate><guid>https://laeo.me/golang/%E8%AE%B0%E4%B8%80%E6%AC%A1%E5%A4%B1%E8%B4%A5%E5%88%B0%E8%BF%9E%E9%9D%A2%E8%AF%95%E9%A2%98%E9%83%BD%E6%B2%A1%E8%BF%87%E5%8E%BB%E7%9A%84go%E8%AF%AD%E8%A8%80%E9%9D%A2%E8%AF%95/</guid><description>LAEO https://laeo.me/golang/%E8%AE%B0%E4%B8%80%E6%AC%A1%E5%A4%B1%E8%B4%A5%E5%88%B0%E8%BF%9E%E9%9D%A2%E8%AF%95%E9%A2%98%E9%83%BD%E6%B2%A1%E8%BF%87%E5%8E%BB%E7%9A%84go%E8%AF%AD%E8%A8%80%E9%9D%A2%E8%AF%95/ -&lt;p>断断续续学习、关注 Go 语言相关技术也有段时间了（大概一两年吧），今年是靠着疫情后的大段休息时间，狠下心决定要找找 Go 语言方面的岗位，简历投出去却是如石沉大海，不是已查阅，就是不合适。考虑到自身学历和工作经历，也觉得有这般结果是正常的，但仍是不甘心如此结束，也就偶尔看到合适的岗位就尝试投一投。功夫不负有心人，总算是有一家公司的人事联系让我去面试，这篇文章就是记录我在面试前、面试中、面试后的各种准备、思考。&lt;/p>
+&lt;h2 id="准备时">准备时&lt;/h2>
+&lt;p>第一次参加 Go 语言岗位的面试，也不知道会问些什么问题，根据自身情况，我投的都是偏业务逻辑开发的岗位，所以猜测最多也就是常规的语言知识，后端技术栈相关的东西吧。于是我就主要搜索了下 Go 语言相关的面试题，优先看语言方面的题目，对于数据库、缓存之类的题就没去看。坐一路的公交，就低头看了一路的面试题，着重看了其中与语言特性有关的各种题目，比如结构的值接收者方法与指针接收者方法的差异、chan 与协程的搭配使用、defer 关键词等等，都是平时在 IDE 的帮助下，处理过，但未曾关注过的信息。&lt;/p>
+&lt;h2 id="面试题">面试题&lt;/h2>
+&lt;p>拿到面试题的一瞬间，我就开始懵逼了，有一部分“大庭广众之下”的紧张感（或许是担心作弊，该公司并没有让我在会议室做题，而是应该在两个部门办公桌之间过道的桌子上做题），也有一部分第一次参加此语言岗位的紧张感，整个人都不好了，于是大脑一片空白。&lt;/p>
+&lt;p>看题目，&lt;/p>
+&lt;ol>
+&lt;li>
+&lt;p>协程，线程，进程的区别。&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>我的答案：
+协程是用户态的，由软件实现。线程分内核态和用户态，存在于进程中。线程是 CPU 执行的最小单元。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>相关资料：&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://zhuanlan.zhihu.com/p/70256971">【面试高频问题】线程、进程、协程&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://zhuanlan.zhihu.com/p/27245377">进程、线程、协程与goruntine&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://stackoverflow.com/questions/200469/what-is-the-difference-between-a-process-and-a-thread">What is the difference between a process and a thread?&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://stackoverflow.com/questions/1934715/difference-between-a-coroutine-and-a-thread">Difference between a “coroutine” and a “thread”?&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;p>点评：
+进程是分配资源的最小单位，线程是CPU调度的最小单位，协程是工程师或语言自建的调度单位。一步步看过来，就是在层层拆分调度时的“块”，提升调度的精度。&lt;/p>
+&lt;p>最开始以进程来调度，发现成本太高，然后将进程的计算逻辑拆分成多个小块，根据情况进行调度，结果发现在大规模系统下资源耗费还是很高，于是继续拆为更小的计算块，在线程内部再次进行调度。而最高层级的进程，反而成为了只存储数据的&lt;em>模型层&lt;/em>，线程倒是变成了&lt;em>控制器层&lt;/em>，协程成了控制器中完成逻辑所调用到的各种&lt;em>方法&lt;/em>。不知道这样理解是否正确，但确实是我看了这几份资料后的感觉。&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;p>无缓冲 Chan 的发送和接收是否同步？&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>我的答案：
+是&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>相关资料：&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://golang.org/ref/spec#Channel_types">Go Doc Spec&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;p>Golang 中是否需要重入锁？&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>我的答案：
+不清楚此概念。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>相关资料：&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://zhuanlan.zhihu.com/p/71018541">到底什么是重入锁，拜托，一次搞清楚！&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://studygolang.com/topics/6139">golang 如何解决重入锁的问题？有没有代替方案？&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://stackoverflow.com/questions/14670979/recursive-locking-in-go#14671462">Recursive locking in Go&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;p>点评：
+自是不必！&lt;/p>
+&lt;p>最开始看到这个重入锁我就有点奇怪，从来没在任何所学语言的文档、注释、教程中看到过这个概念，回家的路上一搜，果不其然——JAVA……想来也对，只有这门语言毛病最多。地铁上把第一篇文章看完了，对这概念有了个了解，下意识就觉得这设计有点反人类，又想到 Go 中肯定不需要用到，如果有，那肯定是代码写的有问题。&lt;/p>
+&lt;p>从入口函数开始，执行的层次都是一层层往下的，如果有一个锁需要共享给几个函数，那在调用这几个函数的上层，直接加好锁不就可以了吗？不必搞什么新概念，每个函数中都加一次锁，又要每个函数都去释放，为了解决一个问题，又引入新的问题，实不可取。看了 SF 帖子里的大佬的邮件内容，安心了。&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;p>一个 uint 类型的值 a=1，和一个 uint 类型的值 b=2，a - b 结果是多少&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>我的答案：
+应该是1。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>实践代码：&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">func&lt;/span> &lt;span style="color:#008b45">main&lt;/span>() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">var&lt;/span> a &lt;span style="color:#00688b;font-weight:bold">uint&lt;/span> = &lt;span style="color:#b452cd">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">var&lt;/span> b &lt;span style="color:#00688b;font-weight:bold">uint&lt;/span> = &lt;span style="color:#b452cd">2&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fmt.&lt;span style="color:#008b45">Printf&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;%d&amp;#34;&lt;/span>, a-b) &lt;span style="color:#228b22">// 18446744073709551615
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span> }
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
+&lt;li>
+&lt;p>相关资料：&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://golang.org/ref/spec#Numeric_types">Numeric_types&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://zh.wikipedia.org/wiki/%E4%BA%8C%E8%A3%9C%E6%95%B8">补码 2&amp;rsquo;s complement&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://stackoverflow.com/questions/4975340/int-to-unsigned-int-conversion">int to unsigned int conversion&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;p>点评：
+不禁感叹野路子出生的猿好难。这应该是一个科班出身的程序员的常识了，甚至我在某群里发出这个题目的时候，还有大佬不假思索就给出了答案。这个结果是根据计算机架构来决定的，因为 Go 语言中的 int、uint 类型并非 int32、uint32 的别名，而是一个独立类型。在 32 位机器中 int 的长度与 int32 相同，而在 64 位的机器中是与 int64 相同，所以在我电脑上打印出来的这个值，与 &lt;code>math.MaxUnt64&lt;/code> 相等。&lt;/p>
+&lt;p>至于为什么一个 uint(-1) 会打印出这个最大值，看了这三篇资料后，在 SF 帖子中找到了简单的一句话，&lt;/p>
+&lt;blockquote>
+&lt;p>Since the value is negative, UINT_MAX + 1 is added to it so that the value is a valid unsigned quantity.&lt;/p>
+&lt;/blockquote>
+&lt;p>带入上面的代码中就能计算出答案， &lt;code>math.MaxUint64 + 1 - 1&lt;/code> 就是为什么会得出这个结果，不难想象，如果是 32 位计算机上，结果会是 &lt;code>math.MaxUint32 + 1 - 1&lt;/code> 。另外我也做了尝试将 b 的值改为 3，结果确实也是 &lt;code>math.MaxUint64 + 1 - 2&lt;/code> 。至于具体的运算原理，看了一遍补码的百科后，我已经绕晕在 0 和 1 的海洋，需要多看看才能顿悟。&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;p>如何解决 Golang 中的循环依赖？&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>我的答案：
+将循环处单独抽离。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>点评：
+这个问题我以前遇到过，比如包 &lt;code>A&lt;/code> 引用了 &lt;code>B&lt;/code> ，然后 &lt;code>B&lt;/code> 又引用到了 &lt;code>A&lt;/code> ，造成了循环引用，编译时会报错。这个问题解决起来也没别的办法，只能对代码结构进行整理，将互相的依赖抽离，单独放到第三个包中，不管是直接引用还是通过接口间接引用。&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;p>方法和函数有什么区别？&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>我的答案：
+方法有一个隐藏参数，函数没有。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>点评：
+个人感觉回答的方向是对的，Go 语言中没有类的概念，实际上也就不存在“类方法”，函数是独立的一个代码块，方法则与类直接关联。Go 语言中常说的方法，其实应该是 &lt;em>接收者函数 Receiver Function&lt;/em>，它会比常规的函数多一个隐藏参数，通过在 &lt;code>func&lt;/code> 关键词和函数名之间声明，程序在执行到该函数时，会自动将这个参数传递给函数。&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;p>下面代码是否有问题，如有则说明&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">package&lt;/span> main
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#cd5555">&amp;#34;fmt&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">type&lt;/span> People &lt;span style="color:#8b008b;font-weight:bold">struct&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Name &lt;span style="color:#00688b;font-weight:bold">string&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">func&lt;/span> (p People) &lt;span style="color:#008b45">String&lt;/span>() &lt;span style="color:#00688b;font-weight:bold">string&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> fmt.&lt;span style="color:#008b45">Sprintf&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;print: %v&amp;#34;&lt;/span>, p)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">func&lt;/span> &lt;span style="color:#008b45">main&lt;/span>() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> p := &amp;amp;People{}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> p.&lt;span style="color:#008b45">String&lt;/span>()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>
+&lt;p>我的答案：
+fmt 会调用 Stringer 接口方法，由此产生死循环。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>点评：
+代码放到 VSCode 里，立马就提示我 &lt;code>Sprintf format %v with arg p causes recursive String method call&lt;/code> ，然后又 &lt;code>result of (*interview.People).String call not used&lt;/code> ，除此之外并无别的错误。那么正常来讲，我的答案虽不完整（还有函数调用未使用的问题），但也不至于不对吧？当时面试官说我答得不好，我还指着这道题问他说，至少这道是对的吧，他告诉我说不对……也不知是敷衍，还是确实有什么问题我没看出来……&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;p>请解释 CAP 的原理以及是如何保证线程安全的&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>我的答案：
+只看过 GPM 的资料，CAP 的还未知，会补上。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>相关资料：
+未搜到相关资料，懵逼……&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;p>给定一个字符串 s，请计算 s 是否由相同字符串重复多次（至少两次）得到。
+例如：s=ababab，计算返回：true。原因：由 ab 重复三次得到。&lt;/p>
+&lt;p>s=abcab，计算返回：false。原因 s 并不能由一个字符串重复多次得到。&lt;/p>
+&lt;p>请使用 go 写出入参是 s 返回值为 bool 类型的方法&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>我的答案：&lt;/p>
+&lt;blockquote>
+&lt;p>这是要求纸上手写代码，说实话体验非常不好，故在此用代码将我的思路实现。&lt;/p>
+&lt;/blockquote>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">func&lt;/span> &lt;span style="color:#008b45">repeatedSubstr&lt;/span>(s &lt;span style="color:#00688b;font-weight:bold">string&lt;/span>) &lt;span style="color:#00688b;font-weight:bold">bool&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> s == &lt;span style="color:#cd5555">&amp;#34;&amp;#34;&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> &lt;span style="color:#658b00">len&lt;/span>(s) &amp;lt; &lt;span style="color:#b452cd">2&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> i := &lt;span style="color:#b452cd">1&lt;/span>; i &amp;lt; &lt;span style="color:#658b00">len&lt;/span>(s); i++ {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> may := &lt;span style="color:#658b00">len&lt;/span>(s) / i
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> may &amp;gt; &lt;span style="color:#b452cd">1&lt;/span> &amp;amp;&amp;amp; s == strings.&lt;span style="color:#008b45">Repeat&lt;/span>(s[&lt;span style="color:#b452cd">0&lt;/span>:i], may) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
+&lt;li>
+&lt;p>相关资料：&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://blog.csdn.net/v_july_v/article/details/7041827">从头到尾彻底理解KMP&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://leetcode-cn.com/problems/repeated-substring-pattern/comments/">重复的子字符串&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;p>点评：
+毫无疑问，我当时能想到的就是暴力解法，如果由重复的子字符串组成，那么依次取一个片段，重复一定次数，一定能有与原字符串相等的时候，否则该字符串就不是由重复的子字符串组成。看过资料后才想起来，其实也不必每次都用片段去构建完整字符串，只需在循环内部再套一个循环，利用字符串索引遍历匹配每个片段即可。当然最佳答案肯定是用 KMP 算法来处理，可惜我当时不会这，平时也疏于对算法的学习、练习。&lt;/p>
+&lt;p>力扣评论区有些奇怪的算法，重复一次母字符串，然后掐头去尾，再判断母字符串是否存在于其中，如果字符串由重复子串构成，那么就算掐头去尾后的双份母串中，也一定能找出与原母串相同的字符串。比如 &lt;code>abab&lt;/code> 作为母串，重复后为 &lt;code>abababab&lt;/code> ，掐头去尾后为 &lt;code>bababa&lt;/code> ，那么里面是不是有原始字符串 &lt;code>abab&lt;/code> ？就是这么个逻辑。但是这里有个问题，就是判断原字符串是否存在于处理后的字符串中，这个逻辑也挺复杂，遇到较真的，非要你写出来……&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ol>
+&lt;h2 id="总结和感想">总结和感想&lt;/h2>
+&lt;p>说实话这次面试是关注、学习、使用 Go 语言这么多年来，第一次正式的参加面试，为此我还一路上都在看面试题，以期望能有个好结果。万万没想到，我连会议室的门都没进去，就灰溜溜离开了。属实难受，一度想放弃 Go，继续安心 PHP 或者 JS 了。&lt;/p>
+&lt;p>但是到家后仔细想了想，也感觉有这结果并不出意料，Go 语言的求职环境已经不是两三年前那样了，当初招人都是 PHP 转 Go，弱类型的脚本语言毕竟都是追求开发速度的，可现在市场逐渐饱和，企业招人也开始精益求精，要求基础要求底子。越往后，越难搞。&lt;/p>
+&lt;p>这次失败的面试，算是给我提了个醒，K8S、容器、分布式、微服务之类，虽然也是重要的，可是要是连基础都不行，怕是连会议室都进不去，更别提面试。如果一直用学 PHP 的心态学 Go，迟早还得滚回去继续写 PHP。&lt;/p>
+- https://laeo.me/golang/%E8%AE%B0%E4%B8%80%E6%AC%A1%E5%A4%B1%E8%B4%A5%E5%88%B0%E8%BF%9E%E9%9D%A2%E8%AF%95%E9%A2%98%E9%83%BD%E6%B2%A1%E8%BF%87%E5%8E%BB%E7%9A%84go%E8%AF%AD%E8%A8%80%E9%9D%A2%E8%AF%95/ -</description></item><item><title>Flutter学习与实践总结</title><link>https://laeo.me/mobile/flutter%E5%AD%A6%E4%B9%A0%E4%B8%8E%E5%AE%9E%E8%B7%B5%E6%80%BB%E7%BB%93/</link><pubDate>Fri, 11 Sep 2020 00:00:00 +0000</pubDate><guid>https://laeo.me/mobile/flutter%E5%AD%A6%E4%B9%A0%E4%B8%8E%E5%AE%9E%E8%B7%B5%E6%80%BB%E7%BB%93/</guid><description>LAEO https://laeo.me/mobile/flutter%E5%AD%A6%E4%B9%A0%E4%B8%8E%E5%AE%9E%E8%B7%B5%E6%80%BB%E7%BB%93/ -&lt;h2 id="闲言">闲言&lt;/h2>
+&lt;p>Flutter 可以说在开发者圈子还是很有名的了，毕竟是谷歌，关注度自不必说。我很早就有心涉足移动 APP 开发，但是学习了一段时间的安卓开发后，实在忍受不了 JAVA 那种类中套类的套娃写法（也可能是没学对吧），后面就没坚持下去。做过一段时间的小程序开发后，又让我燃起了对原生移动端的热情，于是我打开了 Flutter 的官网……&lt;/p>
+&lt;h2 id="学习记录">学习记录&lt;/h2>
+&lt;p>学习方法很重要，对于我这个大部分靠自学的人而言，最好的办法肯定就是先速览一遍文档，对要学习的内容有个大致的印象，然后跟着教程挨个阅读、实践，增强对细节的记忆与理解。&lt;/p>
+&lt;h4 id="安装-flutter">安装 Flutter&lt;/h4>
+&lt;p>我用的是 Mac，所以安装时走的包管理器，并没有依照文档中那样下载二进制文件。所以总的来说安装还是很简单的，首先 &lt;code>brew install flutter&lt;/code> ，安装好二进制，然后执行 &lt;code>flutter docter&lt;/code> 检查环境及依赖。&lt;/p>
+&lt;p>无论使用什么编辑器编写代码，&lt;strong>Android Studio&lt;/strong> 以及 &lt;strong>Xcode&lt;/strong> 都是必须的，为了方便调试，还需要创建各平台的虚拟机。对于我来说，&lt;strong>VSCode&lt;/strong> 搭配 Flutter 相关的插件就已经满足开发调试的需要，而且还可以直接吊起双端的虚拟机进行调试，简直方便到不行。&lt;/p>
+&lt;h4 id="dart-与-widget">Dart 与 Widget&lt;/h4>
+&lt;p>了解 Flutter 的都知道，谷歌为它选择了一门冷门语言 —— Dart。这门语言对于熟悉 JS 和 TS 的人来说，上手难度不大。入口函数 &lt;code>void main()&lt;/code> 、类、接口、范型、异步，主要是看下异步那块的文档，其它的都大同小异。Widget 的话，类似 Vue 和 React 里的组件，Flutter 渲染界面就是通过我们传递给 &lt;code>runApp()&lt;/code> 函数的组件实例开始的，所以我们开发时会经常跟各种 Widget 打交道。&lt;/p>
+&lt;p>Flutter 把 Widget 分为两种类型，即 &lt;strong>StatefullWidget&lt;/strong> 和 &lt;strong>StatelessWidget&lt;/strong>，我们要创建自定义的组件，也是通过继承这两个组件类来完成的。看到 &lt;code>Statefull&lt;/code> 和 &lt;code>Stateless&lt;/code> ，如果熟悉 Kubernetes 的话，一定会有所联想。确实，与 K8S 中的定义类似，它们也是用于区分组件自身是否需要维护一个状态的，具体两种组件在渲染时有何差异，我还并未去了解，想来应该是用于拆分代码结构、确定组件是否需要重建用的吧。&lt;/p>
+&lt;p>另外，需要注意的是，虽然 runApp() 函数接收一个组件，但不代表组件就是被渲染到屏幕上的具体元素。按文档所言，Widget 主要是用来存储渲染结果的配置信息的，也就是说它只是个配置信息容器。实际代表渲染结果的，是 Element 类实例。Widget 中的配置信息，决定了 Element 最终以何等形式显示在屏幕上。另外，Widget 中的 build 方法所接收的参数 context，实际上就是 Element 的实例。&lt;/p>
+&lt;h4 id="布局与排版">布局与排版&lt;/h4>
+&lt;p>Flutter 提供了类似现代 Web 形式的布局与排版方式，比如熟悉的 Flex 布局系统，还有基于 Flex 布局的 &lt;code>Row&lt;/code> 和 &lt;code>Column&lt;/code> 组件，简直不要太方便。对于展示需要垂直或者水平滚动的内容，Flutter 内置了 &lt;code>SingleChildScrollViewWidget&lt;/code> 、 &lt;code>MultiChildScrollViewWidget&lt;/code> 两个组件，还有如 &lt;code>Container&lt;/code> &lt;code>Stack&lt;/code> &lt;code>Positioned&lt;/code> &lt;code>Expanded&lt;/code> &lt;code>Text&lt;/code> 之类的组件，轻松处理各种布局。&lt;/p>
+&lt;h4 id="样式">样式&lt;/h4>
+&lt;p>谷歌出品，必须质感。&lt;strong>Material&lt;/strong> 不出意外的成为默认设计风格，当然为了兼容苹果设备，谷歌另外提供了一套风格组件 &lt;strong>Cupertino&lt;/strong>。当然现代移动 APP 应用都很难说清自己用了什么风格，或许都沾一点，也不要紧，自己动手修改组件的参数就行。&lt;/p>
+&lt;h4 id="canvas">Canvas&lt;/h4>
+&lt;p>为啥要单独提出来说呢？因为它给我的印象最深。我练手写的 APP，是一款图片加水印的 APP，用于各种证件照片打水印。Flutter 没有内置的操作处理图片的库，也没有找到相关的三方库，唯一找到的一个 &lt;strong>image&lt;/strong> 还因为各种原因不适用。所以找来找去，找到了 &lt;code>CustomPaint&lt;/code> ，因为要实时预览最终的图片效果，所以只能自己写一个 &lt;code>CustomPainter&lt;/code> 来实现图片打水印的逻辑。&lt;/p>
+&lt;p>说起这个 CustomPaint Widget，那就不知道要说些啥了，反正很强大，搭配自定义的 CustomPainter，可以为用户呈现任意图形，甚至是动画。而其依赖的 CustomPainter 实现，则是通过 &lt;strong>Canvas&lt;/strong> 来达到构造任意图形的功能，只是由于 Canvas 的 API 设计没有对象化，所以用起来还是挺烧脑的，特别是我这种没有过 Canvas 绘制经验的人……&lt;/p>
+&lt;h2 id="槽点">槽点&lt;/h2>
+&lt;p>由于我没做过原生相关开发，所以某些观点可能存在差错。&lt;/p>
+&lt;h4 id="系统权限">系统权限&lt;/h4>
+&lt;p>这一点说实话 Flutter 没做好，依然还要手动修改原生配置文件来申请权限，虽然有一个开源的库可以辅助，但仍需要手动修改配置。按我所设想，它完全可以用配置文件加代码生成的方式，来达成权限申请的统一管理，隔离开发者与原生配置文件。&lt;/p>
+&lt;h4 id="本地化">本地化&lt;/h4>
+&lt;p>Flutter 的本地化，并没有包括应用在启动器里的名字，让我很差异……其实也可以通过代码生成的方式来处理这个问题。&lt;/p>
+&lt;h4 id="各种库缺失">各种库缺失&lt;/h4>
+&lt;p>可能是因为 Dart 这个语言的定位问题，Flutter 的各种库（比如图片、视频）都是依靠第三方开发，没有自己实现的。这意味着不稳定、更新不及时、兼容性无法保证等问题。比如我找一个将图片保存到系统相册的库，尝试了好几个都不行，有的是权限问题，有的是原生代码老旧，最后还是找了一个别人修改过的版本，才能正常使用。&lt;/p>
+&lt;h2 id="水印-app">水印 APP&lt;/h2>
+&lt;p>我开发的 APP 已开源，地址是 &lt;a href="https://github.com/laeo/flutter-watermark">laeo/flutter-watermark&lt;/a>。大致的逻辑就是自定义 CustomPainter 根据传入的参数绘制水印图，画布的大小根据传入的 &lt;code>Size&lt;/code> 来定。当用于界面展示时就根据容器宽度，保持与图片相同宽高比计算画布的宽高，图片使用 &lt;code>BoxFit.cover&lt;/code> 约束填充到画布上。而当用户点击保存按钮时，传入的 &lt;code>Size&lt;/code> 直接使用图片本身的宽高，以保证清晰度。&lt;/p>
+&lt;h2 id="总结">总结&lt;/h2>
+&lt;p>就目前我的开发体验来说，Flutter 的路还很长，虽然现在有部分公司开始使用，特别是像咸鱼团队这种主推它的，可依然无法避免开发过程中需要与原生打交道的时候。对于开发一些小型的 APP，或者技术团队足够强的企业，或许会省事一些，希望以后会更加完善吧。&lt;/p>
+- https://laeo.me/mobile/flutter%E5%AD%A6%E4%B9%A0%E4%B8%8E%E5%AE%9E%E8%B7%B5%E6%80%BB%E7%BB%93/ -</description></item><item><title>Go 语言中的依赖注入解决方案</title><link>https://laeo.me/golang/go%E8%AF%AD%E8%A8%80%E4%B8%AD%E7%9A%84%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/</link><pubDate>Sun, 16 Aug 2020 00:00:00 +0000</pubDate><guid>https://laeo.me/golang/go%E8%AF%AD%E8%A8%80%E4%B8%AD%E7%9A%84%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/</guid><description>LAEO https://laeo.me/golang/go%E8%AF%AD%E8%A8%80%E4%B8%AD%E7%9A%84%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/ -&lt;p>Go 语言在我的认知中，是一种面向过程的函数式编程语言。所以通常我开发时，基本都是一把梭，并没有太过注重代码的结构。但是最近在开发“奋斗社”社区系统时，一直有感于代码结构太冗杂、混乱，所以有寻找相应的工具来处理。&lt;/p>
+&lt;p>根据我在实际开发过程中的感受，我认为我首先就需要一个能够对结构体注入给定数据的工具，比如数据库连接实例，如果没有自动注入的工具，那么在我调用各种函数时&lt;/p>
+&lt;ol>
+&lt;li>要么手动在初始化结构体时注入连接实例。&lt;/li>
+&lt;li>要么将实例存储在独立包中的导出变量中。&lt;/li>
+&lt;/ol>
+&lt;p>之前一直是使用的第二种方式，但不管那种方式，都没有写 PHP 这类动态脚本语言的方便顺手，因此我在社区搜索了相关的依赖注入的实现。&lt;/p>
+&lt;h2 id="依赖注入di">依赖注入（DI）&lt;/h2>
+&lt;p>依赖注入是面向对象编程常用的代码解耦方法，通常是通过 &lt;code>反射&lt;/code> 来获取调用者所需的参数信息，并根据相应的类型，从对象容器中查找相应的实例，最后将确定出的依赖以参数的形式传递给调用者。&lt;/p>
+&lt;p>从实现的逻辑来看，依赖注入就是很简单直接的，将“我要”转变为“给我”，从主动的强依赖，变为被动的弱依赖。并且使用注入的形式提供调用依赖，可以方便的进行测试。&lt;/p>
+&lt;h2 id="go-语言的-di">Go 语言的 DI&lt;/h2>
+&lt;p>我所搜到的热门的依赖注入工具有三个，分别是由谷歌推出的 &lt;a href="https://github.com/google/wire">wire&lt;/a> 和由 Uber 推出的 &lt;a href="https://github.com/uber-go/dig">dig&lt;/a>。当然还有其它的一些实现，但是时间精力有限，我就先看这两个✨数量比较高的。&lt;/p>
+&lt;p>从各自文档以及示例中可以看出两个仓库虽然实现方式不同，但总的工作逻辑还是相同的，都是基于预设的基础依赖项，解析并填充关联的依赖项，直到最终的入口点。&lt;/p>
+&lt;p>&lt;code>wire&lt;/code> 是通过代码生成完成的依赖分析与注入， &lt;code>dig&lt;/code> 则是运行时通过“反射”进行依赖分析与注入，明显前者性能要比后者好，所以我选择用前者。&lt;/p>
+&lt;h2 id="wire">wire&lt;/h2>
+&lt;p>在接入 wire 之前，我先从现有代码结构上观察，哪些是需要（且能够）进行依赖分析注入的。我从 “奋斗社” 的代码中，找出了需要依赖注入的地方&lt;/p>
+&lt;ul>
+&lt;li>控制器 Controller&lt;/li>
+&lt;li>数据服务 Service&lt;/li>
+&lt;/ul>
+&lt;p>其它的比如模型、钩子函数、纯函数之类的，无法用代码生成的形式处理依赖问题，只能手写。&lt;/p>
+&lt;p>为了达到为控制器注入依赖的目的，我为每个控制器结构添加了一个构造函数，比如用户控制器的构造函数如下&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">func&lt;/span> &lt;span style="color:#008b45">NewUserController&lt;/span>() runtime.Controller {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> wire.&lt;span style="color:#008b45">Build&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> pkg.ApplicationSet,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> wire.&lt;span style="color:#008b45">Struct&lt;/span>(&lt;span style="color:#658b00">new&lt;/span>(User), &lt;span style="color:#cd5555">&amp;#34;*&amp;#34;&lt;/span>),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> wire.&lt;span style="color:#008b45">Bind&lt;/span>(&lt;span style="color:#658b00">new&lt;/span>(runtime.Controller), &lt;span style="color:#658b00">new&lt;/span>(*User)),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">nil&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>通过在同级目录下执行 &lt;code>wire&lt;/code> 命令，自动生成同名函数，外部可直接调用并获取注入完依赖的控制器实例。&lt;/p>
+&lt;p>然后在将 &lt;code>控制器&lt;/code> 注入到 &lt;code>路由器&lt;/code> 时，遇到问题了。每个控制器都是一个 Provider，如果要为控制器注册相应路由规则，那么就需要另一个 Provider 依赖一个控制器，这样的话，有多少个控制器就要写多少个相应的 Provider。最大的问题是，wire 不支持同一个类型作为入参与出参，也不支持没有出参，所以无法直接使用它来处理路由规则的注册。&lt;/p>
+&lt;p>为了处理路由规则注册的问题，我为项目添加了一个接口 &lt;code>runtime.Controller&lt;/code> ，这个接口要求结构必须实现一个函数 &lt;code>RegisterRoute&lt;/code> ，在这个函数中注册控制器下的各个方法到路由。然后我们就可以在提供者（Provider）中声明，需要注入控制器切片（[]runtime. Controller）类型的依赖项。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">func&lt;/span> &lt;span style="color:#008b45">createServerMux&lt;/span>(wrapper muxie.Wrapper, cs []runtime.Controller) *muxie.Mux {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> m := muxie.&lt;span style="color:#008b45">NewMux&lt;/span>()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> m.PathCorrection = &lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> m.&lt;span style="color:#008b45">Use&lt;/span>(wrapper)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> _, ctrl := &lt;span style="color:#8b008b;font-weight:bold">range&lt;/span> cs {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ctrl.&lt;span style="color:#008b45">RegisterRoute&lt;/span>(m.&lt;span style="color:#008b45">Of&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;v1&amp;#34;&lt;/span>))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> m
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>看 Issue 列表里有其他人也提到过类似问题，暂时只能手写 Provider 来初始化控制器切片，麻烦是麻烦点，至少还能用嘛。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">func&lt;/span> &lt;span style="color:#008b45">resolveControllerSet&lt;/span>() []runtime.Controller {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> []runtime.Controller{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> app.&lt;span style="color:#008b45">NewUserController&lt;/span>(),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> app.&lt;span style="color:#008b45">NewTopicController&lt;/span>(),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> app.&lt;span style="color:#008b45">NewNotificationController&lt;/span>(),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> app.&lt;span style="color:#008b45">NewCommentController&lt;/span>(),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> app.&lt;span style="color:#008b45">NewAnnounceController&lt;/span>(),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="单例模式">单例模式&lt;/h2>
+&lt;p>对于数据库这类通常自带连接池的库，我们通常只需要初始化一个实例就行，wire 要实现单例模式，可以使用 &lt;code>wire.Value&lt;/code> 或者 &lt;code>wire.InterfaceValue&lt;/code> 来实现，也可以在 Provider 函数中实现单例逻辑，如我在 “奋斗社” 程序中就使用如下方式实现了单例数据库实例&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">var&lt;/span> db *pg.DB
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">// ProvideSingleton provides singleton DB instance.
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">func&lt;/span> &lt;span style="color:#008b45">ProvideSingleton&lt;/span>() *pg.DB {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> db == &lt;span style="color:#8b008b;font-weight:bold">nil&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> c := config.&lt;span style="color:#008b45">ProvideSingleton&lt;/span>()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> db = pg.&lt;span style="color:#008b45">Connect&lt;/span>(&amp;amp;pg.Options{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Addr: c.DB.Addr,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> User: c.DB.User,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Password: c.DB.Secret,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Database: c.DB.Name,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> })
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> c.Debug {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> db.&lt;span style="color:#008b45">AddQueryHook&lt;/span>(dbLogger{})
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> _, err := db.&lt;span style="color:#008b45">Exec&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;select 1&amp;#34;&lt;/span>); err != &lt;span style="color:#8b008b;font-weight:bold">nil&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#658b00">panic&lt;/span>(err)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> db
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>逻辑一目了然，全局变量存储连接实例，供应函数内判断是否初始化过，没初始化就走初始化流程，唯一有点问题的或许就是报错后直接 panic 吧。&lt;/p>
+&lt;h2 id="总结">总结&lt;/h2>
+&lt;p>大概的用法就写这些就足够了，实际上对比两种依赖注入方式，都是将“面向过程编程”中的部分过程，单独抽离为一个函数体，以便复用。比如数据库的初始化，每个控制器函数都要用到，如果没有依赖注入，或者放到单独的包里维护，那么每个控制器函数里都要写一遍数据库连接的逻辑。而依赖注入正是将这一部分单独抽离，作为一个独立的代码块进行执行，并将结果用参数的形式提供给原函数。&lt;/p>
+&lt;p>目前来看，Go 语言的依赖注入功能还非常僵硬，对于单纯的函数调用还无法做到自动注入依赖（或许某些使用反射实现的工具可以做到），还有就是比如数据库模型库的钩子函数也无法很好的兼容，只能在内部进行各种初始化工作。希望范型正式发布后，能够给 Go 的生态带来地震般变化吧。&lt;/p>
+- https://laeo.me/golang/go%E8%AF%AD%E8%A8%80%E4%B8%AD%E7%9A%84%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/ -</description></item><item><title>三节点K3S集群部署Gitea记录</title><link>https://laeo.me/container/%E4%B8%89%E8%8A%82%E7%82%B9k3s%E9%9B%86%E7%BE%A4%E9%83%A8%E7%BD%B2gitea%E8%AE%B0%E5%BD%95/</link><pubDate>Thu, 09 Jul 2020 00:00:00 +0000</pubDate><guid>https://laeo.me/container/%E4%B8%89%E8%8A%82%E7%82%B9k3s%E9%9B%86%E7%BE%A4%E9%83%A8%E7%BD%B2gitea%E8%AE%B0%E5%BD%95/</guid><description>LAEO https://laeo.me/container/%E4%B8%89%E8%8A%82%E7%82%B9k3s%E9%9B%86%E7%BE%A4%E9%83%A8%E7%BD%B2gitea%E8%AE%B0%E5%BD%95/ -&lt;p>接前文所言，记录下gitea的搭建过程，处理Longhorn存储系统挂载失败的问题，并且处理老数据迁移问题。&lt;/p>
+&lt;h2 id="gitea">Gitea&lt;/h2>
+&lt;p>Gitea 是一个开源社区驱动的轻量级代码托管解决方案，后端采用 Go 编写，采用 MIT 许可证.&lt;/p>
+&lt;h2 id="部署">部署&lt;/h2>
+&lt;p>Gitea文档中并未提供K8S部署相关的说明，但是我从其github仓库中找到了官方提供的YAML部署文件，地址是 &lt;code>https://github.com/go-gitea/gitea/blob/master/contrib/k8s/gitea.yml&lt;/code> ，直接下载到本地，然后根据需要进行修改即可。下面是我修改后的&lt;/p>
+&lt;p>&lt;em>gitea.yaml&lt;/em>&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#008b45;text-decoration:underline">---&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>v1&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>PersistentVolumeClaim&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>gitea-data&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>gitea&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">accessModes&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- ReadWriteOnce&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">storageClassName&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>longhorn&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">resources&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">requests&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">storage&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>1Gi&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#008b45;text-decoration:underline">---&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>apps/v1&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Deployment&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>gitea&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>gitea&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">labels&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">app&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>gitea&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">replicas&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">1&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">template&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>gitea&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">labels&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">app&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>gitea&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">containers&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>gitea&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">image&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>gitea/gitea:1.12&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">imagePullPolicy&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Always&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">volumeMounts&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">mountPath&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;/data&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;data&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">ports&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">containerPort&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">22&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ssh&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">protocol&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>TCP&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">containerPort&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">3000&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>http&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">protocol&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>TCP&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">restartPolicy&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Always&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">securityContext&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">fsGroup&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">1000&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">volumes&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;data&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">persistentVolumeClaim&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">claimName&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>gitea-data&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">selector&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">matchLabels&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">app&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>gitea&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#008b45;text-decoration:underline">---&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>v1&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Service&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>gitea-web&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>gitea&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">labels&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">app&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>gitea-web&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">ports&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">port&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">80&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">targetPort&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">3000&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>http&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">selector&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">app&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>gitea&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#008b45;text-decoration:underline">---&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>v1&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Service&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>gitea-ssh&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>gitea&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">labels&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">app&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>gitea-ssh&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">ports&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">port&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">22&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">targetPort&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">22&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">nodePort&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">30022&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ssh&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">selector&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">app&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>gitea&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">type&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>NodePort&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#008b45;text-decoration:underline">---&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>extensions/v1beta1&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Ingress&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>gitea&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>gitea&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">annotations&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">cert-manager.io/cluster-issuer&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;acme-prod&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kubernetes.io/ingress.class&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;nginx&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">tls&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">hosts&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- git.example.org&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">secretName&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>gitea-web&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">rules&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">host&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>git.example.org&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">http&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">paths&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">backend&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">serviceName&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>gitea-web&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">servicePort&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">80&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>首先是声明了数据存储所用的PVC，因为我之前的部署是使用的SQLite，这里依旧沿用，不需要外部数据库，那么这个PVC就将存储所有数据。因为Longhorn存储是允许动态扩容的，所以先声明1G容量，不够再加。&lt;/p>
+&lt;p>然后创建两个Service类型的服务，分别对外暴露WEB和SSH入口，最后为WEB入口创建Ingress，并创建好正式的SSL证书。&lt;/p>
+&lt;p>那么执行 &lt;code>kubectl create ns gitea&lt;/code> ，然后执行 &lt;code>kubectl create -f gitea.yaml&lt;/code> 即可。&lt;/p>
+&lt;h2 id="longhorn-挂载问题">Longhorn 挂载问题&lt;/h2>
+&lt;p>创建相关部署后，我发现容器始终处于 &lt;code>ContainerCreating&lt;/code> 状态，然后 &lt;code>describe&lt;/code> 了容器，发现事件列表中出现如下内容&lt;/p>
+&lt;pre tabindex="0">&lt;code>Events:
+Type Reason Age From Message
+---- ------ ---- ---- -------
+Warning FailedScheduling &amp;lt;unknown&amp;gt; default-scheduler running &amp;#34;VolumeBinding&amp;#34; filter plugin for pod &amp;#34;gitea-d89bf4b95-6qrqv&amp;#34;: pod has unbound immediate PersistentVolumeClaims
+Warning FailedScheduling &amp;lt;unknown&amp;gt; default-scheduler running &amp;#34;VolumeBinding&amp;#34; filter plugin for pod &amp;#34;gitea-d89bf4b95-6qrqv&amp;#34;: pod has unbound immediate PersistentVolumeClaims
+Normal Scheduled &amp;lt;unknown&amp;gt; default-scheduler Successfully assigned gitea/gitea-d89bf4b95-6qrqv to izj6cd9x6l987sieuxvhrwz
+Warning FailedAttachVolume 0s (x2 over 1s) attachdetach-controller AttachVolume.Attach failed for volume &amp;#34;pvc-83693576-6378-4714-848c-02e68740476c&amp;#34; : rpc error: code = Internal desc = Action [attach] not available on [&amp;amp;{pvc-83693576-6378-4714-848c-02e68740476c volume map[self:http://longhorn-backend:9500/v1/volumes/pvc-83693576-6378-4714-848c-02e68740476c] map[]}]
+&lt;/code>&lt;/pre>&lt;p>然后又 &lt;code>describe&lt;/code> 了相关的PVC及PV资源，发现均处于正常绑定状态。通过Longhorn UI查看相关的存储卷，发现始终处于 &lt;em>Not Ready&lt;/em> 状态。&lt;/p>
+&lt;p>反复查找相关资料，又翻了项目仓库的issue列表，什么都没有发现……最后只能自己各种尝试，因为没有人提示过相关问题，所以我认为这个可能是环境、服务器配置等外部因素引起。
+经过一番折腾，几次重装（感谢之前保存的各个YAML文件），总算找到了解决方案&lt;/p>
+&lt;ol>
+&lt;li>通过 Longhorn UI 删除并重新创建同名 Volume；&lt;/li>
+&lt;li>将相关部署（Deployment）规模缩小为0；&lt;/li>
+&lt;li>等待相关容器被清理后，重新将规模扩大到1；&lt;/li>
+&lt;/ol>
+&lt;p>等待容器创建后，你会从 Longhorn UI 中发现相关存储卷已处于正常绑定状态，容器也能正常读写挂载的目录了。&lt;/p>
+&lt;h2 id="老数据迁移">老数据迁移&lt;/h2>
+&lt;p>因为之前部署是用的SQLite数据库，数据库文件也存储在 &lt;code>/data&lt;/code> 目录中，所以直接将该目录打包复制即可。至于为何不用 Gitea 自带的 dump 指令进行备份……我只能说不好用、不会用、懒得用。&lt;/p>
+&lt;p>所以得到了打包好的 .zip 文件后，我们只需将该文件复制到 Pod 里，并解压到 &lt;code>/data&lt;/code> 目录即可。那么怎么才能复制文件到 Pod 中呢？答案是 &lt;code>kubectl cp&lt;/code> 命令，具体可以查询下帮助信息。&lt;/p>
+&lt;h2 id="总结">总结&lt;/h2>
+&lt;p>部署过程中最麻烦的就是存储那块的问题，因为服务器都是在阿里云，又没有内网通信的能力，公网带宽上限30M，所以一直担心是不是带宽不足引起的存储卷调度错误。不过折腾半天后总算能用了，感觉还是不错的。有点别扭的是，K8S的 NodePort 类型的服务限制了端口区间，不能为 Gitea 的SSH入口分配22端口，看起来还是有点强迫症的。总的来说能在阿里云新手2.0套餐到期前将代码仓库迁移到一个高可用的、分布式的环境中，感觉还是非常不错的，也希望相关记录能帮助到你。&lt;/p>
+&lt;p>下一篇文章不出意外，应该是处理整个集群的日志收集问题，因为我在 Longhorn 项目提了个 issue，然后有维护人员让我帮忙提取日志，结果由于日志太多太杂，命令行模式又不便查找，就搁置了。我要部署一个完整的日志收集、展示系统，便于接下来辅助官方的维护人员，查找存储卷处于 &lt;em>Not Ready&lt;/em> 状态的原因。&lt;/p>
+- https://laeo.me/container/%E4%B8%89%E8%8A%82%E7%82%B9k3s%E9%9B%86%E7%BE%A4%E9%83%A8%E7%BD%B2gitea%E8%AE%B0%E5%BD%95/ -</description></item><item><title>基于WireGuard虚拟局域网组建k3s集群</title><link>https://laeo.me/linux/%E5%9F%BA%E4%BA%8Ewireguard%E8%99%9A%E6%8B%9F%E5%B1%80%E5%9F%9F%E7%BD%91%E7%BB%84%E5%BB%BAk3s%E9%9B%86%E7%BE%A4/</link><pubDate>Tue, 07 Jul 2020 00:00:00 +0000</pubDate><guid>https://laeo.me/linux/%E5%9F%BA%E4%BA%8Ewireguard%E8%99%9A%E6%8B%9F%E5%B1%80%E5%9F%9F%E7%BD%91%E7%BB%84%E5%BB%BAk3s%E9%9B%86%E7%BE%A4/</guid><description>LAEO https://laeo.me/linux/%E5%9F%BA%E4%BA%8Ewireguard%E8%99%9A%E6%8B%9F%E5%B1%80%E5%9F%9F%E7%BD%91%E7%BB%84%E5%BB%BAk3s%E9%9B%86%E7%BE%A4/ -&lt;p>上一篇文章记录了在VPS上通过 WireGuard 组建虚拟局域网的过程，也提到是在为搭建k3s集群做准备，这两天总算是搞定了 &lt;code>Longhorn&lt;/code> 存储系统的问题，可以把搭建的流程以及所需的 YAML 文件都贴出来，也方便以后再用到时查找。&lt;/p>
+&lt;h2 id="k3s">k3s&lt;/h2>
+&lt;p>&lt;code>k3s&lt;/code> (官网是 &lt;a href="https://k3s.io">k3s.io&lt;/a>)是一个精简版本的 Kubernetes(k8s)，也是用于实现容器编排与管理功能，但它更加轻量，精简了许多复杂的内容，却能达到与k8s差不多的功能。官网上写着 “The certified Kubernetes distribution built for IoT &amp;amp; Edge computing”，但是个人项目或者小型项目也是可以用用的，比较相对于k8s所需的硬件配置，它的需求简直不值一提。&lt;/p>
+&lt;h2 id="环境初始化">环境初始化&lt;/h2>
+&lt;ul>
+&lt;li>VPC: 阿里云国际站 轻量服务器 新加坡节点 2C2G80G30M&lt;/li>
+&lt;li>OS: CentOS 7 with kernel 5.7&lt;/li>
+&lt;/ul>
+&lt;p>配置好 WireGuard 后，根据 Rancher 官方文档中的 &lt;a href="https://rancher2.docs.rancher.cn/docs/best-practices/optimize/os/_index/">节点调优&lt;/a> 小节，处理系统参数的优化、打开流量转发等工作。&lt;/p>
+&lt;h2 id="安装记录">安装记录&lt;/h2>
+&lt;p>根据官方文档的说明，安装主控节点，个人使用不考虑主控的高可用，单主即可。然后添加被控，参数改改就行，非常简单。&lt;/p>
+&lt;h3 id="主控">主控&lt;/h3>
+&lt;p>由于我此次使用了阿里云的VPC，又通过WireGuard进行了虚拟组网，因此需要设置部分初始化参数，以兼容当前环境。最终调整后的结果如下所示&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>curl -sfL https://get.k3s.io | sh -s - --node-label &lt;span style="color:#00688b">region&lt;/span>=sg --node-external-ip 149.172.63.24 --advertise-address 149.172.63.24 --disable traefik --node-ip 10.20.30.1 --flannel-iface wg0
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>解释下上述参数的作用&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>--node-label region=sg&lt;/code> 为节点打上region标签，这样在创建部署时，就可以根据业务需要，调整Pod或其它资源分布的节点。&lt;/li>
+&lt;li>&lt;code>--node-external-ip 149.172.63.24&lt;/code> 为节点设置外部IP，阿里云VPC的外网IP并未直接绑定到虚拟机网卡上，所以我要设置这个参数，避免k3s组件在设置loadbalance时，将内网IP当作公网IP使用。&lt;/li>
+&lt;li>&lt;code>--advertise-address 149.172.63.24&lt;/code> 用于设置kubectl工具以及子节点进行通讯使用的地址，可以是IP，也可以是域名，在创建apiserver证书时会将此设置到有效域中。&lt;/li>
+&lt;li>&lt;code>--disable traefik&lt;/code> k3s自带Ingress组件 Traefik，但是并不好用，我使用后无法正常生成 ACME 免费证书，所以禁用它，换成 ingress-nginx 与 certmanager 的组合。&lt;/li>
+&lt;li>&lt;code>--node-ip 10.20.30.1&lt;/code> 如果不设置这个参数，那么第一张网卡设备上的IP就会被选中，所以这个IP常是内网IP。但我自行组建了虚拟局域网，所以需要指定虚拟局域网的IP（也就是WireGuard的IP）。&lt;/li>
+&lt;li>&lt;code>--flannel-iface wg0&lt;/code> wg0是WireGuard创建的网卡设备，我需要使用虚拟局域网来进行节点间的通信，所以这里需要指定为wg0。&lt;/li>
+&lt;/ul>
+&lt;p>另外就是，由于WireGuard的所有流量都是加密传输的，通过它来进行节点间的通信，就已经能够保证通信安全，也就没有必要改用其它的CNI驱动，使用默认的就可以了。&lt;/p>
+&lt;p>在主节点执行上述命令后，一分钟不到就可以看到脚本提示安装完成。通过命令查看下主控端的运行情况&lt;/p>
+&lt;pre tabindex="0">&lt;code>sudo systemctl status k3s
+&lt;/code>&lt;/pre>&lt;p>如果运行正常，那么就看看容器的运行状态是否正常&lt;/p>
+&lt;pre tabindex="0">&lt;code>kubectl get pod -A -o wide
+&lt;/code>&lt;/pre>&lt;p>&lt;code>-A&lt;/code> 参数用于查看所有命名空间，如果容器都处于 running 状态，那么安装就成功了，接下来要可以添加被控节点。&lt;/p>
+&lt;h3 id="被控">被控&lt;/h3>
+&lt;p>有了上述安装主控的经验，被控安装更加简单，参数需要一定的调整&lt;/p>
+&lt;pre tabindex="0">&lt;code>curl -sfL https://get.k3s.io | K3S_TOKEN=K10b5a114775238ba75568d6387a31633a2c08bd377271b59e8797568b7cf56a841::server:54340df706c7090febf56ed0ae553492 K3S_URL=https://10.20.30.1:6443 sh -s - --node-label region=hk --node-external-ip 8.210.153.27 --node-ip 10.20.30.2 --flannel-iface wg0
+&lt;/code>&lt;/pre>&lt;p>参数不必过多解释&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>K3S_Token&lt;/code> 根据文档说明，去 &lt;code>/var/lib/rancher/k3s/server/node-token&lt;/code> 获取即可。&lt;/li>
+&lt;li>&lt;code>K3S_URL&lt;/code> 需要设置主控的通信地址端口，端口默认是6443，IP地址就是虚拟网域的IP，这样流量就会通过WireGuard加密传输。&lt;/li>
+&lt;li>&lt;code>--node-label&lt;/code> 不必多说，这服务器是香港节点。&lt;/li>
+&lt;/ul>
+&lt;p>另外两个参数也不必多说，与主控一样的逻辑。执行后稍等一会，安装成功后，照例查看服务运行状态&lt;/p>
+&lt;pre tabindex="0">&lt;code>sudo systemctl status k3s-agent
+&lt;/code>&lt;/pre>&lt;p>如果有报错就根据报错查找解决方案。&lt;/p>
+&lt;h2 id="组件">组件&lt;/h2>
+&lt;h3 id="nginx--certmanager">Nginx + CertManager&lt;/h3>
+&lt;p>前面提到我弃用了 Traefik，改用 Nginx，下面把相关 YAML 文件贴出来&lt;/p>
+&lt;p>&lt;em>nginx.yaml&lt;/em>&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>helm.cattle.io/v1&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>HelmChart&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>nginx-ingress&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>kube-system&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">chart&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>stable/nginx-ingress&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">valuesContent&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>|-&lt;span style="color:#cd5555">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> controller:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> kind: DaemonSet
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> daemonset:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> useHostPort: true
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> nodeSelector:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> role: edge
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> service:
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555"> type: ClusterIP&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>安装 Nginx Ingress 非常简单，创建一个 HelmChart 类型的资源即可通过控制器自动部署好，非常方便，不知是 K8S 新增的，还是 k3s 添加的。&lt;/p>
+&lt;p>另外就是 CertManager 了，直接使用官方文档中提供的命令来安装&lt;/p>
+&lt;pre tabindex="0">&lt;code>kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.15.0/cert-manager.yaml
+&lt;/code>&lt;/pre>&lt;p>然后 &lt;code>kubectl -n cert-manager get pod -w&lt;/code> 等待所有Pod都正常运行后就可以继续下一步了。创建 ClusterIssuer 资源，YAML如下&lt;/p>
+&lt;p>&lt;em>acme-issuer.yaml&lt;/em>&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>cert-manager.io/v1alpha2&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ClusterIssuer&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>acme&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">acme&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">email&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>acme@example.org&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">server&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>https://acme-staging-v02.api.letsencrypt.org/directory&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">privateKeySecretRef&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>acme&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">solvers&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">http01&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">ingress&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">class&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>nginx&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#008b45;text-decoration:underline">---&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>cert-manager.io/v1alpha2&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ClusterIssuer&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>acme-prod&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">acme&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">email&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>acme@example.org&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">server&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>https://acme-v02.api.letsencrypt.org/directory&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">privateKeySecretRef&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>acme-prod&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">solvers&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">http01&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">ingress&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">class&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>nginx&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>修改其中 &lt;code>email&lt;/code> 字段并创建，然后我们就能够通过设置 Ingress 的注解，来指定使用哪一个 Issuer 签发证书了。 &lt;code>acme&lt;/code> 是用于调试的, 生成无效证书，不确定YAML编写是否有问题、部署是否成功前，最好都使用它来进行证书签发，避免出发频率限制。 &lt;code>acme-prod&lt;/code> 自然就是用于签发有效证书的。&lt;/p>
+&lt;p>如果证书签发失败或遇到问题，可以检查下 &lt;code>CertificateRequest&lt;/code> 类型的资源，查看其事件记录来排错。&lt;/p>
+&lt;h3 id="longhorn存储">Longhorn存储&lt;/h3>
+&lt;p>&lt;code>Longhorn&lt;/code> 是k3s官方文档中，存储相关文档中提及的分布式块存储解决方案。迫于 local-path 不好用，rook-ceph 又太重，别无选择，只能用它。&lt;/p>
+&lt;p>首先需要在每一台需要部署 Longhorn 的节点上安装一个软件包，在 CentOS 7 下是 &lt;code>iscsi-initiator-utils&lt;/code> , 直接yum安装就好，其它发行版的只能搜索下了。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/master/deploy/longhorn.yaml
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>执行上述指令，安装好 Longhorn 后，等待容器全部正常运行，然后为其WEB面板创建 Ingress 入口&lt;/p>
+&lt;p>&lt;em>longhorn-ingress.yaml&lt;/em>&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>networking.k8s.io/v1beta1&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Ingress&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>longhorn-ingress&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>longhorn-system&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">annotations&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">nginx.ingress.kubernetes.io/auth-type&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>basic&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">nginx.ingress.kubernetes.io/ssl-redirect&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#39;false&amp;#39;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">nginx.ingress.kubernetes.io/auth-secret&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>basic-auth&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">nginx.ingress.kubernetes.io/auth-realm&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#39;Authentication Required &amp;#39;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">tls&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">hosts&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- long.example.org&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">secretName&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>longhorn-tls&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">rules&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">host&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>long.example.org&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">http&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">paths&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">path&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>/&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">backend&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">serviceName&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>longhorn-frontend&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">servicePort&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">80&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>修改域名并创建，然后创建用于认证所使用的账号密码&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#00688b">USER&lt;/span>=&amp;lt;USERNAME_HERE&amp;gt;; &lt;span style="color:#00688b">PASSWORD&lt;/span>=&amp;lt;PASSWORD_HERE&amp;gt;; &lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">&amp;#34;&lt;/span>&lt;span style="color:#cd5555">${&lt;/span>&lt;span style="color:#00688b">USER&lt;/span>&lt;span style="color:#cd5555">}&lt;/span>&lt;span style="color:#cd5555">:&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">$(&lt;/span>openssl passwd -stdin -apr1 &amp;lt;&amp;lt;&amp;lt; &lt;span style="color:#cd5555">${&lt;/span>&lt;span style="color:#00688b">PASSWORD&lt;/span>&lt;span style="color:#cd5555">}&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">)&lt;/span>&lt;span style="color:#cd5555">&amp;#34;&lt;/span> &amp;gt;&amp;gt; auth
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>kubectl -n longhorn-system create secret generic basic-auth --from-file=auth
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>然后就可以访问域名，登录并管理存储引擎了。&lt;/p>
+&lt;blockquote>
+&lt;p>k3s与longhorn配合似乎有问题，一定要有WEB面板进行操作后才能正常挂载到容器中。&lt;/p>
+&lt;/blockquote>
+&lt;h3 id="kubernetes-dashboard">Kubernetes Dashboard&lt;/h3>
+&lt;p>参照 &lt;a href="https://rancher.com/docs/k3s/latest/en/installation/kube-dashboard/">文档&lt;/a> 创建好相关部署与角色，然后创建一个Ingress开放访问即可。&lt;/p>
+&lt;p>&lt;em>dashboard-ingress.yaml&lt;/em>&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>networking.k8s.io/v1beta1&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Ingress&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">annotations&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">nginx.ingress.kubernetes.io/proxy-body-size&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;0&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">nginx.ingress.kubernetes.io/proxy-read-timeout&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;600&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">nginx.ingress.kubernetes.io/proxy-send-timeout&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;600&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">cert-manager.io/cluster-issuer&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;acme-prod&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kubernetes.io/ingress.class&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;nginx&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">ingress.kubernetes.io/protocol&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>https&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">nginx.ingress.kubernetes.io/backend-protocol&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>https&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>dashboard&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>kubernetes-dashboard&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">tls&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">hosts&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- dash.example.org&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">secretName&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>dashboard-tls&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">rules&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">host&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>dash.example.org&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">http&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">paths&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">backend&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">serviceName&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>kubernetes-dashboard&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">servicePort&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">443&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">path&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>/&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>等待一会，访问试试，选用Token认证并填入Token即可。&lt;/p>
+&lt;h2 id="总结">总结&lt;/h2>
+&lt;p>至此所有必须的组件都部署完成，下一篇会记录如何在集群中部署 &lt;code>gitea&lt;/code> 服务，并恢复老的备份到其中。&lt;/p>
+- https://laeo.me/linux/%E5%9F%BA%E4%BA%8Ewireguard%E8%99%9A%E6%8B%9F%E5%B1%80%E5%9F%9F%E7%BD%91%E7%BB%84%E5%BB%BAk3s%E9%9B%86%E7%BE%A4/ -</description></item><item><title>使用WireGuard搭建对等网络通道</title><link>https://laeo.me/linux/%E4%BD%BF%E7%94%A8wireguard%E6%90%AD%E5%BB%BA%E5%AF%B9%E7%AD%89%E7%BD%91%E7%BB%9C%E9%80%9A%E9%81%93/</link><pubDate>Sat, 04 Jul 2020 00:00:00 +0000</pubDate><guid>https://laeo.me/linux/%E4%BD%BF%E7%94%A8wireguard%E6%90%AD%E5%BB%BA%E5%AF%B9%E7%AD%89%E7%BD%91%E7%BB%9C%E9%80%9A%E9%81%93/</guid><description>LAEO https://laeo.me/linux/%E4%BD%BF%E7%94%A8wireguard%E6%90%AD%E5%BB%BA%E5%AF%B9%E7%AD%89%E7%BD%91%E7%BB%9C%E9%80%9A%E9%81%93/ -&lt;p>由于阿里云国际站停止了新手套餐2.0的续费，导致我自建的代码仓库、持续集成、容器镜像存储与代理等系统，全部需要迁移到轻量服务器上。之前是用 Docker Swarm 作为容器编排工具，这次正好换成 Kubernetes 的简化版——k3s。&lt;/p>
+&lt;p>由于轻量服务器内网是不互通的，为了便于以后增加服务器、扩容资源啥的，就试着用 WireGuard 来进行组网。它轻量、便捷、高效，而且数据全程加密传输，是依托公网组建虚拟局域网的优秀选择。&lt;/p>
+&lt;h2 id="安装">安装&lt;/h2>
+&lt;p>安装流程非常简单，目前是可以参照官网的&lt;a href="https://www.wireguard.com/install/">安装指南&lt;/a>进行安装，也可以选择更新系统内核，它已经被合并到内核中了。&lt;/p>
+&lt;p>我这里是直接将 CentOS 内核更新到目前最新的 5.7 版本，其中就已经包含了 WireGuard 的内核模块，只需要安装 &lt;code>wireguard-tools&lt;/code> 这个 yum 包就行了。&lt;/p>
+&lt;h2 id="配置">配置&lt;/h2>
+&lt;p>&lt;code>wireguard-tools&lt;/code> 包提供了我们所需的工具 &lt;code>wg&lt;/code> 和 &lt;code>wg-quick&lt;/code> ，可以使用它们来分别完成手动部署和自动部署。&lt;/p>
+&lt;p>先按照官方文档描述的形式，生成好 &lt;em>主机A&lt;/em> 用于加密解密的密钥，其实就只需一行命令&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>wg genkey | tee privatekey | wg pubkey &amp;gt; publickey
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>这样在当前目录下就生成了 &lt;code>privatekey&lt;/code> 和 &lt;code>publickey&lt;/code> 两个文件，其中密钥是配置到本机的，而公钥是配置到其它机器里的。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ cat privatekey &amp;amp;&amp;amp; cat publickey
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#00688b">6TpHfNWc2H2NuM6ajQMMLkUWTgCf3xlwTTCiayz7Jmo&lt;/span>=
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#00688b">kUWTgCf3xlwTTCiayz7Jmo6TpHfNWc2H2NuM6ajQMML&lt;/span>=
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>假如现在有一台需要与上述主机对等联网的 &lt;em>主机B&lt;/em>，其公网IP（或者内网IP，只要能与上述主机通信即可）是 172.17.3.1，我们首先依照上面的流程安装 WireGuard 并生成好主机B的密钥。&lt;/p>
+&lt;p>然后编写 &lt;em>主机A&lt;/em> 完整的配置文件，以供 &lt;code>wg-quick&lt;/code> 使用，在主机A的 &lt;code>/etc/wireguard/wg0.conf&lt;/code> 中写入&lt;/p>
+&lt;pre tabindex="0">&lt;code>[Interface]
+PrivateKey = 6TpHfNWc2H2NuM6ajQMMLkUWTgCf3xlwTTCiayz7Jmo=
+Address = 10.0.0.1
+ListenPort = 51820
+[Peer]
+PublicKey = 主机B的publickey
+EndPoint = 172.17.3.1:51820
+AllowedIPs = 10.0.0.2/32
+&lt;/code>&lt;/pre>&lt;p>及其简单的配置了，一看就懂。Interface 小节是属于主机A（也就是本机）的配置，其中 &lt;code>Address&lt;/code> 是你给这台主机分配的虚拟IP，而 &lt;code>ListenPort&lt;/code> 是主机之间通讯使用的端口，是 &lt;em>UDP&lt;/em> 协议的。&lt;/p>
+&lt;p>Peer 是属于需要通信的主机B的信息，有多少需要通信的主机，就添加多少个 Peer 小节。其中 &lt;code>EndPoint&lt;/code> 是主机B的公网IP与WireGuard监听的UDP端口，这个IP不一定是公网，如果你的机器通过内网也能通信，直接用内网IP也可以，当然要注意这个IP需要所有加入局域网的主机都能通信才行。 &lt;code>AllowedIPs&lt;/code> 是指本机发起连接的哪些IP应该将流量转发到这个节点去，比如我们给主机B分配了内网IP 10.0.0.2，那么在主机A上发送到 10.0.0.2 的数据包，都应该转发到这个 EndPoint 上，它其实起的是一个过滤作用。而且如您所想，多个 Peer 时，这里配置的IP地址不能有冲突。&lt;/p>
+&lt;p>配置好主机A后，照猫画虎，将主机B也配置好，无非就是密钥信息改改，IP地址改改就行了。&lt;/p>
+&lt;h2 id="启动">启动&lt;/h2>
+&lt;p>配置文件写好后，使用 &lt;code>wg-quick&lt;/code> 工具来创建虚拟网卡，&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>wg-quick up wg0
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上面命令中的 &lt;code>wg0&lt;/code> 对应的是 &lt;code>/etc/wireguard/wg0.conf&lt;/code> 这个配置文件，其自动创建的网卡设备，名字就是 wg0，这对应关系自不必多言。&lt;/p>
+&lt;p>将主机A和B的网卡设备都安装配置好后，就能使用 &lt;code>wg&lt;/code> 命令来观察组网情况了&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ wg
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>interface: wg0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> public key: &lt;span style="color:#00688b">6TpHfNWc2H2NuM6ajQMMLkUWTgCf3xlwTTCiayz7Jmo&lt;/span>=
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> private key: (hidden)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> listening port: &lt;span style="color:#b452cd">51820&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>peer: &lt;span style="color:#00688b">neFHhQdYDXhmJLhImyr0QoDCpukRMJlwMN7bpkTnjxc&lt;/span>=
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> endpoint: 172.17.3.1:51820
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> allowed ips: 10.0.0.1/32
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> latest handshake: &lt;span style="color:#b452cd">1&lt;/span> hour, &lt;span style="color:#b452cd">14&lt;/span> minutes, &lt;span style="color:#b452cd">54&lt;/span> seconds ago
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> transfer: &lt;span style="color:#b452cd">656&lt;/span> B received, &lt;span style="color:#b452cd">656&lt;/span> B sent
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>可以看到列出了对等联网的节点信息，还有通信测量数据。然后可以通过 ping 另一台主机的虚拟IP，来检查网络通信是否正常。&lt;/p>
+&lt;h2 id="自动化">自动化&lt;/h2>
+&lt;p>系统重启后，WireGuard创建的网卡设备就会丢失，幸好它为我们提供了自动化的脚本&lt;/p>
+&lt;pre tabindex="0">&lt;code>systemctl enable wg-quick@wg0
+&lt;/code>&lt;/pre>&lt;p>使用上述命令生成systemd守护脚本，开机会自动运行up指令。&lt;/p>
+&lt;h2 id="配置热重载">配置热重载&lt;/h2>
+&lt;p>wg-quick并未提供重载相关的指令，但是提供了 &lt;code>strip&lt;/code> 指令，可以将 conf 文件转换为 wg 指令可以识别的格式。&lt;/p>
+&lt;p>所以&lt;/p>
+&lt;pre tabindex="0">&lt;code>wg syncconf wg0 &amp;lt;(wg-quick strip wg0)
+&lt;/code>&lt;/pre>&lt;p>即可实现热重载。&lt;/p>
+&lt;h2 id="总结">总结&lt;/h2>
+&lt;p>之前有段时间一直折腾腾讯云CVM组建 K8S 集群，但是由于跨地域内网不通，又因 K8S 许多组件写死了绑定网卡IP，导致最终失败了。虽然找到许多替代方案，但无疑需要加钱！&lt;/p>
+&lt;p>现在发现了 WireGuard，性能好不说，使用还简单，还全程加密，可以说要组建点低端集群来玩耍，会很方便了。&lt;/p>
+&lt;p>当然问题还是存在的，比如数据全部走公网了，速率会收到公网带宽限制，而且公网稳定性也无保障。说来说去，还是穷，有钱直接配置拉满不就好了哈哈。&lt;/p>
+- https://laeo.me/linux/%E4%BD%BF%E7%94%A8wireguard%E6%90%AD%E5%BB%BA%E5%AF%B9%E7%AD%89%E7%BD%91%E7%BB%9C%E9%80%9A%E9%81%93/ -</description></item><item><title>k8s中drone-kube-runner容器无网络问题</title><link>https://laeo.me/container/k8s%E4%B8%ADdrone-kube-runner%E5%AE%B9%E5%99%A8%E6%97%A0%E7%BD%91%E7%BB%9C%E9%97%AE%E9%A2%98/</link><pubDate>Thu, 05 Mar 2020 00:00:00 +0000</pubDate><guid>https://laeo.me/container/k8s%E4%B8%ADdrone-kube-runner%E5%AE%B9%E5%99%A8%E6%97%A0%E7%BD%91%E7%BB%9C%E9%97%AE%E9%A2%98/</guid><description>LAEO https://laeo.me/container/k8s%E4%B8%ADdrone-kube-runner%E5%AE%B9%E5%99%A8%E6%97%A0%E7%BD%91%E7%BB%9C%E9%97%AE%E9%A2%98/ -&lt;h2 id="起因">起因&lt;/h2>
+&lt;p>用腾讯云CVM组的K8S集群跑drone的drone-kube-runner，执行项目的容器镜像构建逻辑，但是出现构建流程卡住的问题。
+多重试几次，偶尔还能正常构建起来。但是今天重试了好几次，一直卡住。卡住的地方还都一样， &lt;code>apk update&lt;/code> 这里。
+因为基础镜像是用的 &lt;em>alpine&lt;/em>，就将其自带的apk的更新地址换为了华中科大的镜像站，并没有多少改善，还是卡住。
+然后又换到阿里云的镜像站，最后换到腾讯云的镜像站，一直都这样，很奇怪。
+实在没招，直接 &lt;code>kubectl exec&lt;/code> 进容器里看看到底啥情况。
+进去之后下意识执行了 &lt;code>apk update&lt;/code> ，发现报了几个网络错误。然后又看了下容器的IP地址、网卡配置，都没啥问题。
+尝试 &lt;code>ping&lt;/code> 了下百度，无用。又看了 NS 服务器的配置，也正常，但是执行 &lt;code>nslookup&lt;/code> 报错。
+彻底没招，谷歌走起……&lt;/p>
+&lt;h2 id="搜集资料">搜集资料&lt;/h2>
+&lt;p>谷歌搜了下 &lt;code>k8s drone no network&lt;/code> ，第一条记录就引起了我的注意：&lt;a href="https://discourse.drone.io/t/drone-in-kubernetes-has-network-issue/6244">Drone in Kubernetes has network issue&lt;/a>。
+查看了下这个帖子，其中一条说他自己的解决方案的，我感觉有可能也是这个问题，遂跟着对方给的连接看了过去。
+然后又在自己的容器内外查看、对比了下情况，发现我的网卡 MTU 设置跟他的一样，问题定位到了。
+当然为了确保判断正确，我还是手动执行了下 &lt;code>ifconfig docker0 mtu 1440 up&lt;/code> 来测试网络是否正常，当然结果确实是正常了。&lt;/p>
+&lt;h2 id="解决它">解决它&lt;/h2>
+&lt;p>找到问题，人家回复中又给出了修正的方法，那不必多说，直接拷贝其给出的环境变量配置到项目的 &lt;code>.drone.yaml&lt;/code> 文件中，提交完事儿！&lt;/p>
+&lt;pre tabindex="0">&lt;code>environment:
+PLUGIN_MTU: 1440
+&lt;/code>&lt;/pre>&lt;p>为了方便我是直接设置的 Pipeline 等级的环境变量。&lt;/p>
+- https://laeo.me/container/k8s%E4%B8%ADdrone-kube-runner%E5%AE%B9%E5%99%A8%E6%97%A0%E7%BD%91%E7%BB%9C%E9%97%AE%E9%A2%98/ -</description></item><item><title>腾讯云CVM搭建最新K8S集群过程记录</title><link>https://laeo.me/container/%E8%85%BE%E8%AE%AF%E4%BA%91cvm%E6%90%AD%E5%BB%BA%E6%9C%80%E6%96%B0k8s%E9%9B%86%E7%BE%A4%E8%BF%87%E7%A8%8B%E8%AE%B0%E5%BD%95/</link><pubDate>Wed, 05 Feb 2020 00:00:00 +0000</pubDate><guid>https://laeo.me/container/%E8%85%BE%E8%AE%AF%E4%BA%91cvm%E6%90%AD%E5%BB%BA%E6%9C%80%E6%96%B0k8s%E9%9B%86%E7%BE%A4%E8%BF%87%E7%A8%8B%E8%AE%B0%E5%BD%95/</guid><description>LAEO https://laeo.me/container/%E8%85%BE%E8%AE%AF%E4%BA%91cvm%E6%90%AD%E5%BB%BA%E6%9C%80%E6%96%B0k8s%E9%9B%86%E7%BE%A4%E8%BF%87%E7%A8%8B%E8%AE%B0%E5%BD%95/ -&lt;h2 id="说明">说明&lt;/h2>
+&lt;p>&lt;em>穷人专用的&lt;/em>在腾讯云不同账号下的CVM上搭建K8S集群。&lt;/p>
+&lt;h2 id="原料">原料&lt;/h2>
+&lt;ol>
+&lt;li>&lt;a href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/">官方指南一份&lt;/a>&lt;/li>
+&lt;li>腾讯云CVM一份（配置2C4G5M）（运行CentOS 7.4）&lt;/li>
+&lt;li>&lt;a href="https://mirror.azure.cn/help/gcr-proxy-cache.html">微软CN提供的gcr.io镜像一份&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://developer.aliyun.com/mirror/kubernetes">阿里云提供的k8s镜像一份&lt;/a>&lt;/li>
+&lt;/ol>
+&lt;h2 id="烹饪">烹饪&lt;/h2>
+&lt;ol>
+&lt;li>根据 &lt;a href="https://kubernetes.io/zh/docs/setup/production-environment/">容器运行时&lt;/a> 文档介绍选择中意的容器运行时程序，跟以往不同，我没有选择 &lt;em>docker&lt;/em>，而是选择了 &lt;em>containerd&lt;/em>，差别请前往 &lt;a href="https://cloud.tencent.com/document/product/457/35747">如何选择 Containerd 和 Docker&lt;/a> 这篇文档。&lt;/li>
+&lt;/ol>
+&lt;blockquote>
+&lt;p>腾讯云连 Docker 的源太慢了，还是用阿里提供的镜像吧。&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>需要注意的是，当我们根据文档中的说明生成了默认的 &lt;em>containerd&lt;/em> 配置文件后，我们需要手动将其中的 &lt;code>plugins.cri.sandbox_image&lt;/code> 的地址改为微软CN提供的 &lt;em>镜像&lt;/em> 的地址，否则下载不到沙盒镜像，集群将无法正常启动。&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>还需要注意的是，containerd 的 CLI 工具是 &lt;code>crictl&lt;/code> ，常用命令与 docker 一致，具体需要查询官网。安装好 containerd 后是无法直接使用 crictl 查看容器信息的，会报错连接超时。原因是 crictl 默认的后端地址是 &lt;code>unix:///var/run/dockershim.sock&lt;/code> ，而 containerd 使用的地址是 &lt;code>unix:///run/containerd/containerd.sock&lt;/code> ，可以设置环境变量 &lt;code>CONTAINER_RUNTIME_ENDPOINT&lt;/code> 来便于使用。&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>编辑 containerd 的配置文件，使用 docker registry 的镜像地址 &lt;code>https://dockerhub.azk8s.cn&lt;/code> 来加速镜像拉取。&lt;/p>
+&lt;/blockquote>
+&lt;ol start="2">
+&lt;li>根据 &lt;a href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/">官方文档&lt;/a> 安装 kubeadm，安装过程中使用阿里云k8s镜像来加速安装 kubeadm、kubelet、kubectl 等软件。&lt;/li>
+&lt;/ol>
+&lt;blockquote>
+&lt;p>安装前需要根据文档做系统初始化，打开流量转发等功能。记得一定要执行 &lt;code>modprobe br_netfilter&lt;/code> ，否则预检会报错 /proc/sys/net/bridge/bridge-nf-call-iptables contents are not set to 1。&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>需要注意最后安装完成要记得指定 kubelet 的 &amp;ndash;cgroup-driver 为 systemd，保持跟 containerd 一致。&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>腾讯云CVM需要修改 &lt;code>/etc/sysctl.conf&lt;/code> 文件来强制打开 &lt;code>ip_forward&lt;/code> 。&lt;/p>
+&lt;/blockquote>
+&lt;ol start="3">
+&lt;li>根据 &lt;a href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/">官方文档&lt;/a> 使用 kubeadm 创建集群。&lt;/li>
+&lt;/ol>
+&lt;blockquote>
+&lt;p>需要注意的是，腾讯云CVM网卡绑定的 IP 并非公网 IP，所以我们需要指定 &lt;code>--control-plane-endpoint&lt;/code> 参数，便于其它节点通过公网加入到集群。&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>根据不同的网络插件，我们可能需要指定 &lt;code>--pod-network-cidr&lt;/code> 参数，具体需要查看网络插件列表中的描述。&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>kubeadm 初始化集群所需的容器全部存储于 gcr.io 中，由于奇怪的原因我们不能直接访问该网站，所以这就用到原料中的 &lt;em>微软CN&lt;/em> 提供的 gcr.io 镜像网站。通过附加 &lt;code>--image-repository gcr.azk8s.cn/google_containers&lt;/code> 来指明从镜像站下载镜像。&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>穷人专用笔记，将公网IP作为虚拟IP绑定到CVM上，然后修改 &lt;code>/etc/sysconfig/kubelet&lt;/code> 指定 &lt;code>--node-ip&lt;/code> 参数。&lt;/p>
+&lt;/blockquote>
+&lt;pre tabindex="0">&lt;code>cp /etc/sysconfig/network-scripts/ifcfg-eth0 /etc/sysconfig/network-scripts/ifcfg-eth0:0
+cat &amp;gt; /etc/sysconfig/network-scripts/ifcfg-eth0:0 &amp;lt;&amp;lt;EOF
+DEVICE=eth0:0 #此处添加:0，保持和文件名一致，添加多个IP依次递增
+ONBOOT=yes #是否开机激活
+BOOTPROTO=static #静态IP，如果需要DHCP获取请输入dhcp
+IPADDR=&amp;lt;公网IP&amp;gt; #此处修改为要添加的IP
+NETMASK=255.255.255.0
+EOF
+systemctl restart network
+&lt;/code>&lt;/pre>&lt;blockquote>
+&lt;p>穷人专用笔记，绑定好虚拟IP后，我们还需要在 &lt;code>kubeadm init&lt;/code> 时指定 &lt;code>--apiserver-advertise-address&lt;/code> 参数为该虚拟IP，这样在创建 &lt;code>ipvs&lt;/code> 规则的时候，才能正确将流量重定向到公网，否则 worker 节点将无法正常与 master节点通信，因为工作节点上创建的 ipvs 规则，会将 10.96.0.1 这个 VIP 的流量导向 master 服务器的内网IP。&lt;/p>
+&lt;/blockquote>
+&lt;ol start="4">
+&lt;li>安装网络插件，等待初始化完成。&lt;/li>
+&lt;/ol>
+&lt;blockquote>
+&lt;p>安装 Flannel 时，从 quay.io 拉取镜像也非常缓慢，使用镜像 &lt;code>quay.azk8s.cn&lt;/code> 加速它！&lt;/p>
+&lt;/blockquote>
+&lt;ol start="5">
+&lt;li>使用 &lt;a href="https://rook.io/docs/rook/v1.2/ceph-quickstart.html">rook&lt;/a> 安装存储供应商，&lt;/li>
+&lt;/ol>
+&lt;h1 id="上面的骚操作全不需要了因为我人傻了腾讯云提供了一个功能叫对等联网还有新提供的-云联网-都可以将不同账号的cvm降维打击成内网互通虽然没有实验过但想来不会比我上面一堆又麻烦又没用的操作更无用了就这样吧吐了">上面的骚操作全不需要了，因为我人傻了！腾讯云提供了一个功能叫&lt;em>对等联网&lt;/em>，还有新提供的 &lt;em>云联网&lt;/em> 都可以将不同账号的CVM降维打击成内网互通。虽然没有实验过，但想来不会比我上面一堆又麻烦又没用的操作更无用了。就这样吧……吐了&lt;/h1>
+- https://laeo.me/container/%E8%85%BE%E8%AE%AF%E4%BA%91cvm%E6%90%AD%E5%BB%BA%E6%9C%80%E6%96%B0k8s%E9%9B%86%E7%BE%A4%E8%BF%87%E7%A8%8B%E8%AE%B0%E5%BD%95/ -</description></item><item><title>nginx-proxy将证书应用到非HTTPS容器问题处理记录</title><link>https://laeo.me/linux/nginx-proxy%E5%B0%86%E8%AF%81%E4%B9%A6%E5%BA%94%E7%94%A8%E5%88%B0%E9%9D%9Ehttps%E5%AE%B9%E5%99%A8%E9%97%AE%E9%A2%98%E5%A4%84%E7%90%86%E8%AE%B0%E5%BD%95/</link><pubDate>Sun, 17 Mar 2019 00:00:00 +0000</pubDate><guid>https://laeo.me/linux/nginx-proxy%E5%B0%86%E8%AF%81%E4%B9%A6%E5%BA%94%E7%94%A8%E5%88%B0%E9%9D%9Ehttps%E5%AE%B9%E5%99%A8%E9%97%AE%E9%A2%98%E5%A4%84%E7%90%86%E8%AE%B0%E5%BD%95/</guid><description>LAEO https://laeo.me/linux/nginx-proxy%E5%B0%86%E8%AF%81%E4%B9%A6%E5%BA%94%E7%94%A8%E5%88%B0%E9%9D%9Ehttps%E5%AE%B9%E5%99%A8%E9%97%AE%E9%A2%98%E5%A4%84%E7%90%86%E8%AE%B0%E5%BD%95/ -&lt;h2 id="问题描述">问题描述&lt;/h2>
+&lt;p>某台 ECS 实例之前就以 docker + nginx-proxy + letsencrypt-nginx-proxy-companion 的形式托管了数个 WEB 服务，但是因为前端挂了 CDN 的缘故，都没有做证书配置等操作。这次由于将另外一台服务器的 gitea 代码管理服务迁移过来，考虑到要提供 SSH 协议的代码克隆服务，故前端没有使用 CDN，而是通过 let&amp;rsquo;s encrypt 组件自动申请的证书来配置 HTTPS。&lt;/p>
+&lt;p>然而在配置完整个环境并完成数据迁移后，gitea 是可以正常以 HTTPS 协议访问了，之前本就存在的服务却全都无法正常访问，浏览器不断跳转以至于警告并自动停止请求。查看了 nginx-proxy 的容器日志，发现请求并没有到达此处，于是就在想是不是 CDN 出了问题。在临时取消了 CDN 接入后，依旧不能正常访问，只不过错误形式由原有的循环跳转变成了连接不安全！&lt;/p>
+&lt;p>看了具体错误信息，才发现在取消 CDN 接入后，本该是 HTTP 协议的请求，变成了使用 gitea 容器所用证书的 HTTPS 协议的加密请求。那么就要看看是不是配置错误了……&lt;/p>
+&lt;h2 id="探索发现">探索发现&lt;/h2>
+&lt;p>反复查看 nginx-proxy 与 letsencrypt-nginx-proxy-companion 的文档，也并没有发觉有使用方式上的问题，在创建 gitea 容器的时候，也只是依照文档说明指定了 &lt;code>VIRTUAL_HOST&lt;/code> &lt;code>VIRTUAL_PORT&lt;/code> &lt;code>LETSENCRYPT_HOST&lt;/code> &lt;code>LETSENCRYPT_EMAIL&lt;/code> 这几个环境变量，并无再多设置。那么为何会有这种情况呢……&lt;/p>
+&lt;p>是不是域名的问题？gitea 服务我绑定的域名是 &lt;code>t.cn&lt;/code> (privacy protected)，而其余服务都是该域名的二级域名，是否是该原因导致在 nginx 配置生成过程中，产生了错误的判断？&lt;/p>
+&lt;p>终于……文档中出现了这段话 &lt;a href="https://github.com/jwilder/nginx-proxy#wildcard-certificates">wildcard-certificates&lt;/a>：&lt;/p>
+&lt;blockquote>
+&lt;p>Wildcard certificates and keys should be named after the domain name with a .crt and .key extension. For example VIRTUAL_HOST=foo.bar.com would use cert name bar.com.crt and bar.com.key.&lt;/p>
+&lt;/blockquote>
+&lt;p>厉害了我的 nginx-proxy，就是这个原因，这货把根域名的证书默认就当特么 “野卡” 证书用了。&lt;/p>
+&lt;p>没想到还有这个坑……&lt;/p>
+&lt;h2 id="解决方案">解决方案&lt;/h2>
+&lt;ul>
+&lt;li>重建容器，并指定 HTTPS_METHOD=nohttps 禁止为该容器配置 HTTPS 服务；&lt;/li>
+&lt;li>重建容器，指定其它域名；&lt;/li>
+&lt;li>重建容器，配置自动生成 let&amp;rsquo;s encrypt 证书；&lt;/li>
+&lt;li>重建容器，指定根域名创建的证书类型为通配符证书；&lt;/li>
+&lt;/ul>
+&lt;p>数个方案，没一个合我心意，但是能解决问题。&lt;/p>
+- https://laeo.me/linux/nginx-proxy%E5%B0%86%E8%AF%81%E4%B9%A6%E5%BA%94%E7%94%A8%E5%88%B0%E9%9D%9Ehttps%E5%AE%B9%E5%99%A8%E9%97%AE%E9%A2%98%E5%A4%84%E7%90%86%E8%AE%B0%E5%BD%95/ -</description></item><item><title>网站接入Cloudflare后静态资源加载失败问题</title><link>https://laeo.me/misc/%E7%BD%91%E7%AB%99%E6%8E%A5%E5%85%A5cloudflare%E5%90%8E%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90%E5%8A%A0%E8%BD%BD%E5%A4%B1%E8%B4%A5%E9%97%AE%E9%A2%98/</link><pubDate>Sun, 17 Mar 2019 00:00:00 +0000</pubDate><guid>https://laeo.me/misc/%E7%BD%91%E7%AB%99%E6%8E%A5%E5%85%A5cloudflare%E5%90%8E%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90%E5%8A%A0%E8%BD%BD%E5%A4%B1%E8%B4%A5%E9%97%AE%E9%A2%98/</guid><description>LAEO https://laeo.me/misc/%E7%BD%91%E7%AB%99%E6%8E%A5%E5%85%A5cloudflare%E5%90%8E%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90%E5%8A%A0%E8%BD%BD%E5%A4%B1%E8%B4%A5%E9%97%AE%E9%A2%98/ -&lt;h2 id="发现问题">发现问题&lt;/h2>
+&lt;p>将一个新建的图片站接入了 Cloudflare，可是访问后却发现页面不正常，就是静态资源没有加载成功一样。网站系统基于 Django 框架开发，通过 uwsgi 在容器中部署，静态资源也是通过框架在管理，本以为是配置出错导致的 404 错误，结果手动访问静态资源却是正常的。&lt;/p>
+&lt;p>迷一般的问题……&lt;/p>
+&lt;p>打开控制台，发现打印出了几个类似的错误，大概就是&lt;/p>
+&lt;pre tabindex="0">&lt;code>指向 &amp;#34;/static/js/app.js&amp;#34; 的 &amp;lt;script&amp;gt; 加载失败。
+&lt;/code>&lt;/pre>&lt;p>这个样子的错误信息，刷新了页面，通过网络记录发现出现错误的静态文件的 mime 类型都是 &lt;code>application/x-unknown-type-content&lt;/code> ，就很奇怪了，记忆中浏览器会自动通过文件内容猜测其类型才对，就算没有类型也不会出现这种问题的。&lt;/p>
+&lt;p>于是又搜索了下相关资料，发现有提到 CSP 这个词，在 MDN 看了相关文档，发现并不是该设置的问题。于是找了一个报未知文件类型的请求记录，一一查看其响应的头信息。在其中找到了 &lt;code>X-Content-Type-Options: nosniff&lt;/code> 这个指令，查了下其资料后得知，这指令会 &lt;code>导致浏览器停止类型探测&lt;/code> ，我想就是它了。&lt;/p>
+&lt;h2 id="解决问题">解决问题&lt;/h2>
+&lt;p>知道可能是什么原因导致的问题就好，跑到 CF 的网站仔细找了下，最后在 HSTS 设置引导中找到了相关的设置。在停用了该特性之后，网站恢复正常加载。&lt;/p>
+&lt;p>技术发展日新月异，稍微慢一点，就会让头发少几根，想想还是痛苦。&lt;/p>
+- https://laeo.me/misc/%E7%BD%91%E7%AB%99%E6%8E%A5%E5%85%A5cloudflare%E5%90%8E%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90%E5%8A%A0%E8%BD%BD%E5%A4%B1%E8%B4%A5%E9%97%AE%E9%A2%98/ -</description></item></channel></rss>

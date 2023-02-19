@@ -1,0 +1,700 @@
+<?xml-stylesheet href="/rss.xsl" type="text/xsl"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>LAEO</title><link>https://laeo.me/</link><description>Recent content on LAEO</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Fri, 25 Sep 2020 00:00:00 +0000</lastBuildDate><atom:link href="https://laeo.me/index.xml" rel="self" type="application/rss+xml"/><item><title>kubernetes 集群安装分布式存储组件 rook-ceph</title><link>https://laeo.me/container/kubernetes%E9%9B%86%E7%BE%A4%E5%AE%89%E8%A3%85%E5%88%86%E5%B8%83%E5%BC%8F%E5%AD%98%E5%82%A8%E7%BB%84%E4%BB%B6rook-ceph/</link><pubDate>Sat, 12 Jan 2019 00:00:00 +0000</pubDate><guid>https://laeo.me/container/kubernetes%E9%9B%86%E7%BE%A4%E5%AE%89%E8%A3%85%E5%88%86%E5%B8%83%E5%BC%8F%E5%AD%98%E5%82%A8%E7%BB%84%E4%BB%B6rook-ceph/</guid><description>LAEO https://laeo.me/container/kubernetes%E9%9B%86%E7%BE%A4%E5%AE%89%E8%A3%85%E5%88%86%E5%B8%83%E5%BC%8F%E5%AD%98%E5%82%A8%E7%BB%84%E4%BB%B6rook-ceph/ -&lt;h2 id="技术选型">技术选型&lt;/h2>
+&lt;p>根据&lt;a href="https://kubernetes.io/docs/concepts/storage/volumes/">官方文档&lt;/a>说明，k8s 提供了不同存储系统，可以直接根据需求选择不同的存储系统进行部署。由于分布式系统的特点，优先选择同样支持分布式部署的存储系统。为了方便部署，我采用 rook 来部署和管理存储集群。&lt;/p>
+&lt;h2 id="什么是-rook">什么是 rook？&lt;/h2>
+&lt;blockquote>
+&lt;p>Rook is an open source cloud-native storage orchestrator, providing the platform, framework, and support for a diverse set of storage solutions to natively integrate with cloud-native environments.&lt;/p>
+&lt;/blockquote>
+&lt;p>来自官方文档的说明，云原生的存储适配器。根据实际使用体验，rook 是用来对开源云原生存储系统的部署、管理进行管理的工具。通过 rook 可以快捷的部署一套私有的存储集群系统，从&lt;a href="https://rook.io/docs/rook/v0.9/">官网文档&lt;/a>也可以看出其适配了多个云存储集群系统。&lt;/p>
+&lt;h2 id="部署-rook-ceph-集群">部署 rook-ceph 集群&lt;/h2>
+&lt;p>参照 &lt;a href="https://rook.io/docs/rook/v0.9/quickstart-toc.html">快速上手指导&lt;/a> 所列各个存储引擎的版本状态，选择采用已发布正式版本的 ceph 存储系统。&lt;/p>
+&lt;blockquote>
+&lt;p>Ceph is a highly scalable distributed storage solution for block storage, object storage, and shared file systems with years of production deployments.&lt;/p>
+&lt;/blockquote>
+&lt;p>为了快速可控的部署 rook 服务，采用开源的 kubernetes 包管理器 helm 来安装，如果希望获得更多自定义能力，可以参照 &lt;a href="https://rook.io/docs/rook/v0.9/ceph-quickstart.html">官方部署文档&lt;/a> 部署 rook-operator，有关 helm 的安装自行查询官方文档。&lt;/p>
+&lt;p>执行下述指令安装稳定版本的 rook-ceph 组件，&lt;/p>
+&lt;pre tabindex="0">&lt;code>helm repo add rook-stable https://charts.rook.io/stable
+helm install --namespace rook-ceph-system --name rook-ceph rook-stable/rook-ceph
+&lt;/code>&lt;/pre>&lt;p>然后使用下述描述文件创建存储集群所需角色，&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">#################################################################################&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># This example first defines some necessary namespace and RBAC security objects.&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># The actual Ceph Cluster CRD example can be found at the bottom of this example.&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22">#################################################################################&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>v1&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Namespace&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#008b45;text-decoration:underline">---&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>v1&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ServiceAccount&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph-osd&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#008b45;text-decoration:underline">---&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>v1&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ServiceAccount&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph-mgr&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#008b45;text-decoration:underline">---&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Role&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rbac.authorization.k8s.io/v1beta1&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph-osd&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">rules&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">apiGroups&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>[&lt;span style="color:#cd5555">&amp;#34;&amp;#34;&lt;/span>]&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">resources&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>[&lt;span style="color:#cd5555">&amp;#34;configmaps&amp;#34;&lt;/span>]&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">verbs&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>[&lt;span style="color:#cd5555">&amp;#34;get&amp;#34;&lt;/span>,&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;list&amp;#34;&lt;/span>,&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;watch&amp;#34;&lt;/span>,&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;create&amp;#34;&lt;/span>,&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;update&amp;#34;&lt;/span>,&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;delete&amp;#34;&lt;/span>]&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#008b45;text-decoration:underline">---&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># Aspects of ceph-mgr that require access to the system namespace&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Role&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rbac.authorization.k8s.io/v1beta1&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph-mgr-system&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">rules&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">apiGroups&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#cd5555">&amp;#34;&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">resources&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- configmaps&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">verbs&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- get&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- list&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- watch&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#008b45;text-decoration:underline">---&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># Aspects of ceph-mgr that operate within the cluster&amp;#39;s namespace&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Role&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rbac.authorization.k8s.io/v1beta1&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph-mgr&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">rules&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">apiGroups&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#cd5555">&amp;#34;&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">resources&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- pods&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- services&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">verbs&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- get&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- list&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- watch&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">apiGroups&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- batch&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">resources&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- jobs&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">verbs&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- get&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- list&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- watch&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- create&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- update&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- delete&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">apiGroups&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- ceph.rook.io&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">resources&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#cd5555">&amp;#34;*&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">verbs&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#cd5555">&amp;#34;*&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#008b45;text-decoration:underline">---&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># Allow the operator to create resources in this cluster&amp;#39;s namespace&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>RoleBinding&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rbac.authorization.k8s.io/v1beta1&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph-cluster-mgmt&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">roleRef&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiGroup&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rbac.authorization.k8s.io&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ClusterRole&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph-cluster-mgmt&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">subjects&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ServiceAccount&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph-system&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph-system&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#008b45;text-decoration:underline">---&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># Allow the osd pods in this namespace to work with configmaps&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>RoleBinding&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rbac.authorization.k8s.io/v1beta1&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph-osd&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">roleRef&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiGroup&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rbac.authorization.k8s.io&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Role&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph-osd&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">subjects&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ServiceAccount&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph-osd&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#008b45;text-decoration:underline">---&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># Allow the ceph mgr to access the cluster-specific resources necessary for the mgr modules&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>RoleBinding&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rbac.authorization.k8s.io/v1beta1&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph-mgr&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">roleRef&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiGroup&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rbac.authorization.k8s.io&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Role&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph-mgr&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">subjects&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ServiceAccount&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph-mgr&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#008b45;text-decoration:underline">---&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># Allow the ceph mgr to access the rook system resources necessary for the mgr modules&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>RoleBinding&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rbac.authorization.k8s.io/v1beta1&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph-mgr-system&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph-system&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">roleRef&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiGroup&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rbac.authorization.k8s.io&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Role&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph-mgr-system&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">subjects&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ServiceAccount&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph-mgr&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#008b45;text-decoration:underline">---&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># Allow the ceph mgr to access cluster-wide resources necessary for the mgr modules&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>RoleBinding&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rbac.authorization.k8s.io/v1beta1&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph-mgr-cluster&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">roleRef&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiGroup&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rbac.authorization.k8s.io&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ClusterRole&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph-mgr-cluster&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">subjects&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ServiceAccount&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph-mgr&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>将其保存为 rook-ceph-cluster.yaml 后，执行 &lt;code>kubectl create -f rook-ceph-cluster.yaml&lt;/code> 在集群中创建相关资源。然后再通过使用相关 CRD 创建 ceph 集群，&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">#################################################################################&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># The Ceph Cluster CRD example&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22">#################################################################################&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ceph.rook.io/v1&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>CephCluster&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">cephVersion&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># For the latest ceph images, see https://hub.docker.com/r/ceph/ceph/tags&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">image&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ceph/ceph:v13.2.2-20181023&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">dataDirHostPath&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>/var/lib/rook&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">dashboard&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">enabled&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">mon&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">count&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">3&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">allowMultiplePerNode&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">storage&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">useAllNodes&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">useAllDevices&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">false&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">config&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">databaseSizeMB&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;1024&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">journalSizeMB&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;1024&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>该资源描述使用了 &lt;code>ceph.rook.io/v1&lt;/code> 规范，并创建一个 CephCluster 类型的资源，名称为 rook-ceph 并存放于 rook-ceph 命名空间下。&lt;/p>
+&lt;p>我在使用上述资源描述创建 ceph 集群后，执行 &lt;code>kubectl -n rook-ceph get pods -o wide&lt;/code> 会看到 dashboard 相关 pod 存在。但是在我使用更新版本的 image 后，该 pod 却并不存在了，致使我一度认为集群出现错误。&lt;/p>
+&lt;blockquote>
+&lt;p>通过访问 &lt;a href="https://hub.docker.com/r/ceph/ceph/tags">https://hub.docker.com/r/ceph/ceph/tags&lt;/a> 查询新版本的镜像 tag，然后修改上述描述的 image 字段，以达到使用新版 ceph 的目的。&lt;/p>
+&lt;/blockquote>
+&lt;p>同样的执行 &lt;code>kubectl create&lt;/code> 操作后，就可以通过 &lt;code>kubectl -n rook-ceph get pod -o wide&lt;/code> 查询相关 pod 的运行状态了，这个启动过程或许会  消耗多达 10 分钟时间，是根据主机配置决定的。&lt;/p>
+&lt;h2 id="创建-storageclass">创建 StorageClass&lt;/h2>
+&lt;p>存储集群已经创建完成，检测 pods 状态也都处于正常，我们就可以开始使用它来存储数据了么？并不是。&lt;/p>
+&lt;p>之前的操作我们只是基于 k8s 集群创建了一个存储集群，我们的 k8s 集群并不知道该  集群是做什么的， 有什么作用，它只是  提供了一个运行平台。要让 k8s 集群在部署新服务时，根据服务的描述文件自动在 ceph 集群中创建一个存储空间，我们还需要创建一个 StorageClass 类型的资源。&lt;/p>
+&lt;p> 先看下面的资源描述，&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ceph.rook.io/v1&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>CephBlockPool&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ceph-pool&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">replicated&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">size&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">2&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">failureDomain&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>osd&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#008b45;text-decoration:underline">---&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>storage.k8s.io/v1&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>StorageClass&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ceph&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">provisioner&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ceph.rook.io/block&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">parameters&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">pool&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ceph-pool&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">clusterNamespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p> 在上述描述中，我  定义了一个 CephBlockPool 的资源，查阅 rook-ceph 的有关文档，可以知道这是在存储集群中创建了一个 block 存储池，我们的 app 所需的存储空间都从该存储池中分配。&lt;/p>
+&lt;blockquote>
+&lt;p>“app 所需的存储空间” 指的是在资源描述文件中定义的 PVC 类型的固化存储声明。&lt;/p>
+&lt;/blockquote>
+&lt;p>有了资源池，我们就可以根据 k8s 文档中的描述，创建一个 StorageClass 存储分类。上述资源描述文件中我创建了一个名为 &lt;code>ceph&lt;/code> 的存储分类，该分类用于标记当 PersistentVolumeClaim 中出现使用该 StorageClass 的存储声明时，从指定 pool 中获取 PersistentVolume。&lt;/p>
+&lt;p>到这一步，基于 rook-ceph 的存储集群就已经正式准备就绪了，可以准备开始使用咯。&lt;/p>
+&lt;h2 id="外网访问-dashboard">外网访问 dashboard&lt;/h2>
+&lt;p>默认的 dashboard 是无法从集群之外访问，如果要在集群之外访问它，有几种方式：&lt;/p>
+&lt;ol>
+&lt;li>kube-proxy&lt;/li>
+&lt;li>NodePort&lt;/li>
+&lt;li>LoadBalancer&lt;/li>
+&lt;li>Ingress&lt;/li>
+&lt;/ol>
+&lt;p>最简单的就是使用方式一，在本地执行 &lt;code>kubectl proxy&lt;/code> 启动流量转发，来访问集群内部服务。&lt;/p>
+&lt;p>为了便于使用，最佳方案是使用第四种方案，创建 Ingress 资源。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>extensions/v1beta1&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Ingress&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ceph-dashboard&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">annotations&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kubernetes.io/ingress.class&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>traefik&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">rules&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">host&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph.example.com&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">http&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">paths&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">backend&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">serviceName&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph-mgr-dashboard&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">servicePort&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">8443&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上述资源声明了一个处于 &lt;code>rook-ceph&lt;/code> 命名空间、 &lt;code>Ingress&lt;/code> 类型的资源，名为 &lt;code>ceph-dashboard&lt;/code> ，使用注释语句 &lt;code>kubernetes.io/ingress.class&lt;/code> 指明使用哪一个 Ingress 提供商，这里我指定使用 traefik 作为 Ingress 服务提供商。&lt;/p>
+&lt;p>在 spec 字段中，通过 &lt;code>host&lt;/code> 来指定入口域名，通过 &lt;code>backend&lt;/code> 字段指定后端 &lt;code>Service&lt;/code> 。入口服务提供商会根据上述配置，自动创建反向代理，就能够将集群内部的服务暴露到公网。&lt;/p>
+- https://laeo.me/container/kubernetes%E9%9B%86%E7%BE%A4%E5%AE%89%E8%A3%85%E5%88%86%E5%B8%83%E5%BC%8F%E5%AD%98%E5%82%A8%E7%BB%84%E4%BB%B6rook-ceph/ -</description></item><item><title>为 k8s 集群安装 traefik 作为 Ingress 提供商</title><link>https://laeo.me/container/%E4%B8%BAk8s%E9%9B%86%E7%BE%A4%E5%AE%89%E8%A3%85traefik%E4%BD%9C%E4%B8%BAingress%E6%8F%90%E4%BE%9B%E5%95%86/</link><pubDate>Sat, 12 Jan 2019 00:00:00 +0000</pubDate><guid>https://laeo.me/container/%E4%B8%BAk8s%E9%9B%86%E7%BE%A4%E5%AE%89%E8%A3%85traefik%E4%BD%9C%E4%B8%BAingress%E6%8F%90%E4%BE%9B%E5%95%86/</guid><description>LAEO https://laeo.me/container/%E4%B8%BAk8s%E9%9B%86%E7%BE%A4%E5%AE%89%E8%A3%85traefik%E4%BD%9C%E4%B8%BAingress%E6%8F%90%E4%BE%9B%E5%95%86/ -&lt;p>在上一篇文章中，我提到了使用 Ingress 来暴露集群内部服务到公网，那如何为私有的 K8S 集群配置一个 Ingress 服务呢？&lt;/p>
+&lt;h2 id="什么是-ingress">什么是 Ingress&lt;/h2>
+&lt;blockquote>
+&lt;p>Ingress, added in Kubernetes v1.1, exposes HTTP and HTTPS routes from outside the cluster to services within the cluster. Traffic routing is controlled by rules defined on the ingress resource.&lt;/p>
+&lt;/blockquote>
+&lt;p>根据文档说明，Ingress 是一种通过规则来对外网到集群内的 HTTP/HTTPS 流量进行路由控制的资源。&lt;/p>
+&lt;p>官方推荐了数个 Ingress 控制器，具体可以查看 &lt;a href="https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-controllers">这里&lt;/a>。由于之前有过 &lt;a href="https://github.com/containous/traefik">Traefik&lt;/a> 相关使用经验，所以  在挑选控制器的时候我依然选择了 Traefik。&lt;/p>
+&lt;h2 id="安装-traefik">安装 Traefik&lt;/h2>
+&lt;p>参照  文档的说明可以手动安装，获得更强的自定义能力。因为方便和可控，我依然选择使用 Helm 来安装，也是在&lt;a href="https://docs.traefik.io/user-guide/kubernetes/#deploy-traefik-using-helm-chart">官方文档&lt;/a>中说明的流程。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>helm install -n traefik --namespace kube-system --values values.yaml stable/traefik
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>其中 &lt;code>values.yaml&lt;/code> 文件存放了该包的配置项，可以通过 &lt;code>helm inspect stable/traefik&lt;/code> 查看该包的简介，在其中可以查看到所有的配置选项。&lt;/p>
+&lt;p>比如，我自己在安装过程中就设置了如下设置项&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">imageTag&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>v1.7.7&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">externalIP&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">192.168.0.1&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">dashboard&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">enabled&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">domain&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>traefik.example.com&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">rbac&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">enabled&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">ssl&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">enabled&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">enforced&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">insecureSkipVerify&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">acme&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">enabled&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">staging&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">false&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">email&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>acme@example.com&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">challengeType&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>http-01&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">persistence&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">storageClass&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ceph&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">size&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>100Mi&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>查看上述设置项，可以大致清楚一些事情。&lt;/p>
+&lt;p>&lt;code>imageTag&lt;/code> 指定了所使用的 docker 镜像的版本标签，可以通过修改该字段的值自定义需要使用的版本。&lt;/p>
+&lt;p>&lt;code>externalIP&lt;/code> 指定了外部流量的入口 IP，该字段如果不设定，最终的 Service 状态中，externalIP 字段将会一直处于 pending 状态。&lt;/p>
+&lt;p>&lt;code>dashboard&lt;/code> 字段指明需要启用仪表盘功能，并且自动以指定域名创建 Ingress 资源。&lt;/p>
+&lt;p>&lt;code>acme&lt;/code> 字段指明自动申请 let&amp;rsquo;s encrypt 证书所需的参数，比如邮箱地址，域名认证的方式（为了方便直接使用基于 http 请求的方式）。需要特别说明的是 &lt;code>acme.persistence&lt;/code> 字段通过指定 StorageClass 的名称以及所需存储空间的大小（100Mi）来向集群提交一份 &lt;code>PersistentVolumeClaim&lt;/code> 声明，用于为自动申请的证书提供固化存储。&lt;/p>
+&lt;p>通过 helm 可以很方便的安装基于 traefik 的 Ingress 控制器，一旦操作成功，我们就可以通过 &lt;code>kubectl -n kube-system get svc -o wide&lt;/code> 来观测 traefik 服务的创建状态。&lt;/p>
+&lt;p>要观察到具体有些什么操作，可以执行 &lt;code>kubectl -n kube-system get events&lt;/code> 查看事件记录查看是否存在报错信息。&lt;/p>
+&lt;h2 id="使用-traefik-处理外部流量">使用 Traefik 处理外部流量&lt;/h2>
+&lt;p>东西装好了总是需要使用的，那么如何使用我们刚刚安装、配置好的 Ingress 控制器呢？&lt;/p>
+&lt;p>首先我们就可以访问下 Traefik 自带的仪表盘服务，&lt;/p>
+&lt;blockquote>
+&lt;p>注意！访问之前一定记得将域名解析到对应 IP 上，否则 http-01 验证失败会导致无法取得有效证书。&lt;/p>
+&lt;/blockquote>
+&lt;p>仪表盘会显示当前创建的所有 Ingress 资源，并关联显示其对应的后端 Service。我们还可以在仪表盘中看到一些数据，比如请求总数、平均响应时长、失败请求数等等。&lt;/p>
+&lt;p>仪表盘正常工作了，那如何对外暴露其它服务呢？&lt;/p>
+&lt;p>以之前文章中的 rook-ceph 集群为例，该集群在创建时也设置了开启仪表盘功能，所以其内部也有一个仪表盘系统在运行。我们只需要找到相关的服务，然后为其创建 Ingress 资源即可。&lt;/p>
+&lt;p>首先来找找这个服务，执行 &lt;code>kubectl -n rook-ceph get svc&lt;/code> ，我们可以看到其中有个名为 &lt;code>rook-ceph-mgr-dashboard&lt;/code> 的服务，也就是文档中所说的仪表盘所在服务。只要将该服务暴露到外网，我们就能在  外网直接访问它。&lt;/p>
+&lt;p>那么就是为其创建 Ingress 资源，描述如下&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>extensions/v1beta1&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Ingress&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ceph-dashboard&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">annotations&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kubernetes.io/ingress.class&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>traefik&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">rules&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">host&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ceph.rook.example.com&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">http&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">paths&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">backend&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">serviceName&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>rook-ceph-mgr-dashboard&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">servicePort&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">8443&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>我们在描述文件中定义一个名为 &lt;code>ceph-dashboard&lt;/code> ，位于 &lt;code>rook-ceph&lt;/code> 命名空间，类型为 &lt;code>Ingress&lt;/code> 的资源。然后为其添加了值为 &lt;code>traefik&lt;/code> 的注释 &lt;code>kubernetes.io/ingress.class&lt;/code> ，用于标记只有该名称的 Ingress 控制器可以处理这个资源。&lt;/p>
+&lt;p>然后在资源的具体描述（spec 字段）中，指定了对主机名为 ceph.rook.example.com 的流量，全部路由到 &lt;code>serviceName&lt;/code> 为 &lt;code>rook-ceph-mgr-dashboard&lt;/code>  的服务的 &lt;code>8443&lt;/code> 端口。&lt;/p>
+&lt;p>接着通过 &lt;code>kubectl create -f ceph-dashboard.yaml&lt;/code> 来将该描述文件提交给集群控制器，相应的资源会被自动创建。我们可以通过 &lt;code>kubectl -n rook-ceph get ingress&lt;/code> 来查看该资源是否正常被创建。&lt;/p>
+&lt;p>一旦查看到相关资源的存在，我们就可以通过设定的主机名（域名）来访问它了。当然，一定记住的是在访问之前要保证域名的正确解析！&lt;/p>
+&lt;h2 id="结尾">结尾&lt;/h2>
+&lt;p>K8S 的 Ingress 类型资源的作用远远不止是提供一个流量入口这么简单，它还能通过不同的 URI 前缀对流量进行路由，可以轻松实现流量的拆分，更多的用法还是要参照官方文档来实现。&lt;/p>
+- https://laeo.me/container/%E4%B8%BAk8s%E9%9B%86%E7%BE%A4%E5%AE%89%E8%A3%85traefik%E4%BD%9C%E4%B8%BAingress%E6%8F%90%E4%BE%9B%E5%95%86/ -</description></item><item><title>helm 安装 chart 报 no route to host 错误</title><link>https://laeo.me/container/helm%E5%AE%89%E8%A3%85chart%E6%8A%A5no-route-to-host%E9%94%99%E8%AF%AF/</link><pubDate>Fri, 11 Jan 2019 00:00:00 +0000</pubDate><guid>https://laeo.me/container/helm%E5%AE%89%E8%A3%85chart%E6%8A%A5no-route-to-host%E9%94%99%E8%AF%AF/</guid><description>LAEO https://laeo.me/container/helm%E5%AE%89%E8%A3%85chart%E6%8A%A5no-route-to-host%E9%94%99%E8%AF%AF/ -&lt;h2 id="错误信息">错误信息&lt;/h2>
+&lt;pre tabindex="0">&lt;code>$ k8s helm install stable/nginx-ingress --name nginx --set rbac.create=true --namespace kube-system
+Error: forwarding ports: error upgrading connection: error dialing backend: dial tcp *.*.*.*:10250: connect: no route to host
+&lt;/code>&lt;/pre>&lt;h2 id="解决方案">解决方案&lt;/h2>
+&lt;p>清理对应节点的 iptables 规则即可，&lt;/p>
+&lt;pre tabindex="0">&lt;code>systemctl stop kubelet
+systemctl stop docker
+iptables --flush
+iptables -tnat --flush
+systemctl start kubelet
+systemctl start docker
+&lt;/code>&lt;/pre>&lt;p>重新一试果然正常了，但是直勾勾重启节点上的 kubelet 和 docker，又导致 rook 安装的 ceph 存储集群炸了，相关的 pod 处于 pending 状态。&lt;/p>
+- https://laeo.me/container/helm%E5%AE%89%E8%A3%85chart%E6%8A%A5no-route-to-host%E9%94%99%E8%AF%AF/ -</description></item><item><title>Kubeadm 创建 Kubernetes 集群备忘录</title><link>https://laeo.me/container/kubeadm%E5%88%9B%E5%BB%BAkubernetes%E9%9B%86%E7%BE%A4%E5%A4%87%E5%BF%98%E5%BD%95/</link><pubDate>Fri, 04 Jan 2019 00:00:00 +0000</pubDate><guid>https://laeo.me/container/kubeadm%E5%88%9B%E5%BB%BAkubernetes%E9%9B%86%E7%BE%A4%E5%A4%87%E5%BF%98%E5%BD%95/</guid><description>LAEO https://laeo.me/container/kubeadm%E5%88%9B%E5%BB%BAkubernetes%E9%9B%86%E7%BE%A4%E5%A4%87%E5%BF%98%E5%BD%95/ -&lt;p>许久不曾写点东西，这次迫于安装 Kubeadm 过程有点麻烦，想了想还是写下来，以后使用的时候也省的再费脑细胞。&lt;/p>
+&lt;h2 id="配置要求">配置要求&lt;/h2>
+&lt;p>基础的服务器硬件要求参照 &lt;a href="https://kubernetes.io/docs/setup/independent/install-kubeadm/#before-you-begin">官方文档&lt;/a>。&lt;/p>
+&lt;h3 id="云服务器提供商">云服务器提供商？&lt;/h3>
+&lt;p>慎重选择阿里云之类的有公共网关的云服务，因为这些提供商所提供的公网 IP 是没有绑定到虚拟服务器上的，而是通过路由设施映射过去。Kubeadm 在创建集群的时候，会让 etcd 监听在其获取的本地网卡 IP 上，如果采用阿里云这样的提供商，它获取的网卡 IP 只会是内网 IP。结果就是，其它外网的节点无法正常链接上主节点的 etcd 服务，所以集群无法正常使用。&lt;/p>
+&lt;h3 id="swap-禁止使用">Swap 禁止使用？&lt;/h3>
+&lt;p>根据官方文档的说明，Kubernetes 集群需要的是稳定性，而依托于硬盘空间而生的 swap 空间，在读写性能上无法比肩常规内存空间，稳定性无法得到保证，所以禁止使用它。&lt;/p>
+&lt;p>有的服务器默认就启用了 swap 空间，我们只需编辑 &lt;code>/etc/fstab&lt;/code> 文件，注释掉其中 swap 类型的挂载操作，并重启服务器即可。&lt;/p>
+&lt;h3 id="内核参数调整">内核参数调整？&lt;/h3>
+&lt;p>参照 Kubeadm 安装文档执行以下命令，&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>cat &lt;span style="color:#cd5555">&amp;lt;&amp;lt;EOF &amp;gt; /etc/sysctl.d/k8s.conf
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">net.bridge.bridge-nf-call-ip6tables = 1
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">net.bridge.bridge-nf-call-iptables = 1
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">net.ipv4.ip_forward = 1
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">EOF&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>sysctl --system
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="procsysnetbridgebridge-nf-call-iptables-not-found">/proc/sys/net/bridge/bridge-nf-call-iptables not found&lt;/h4>
+&lt;p>参照 &lt;a href="https://github.com/weaveworks/weave/issues/2789">issue&lt;/a>，执行以下指令&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>modprobe br_netfilter
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>即可解决。&lt;/p>
+&lt;h2 id="使用-docker-ce-作为运行时">使用 Docker-CE 作为运行时&lt;/h2>
+&lt;p>Kubernetes 每个版本都有其兼容的 docker 版本，为了新特性一般都安装最新版 docker-ce，除了参照 &lt;a href="https://docs.docker.com/install/linux/docker-ce/centos/">官方文档&lt;/a>，最简单的安装方式&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>wget -qO- get.docker.com | bash
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>该命令会自动安装最新版 docker-ce，但是这常常会带来兼容性问题，Kubeadm 在创建集群时会提示当前兼容的最高版本号，我们可以根据该版本号来安装指定版本。在获取到最高兼容版本号后，可以使用如 CentOS 7 下的包管理工具查询 &lt;code>yum list --showduplicates docker-ce&lt;/code> ，我们可以在输出中看到有不同的版本可以选择，如下输出&lt;/p>
+&lt;pre tabindex="0">&lt;code>...
+docker-ce.x86_64 17.12.0.ce-1.el7.centos docker-ce-edge
+docker-ce.x86_64 17.12.1.ce-1.el7.centos docker-ce-edge
+docker-ce.x86_64 18.01.0.ce-1.el7.centos docker-ce-edge
+docker-ce.x86_64 18.02.0.ce-1.el7.centos docker-ce-edge
+docker-ce.x86_64 18.03.0.ce-1.el7.centos docker-ce-edge
+docker-ce.x86_64 18.03.1.ce-1.el7.centos docker-ce-edge
+docker-ce.x86_64 18.04.0.ce-3.el7.centos docker-ce-edge
+docker-ce.x86_64 18.05.0.ce-3.el7.centos docker-ce-edge
+docker-ce.x86_64 18.06.0.ce-3.el7 docker-ce-edge
+...
+&lt;/code>&lt;/pre>&lt;p>比如我们要安装 &lt;code>18.06&lt;/code> 这个版本，所以直接安装 &lt;code>docker-ce-18.06.0.ce-3.el7&lt;/code> 这个软件包即可。&lt;/p>
+&lt;h2 id="使用-kubeadm-创建集群主节点">使用 kubeadm 创建集群主节点&lt;/h2>
+&lt;p>万事俱备，只欠一条 &lt;code>kubeadm init&lt;/code> 命令。但是，在运行该命令前，我们需要考虑在集群中采用什么样的 &lt;a href="https://kubernetes.io/docs/setup/independent/create-cluster-kubeadm/#pod-network">Pod Network Addon&lt;/a>，不知道这玩意怎么翻译好，Pod 网络插件？我们要根据选用的插件来传递 &lt;code>--pod-network-cidr&lt;/code> 参数给 &lt;code>kubeadm init&lt;/code> 指令。&lt;/p>
+&lt;h3 id="hostname">Hostname？&lt;/h3>
+&lt;p>初始化操作默认会为 &lt;code>apiserver&lt;/code> 创建一份证书，kubeadm 会默认将主机名加入到证书的 DNS 字段中，如果你的主机名不是有效的域名，可以通过 &lt;code>--apiserver-cert-extra-sans&lt;/code> 设置域名。&lt;/p>
+&lt;h2 id="使用-kubeadm-创建子节点">使用 kubeadm 创建子节点&lt;/h2>
+&lt;p>前期操作都相同，只是这里不执行 &lt;code>kubeadm init&lt;/code> ，而是使用创建主节点后输出的一条指令（类似 &lt;code>kubeadm join --token &amp;lt;token&amp;gt; &amp;lt;master-ip&amp;gt;:&amp;lt;master-port&amp;gt; --discovery-token-ca-cert-hash sha256:&amp;lt;hash&amp;gt;&lt;/code> ）来加入集群。啥？没注意记录？不用着急，官方提供了手动创建该指令的一系列命令。&lt;/p>
+&lt;p>通过在子节点执行 &lt;code>kubeadm join&lt;/code> ，就可以在集群中增加一个节点。&lt;/p>
+&lt;h3 id="快捷创建-join-指令">快捷创建 join 指令&lt;/h3>
+&lt;p>主节点执行 &lt;code>kubeadm token create --print-join-command&lt;/code> 即可创建新 token 并输出完整 join 指令。&lt;/p>
+&lt;h3 id="手动创建-join-指令">手动创建 join 指令&lt;/h3>
+&lt;p>在主节点中执行 &lt;code>kubeadm token create&lt;/code> ，可以获取一份 &lt;code>token&lt;/code> 。然后再执行&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2&amp;gt;/dev/null | &lt;span style="color:#cd5555">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">&lt;/span> openssl dgst -sha256 -hex | sed &lt;span style="color:#cd5555">&amp;#39;s/^.* //&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>即可找回 &lt;code>hash&lt;/code> 。&lt;/p>
+&lt;p>将上述命令输出拼装成 &lt;code>kubeadm join --token &amp;lt;token&amp;gt; &amp;lt;master-ip&amp;gt;:&amp;lt;master-port&amp;gt; --discovery-token-ca-cert-hash sha256:&amp;lt;hash&amp;gt;&lt;/code> 格式，其中 &lt;code>master-ip&lt;/code> 为主节点 IP， &lt;code>master-port&lt;/code> 为 apiserver 监听端口（默认 6443）。最后在子节点中执行该指令即可。&lt;/p>
+- https://laeo.me/container/kubeadm%E5%88%9B%E5%BB%BAkubernetes%E9%9B%86%E7%BE%A4%E5%A4%87%E5%BF%98%E5%BD%95/ -</description></item><item><title>从MySQL的事务开始探寻锁的实现原理</title><link>https://laeo.me/mysql/%E4%BB%8Emysql%E7%9A%84%E4%BA%8B%E5%8A%A1%E5%BC%80%E5%A7%8B%E6%8E%A2%E5%AF%BB%E9%94%81%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</link><pubDate>Wed, 31 Oct 2018 00:00:00 +0000</pubDate><guid>https://laeo.me/mysql/%E4%BB%8Emysql%E7%9A%84%E4%BA%8B%E5%8A%A1%E5%BC%80%E5%A7%8B%E6%8E%A2%E5%AF%BB%E9%94%81%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</guid><description>LAEO https://laeo.me/mysql/%E4%BB%8Emysql%E7%9A%84%E4%BA%8B%E5%8A%A1%E5%BC%80%E5%A7%8B%E6%8E%A2%E5%AF%BB%E9%94%81%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/ -&lt;h2 id="mysql-事务的四大特性">MySQL 事务的四大特性&lt;/h2>
+&lt;p>MySQL 事务的四大特性分别为：原子性、一致性、隔离性、持久性，英文简写 &lt;code>ACID&lt;/code> 。在深入该部分知识的过程中，突然想到 “锁” 在事务中的作用，进而又思考起 “锁” 的实现原理起来。&lt;/p>
+&lt;h2 id="mysql-事务中的锁">MySQL 事务中的锁&lt;/h2>
+&lt;p>在实现事务的过程中，为了独占某资源，一定离不开锁的使用。对资源加锁，在 MySQL 中存在两种类型的锁，即 “共享锁” 和 “独享锁”。在数据记录上调用共享锁后，其它事务仍然可以继续为其添加共享锁，但是不能添加独享锁。这意味着，不同事务可以同时锁定并读取相同的数据记录。而独享锁则是事务独占该条数据记录，独享锁是用于修改数据的。&lt;/p>
+&lt;p>那么，锁是如何实现的呢？&lt;/p>
+&lt;h2 id="锁的实现">“锁”的实现&lt;/h2>
+&lt;p>从代码层面来讲，如果要纯手动实现一个锁，那么无非就是在内存中存储一个记录，用于标记锁的开关状态。但是仔细想想，用于操作该记录的操作，是否是原子的呢？操作系统层面来讲，它如何保证我在多线程环境下对该 “锁” 的操作的原子性？&lt;/p>
+&lt;p>如果我们的 CPU 是单核心的，那么可以猜到，所有指令都是一条一条执行的，那么我们在内存中标记一个锁，就可以认为从操作系统层面来讲，该锁的状态切换是原子性的。然而事实并非如此，因为指令的执行是可以中断的。假设我们在读取到锁的状态后，即将对该状态进行判断的一瞬间，操作被中断了，操作系统自动调度了其它线程，刚好该线程也来进行加锁。结果就是两个线程都加锁成功，所以就算是单核心也无法使用这种姿势来实现原子锁。&lt;/p>
+&lt;p>而在多核心环境下，甚至不需要等到操作被中断，只需要多个核心同时进行加锁操作，锁的原子性瞬间毁灭。&lt;/p>
+&lt;p>那么到底如何实现真正的原子锁呢？最终还是需要硬件来提供特性支持。查询资料得知，硬件层面的 CPU 提供了锁内存总线的功能，只要在锁内存总线的状态下执行原子操作即可实现原子锁。果然最终还是得靠硬件层面的支持，上层的所有锁实现都基于此。&lt;/p>
+- https://laeo.me/mysql/%E4%BB%8Emysql%E7%9A%84%E4%BA%8B%E5%8A%A1%E5%BC%80%E5%A7%8B%E6%8E%A2%E5%AF%BB%E9%94%81%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/ -</description></item><item><title>docker 实现新建容器后自动创建 nginx 反向代理</title><link>https://laeo.me/container/docker%E5%AE%9E%E7%8E%B0%E6%96%B0%E5%BB%BA%E5%AE%B9%E5%99%A8%E5%90%8E%E8%87%AA%E5%8A%A8%E5%88%9B%E5%BB%BAnginx%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86/</link><pubDate>Tue, 23 Oct 2018 00:00:00 +0000</pubDate><guid>https://laeo.me/container/docker%E5%AE%9E%E7%8E%B0%E6%96%B0%E5%BB%BA%E5%AE%B9%E5%99%A8%E5%90%8E%E8%87%AA%E5%8A%A8%E5%88%9B%E5%BB%BAnginx%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86/</guid><description>LAEO https://laeo.me/container/docker%E5%AE%9E%E7%8E%B0%E6%96%B0%E5%BB%BA%E5%AE%B9%E5%99%A8%E5%90%8E%E8%87%AA%E5%8A%A8%E5%88%9B%E5%BB%BAnginx%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86/ -&lt;h2 id="nginx-proxy-介绍">nginx-proxy 介绍&lt;/h2>
+&lt;p>&lt;a href="https://github.com/jwilder/nginx-proxy">nginx-proxy&lt;/a> 是一款开源的、根据容器自动创建 nginx 反向代理的软件，基于 docker-gen 开发。使用该软件，我们可以实现在创建 web 项目时，快速构建线上测试环境，免去手动配置 nginx 的痛苦。另外，搭配另一款软件——&lt;a href="https://github.com/JrCs/docker-letsencrypt-nginx-proxy-companion">letsencrypt-nginx-proxy-companion&lt;/a>，更能实现自动申请 let&amp;rsquo;s encrypt 免费证书，轻松搭建 HTTPS 站点，可以方便的用于某些线上环境。&lt;/p>
+&lt;h2 id="动手使用">动手使用&lt;/h2>
+&lt;p>该软件使用非常简单，全程基于 docker 容器软件，只需两步即可。此处我放置的示例命令来自 letsencrypt-nginx-proxy-companion 的使用说明，推荐构建 HTTPS 站点。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>mkdir /var/certs &lt;span style="color:#228b22"># 创建证书存放目录&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>docker run -d -p 80:80 -p 443:443 &lt;span style="color:#cd5555">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">&lt;/span> --name nginx-proxy &lt;span style="color:#cd5555">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">&lt;/span> -v /var/certs:/etc/nginx/certs:ro &lt;span style="color:#cd5555">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">&lt;/span> -v /etc/nginx/vhost.d &lt;span style="color:#cd5555">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">&lt;/span> -v /usr/share/nginx/html &lt;span style="color:#cd5555">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">&lt;/span> -v /var/run/docker.sock:/tmp/docker.sock:ro &lt;span style="color:#cd5555">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">&lt;/span> --label com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy &lt;span style="color:#cd5555">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">&lt;/span> --restart=always &lt;span style="color:#cd5555">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">&lt;/span> jwilder/nginx-proxy
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>docker run -d &lt;span style="color:#cd5555">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">&lt;/span> -v /var/certs:/etc/nginx/certs:rw &lt;span style="color:#cd5555">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">&lt;/span> -v /var/run/docker.sock:/var/run/docker.sock:ro &lt;span style="color:#cd5555">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">&lt;/span> --volumes-from nginx-proxy &lt;span style="color:#cd5555">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">&lt;/span> --restart=always &lt;span style="color:#cd5555">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">&lt;/span> jrcs/letsencrypt-nginx-proxy-companion
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上述命令执行完成后，我们就正式运行起了 docker-proxy 与 letsencrypt-nginx-proxy-companion 服务。&lt;/p>
+&lt;p>在此之后，我们在创建新容器的时候，如果需要构建反向代理，那么只需设置一个环境变量 &lt;code>VIRTUAL_HOST&lt;/code> 即可，docker-gen 软件会通过 docker 的接口取得相关容器的配置信息，并根据该容器的网络配置信息，自动生成 nginx 的配置文件片段，并自动重载 nginx 服务。&lt;/p>
+&lt;p>如果需要自动申请 SSL 证书，那么还需要设置 &lt;code>LETSENCRYPT_HOST&lt;/code> 和 &lt;code>LETSENCRYPT_EMAIL&lt;/code> 两个环境变量，分别表示证书所关联的域名和申请人的邮箱地址，域名必须解析到该服务器上，邮箱必须是真实存在的邮箱。&lt;/p>
+&lt;h2 id="异常排除">异常排除&lt;/h2>
+&lt;h3 id="配置文件无-upstream-或只有-127001-down">配置文件无 upstream 或只有 127.0.0.1 down&lt;/h3>
+&lt;p>我在配置好整个系统后，访问发现报 502 错误，然后发现 nginx 的配置文件里，upstream 一栏只有一条&lt;/p>
+&lt;pre tabindex="0">&lt;code>server 127.0.0.1 down;
+&lt;/code>&lt;/pre>&lt;p>经过不断查找，我发现了&lt;a href="https://github.com/jwilder/nginx-proxy/issues/793">它&lt;/a>，阅读后才恍然大悟。&lt;/p>
+&lt;p>我使用 docker-compose 来整体部署一个项目，但是该工具部署的容器会自有一个 network，与我们直接通过 docker 命令启动的容器不在同一个 network，所以无法直接通信。&lt;del>所以我在项目的 docker-compose.yml 文件中，将每一个服务都设置为 bridge 模式的 network，该问题终于解决。&lt;/del>&lt;/p>
+&lt;p>经过认真查找资料并思考，终于找到最合适的办法来解决这个问题，而且没有安全隐患。&lt;/p>
+&lt;p>首先创建一个自定义网络 &lt;code>docker network create docker-proxy&lt;/code> ，然后将 &lt;code>nginx-proxy&lt;/code> 容器连接到该网络 &lt;code>docker network connect docker-proxy nginx-proxy&lt;/code> ，最后在 docker-compose.yml 文件中使用外部网络，加入如下 networks 定义，&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">networks&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">default&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">external&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>docker-proxy&lt;span style="color:#bbb">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>docker-compose 会在创建服务默认网络时使用指定的外部网络 &lt;code>docker-proxy&lt;/code> ，这样就将 nginx-proxy 与 docker-compose 所创建的容器放置在同一网络中，所以就能正常通信了。&lt;/p>
+&lt;p>相关资料可查看 &lt;a href="https://github.com/jwilder/nginx-proxy#multiple-networks">nginx-proxy 文档&lt;/a> 和 &lt;a href="https://docs.docker.com/compose/networking/#use-a-pre-existing-network">compose 文档&lt;/a>。&lt;/p>
+&lt;h3 id="容器未指定-expose-端口">容器未指定 expose 端口&lt;/h3>
+&lt;p>docker-proxy 使用容器指定的 expose 端口来自动设置 upstream，所以如果容器在 Dockerfile 中没有指定一个端口的  话，我们可以使用 docker 命令行的 -p 参数来指定，也可以使用 docker-compose.yml 中的 expose 指令来指定要暴露出来的端口号。&lt;/p>
+&lt;h3 id="容器暴露多个端口">容器暴露多个端口&lt;/h3>
+&lt;p>文档中已说明，&lt;/p>
+&lt;blockquote>
+&lt;p>If your container exposes multiple ports, nginx-proxy will default to the service running on port 80. If you need to specify a different port, you can set a VIRTUAL_PORT env var to select a different one. If your container only exposes one port and it has a VIRTUAL_HOST env var set, that port will be selected.&lt;/p>
+&lt;/blockquote>
+&lt;p>所以可以使用 &lt;code>VIRTUAL_PORT&lt;/code> 来指定端口。&lt;/p>
+- https://laeo.me/container/docker%E5%AE%9E%E7%8E%B0%E6%96%B0%E5%BB%BA%E5%AE%B9%E5%99%A8%E5%90%8E%E8%87%AA%E5%8A%A8%E5%88%9B%E5%BB%BAnginx%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86/ -</description></item><item><title>Eloquent模型子类MorphToMany调用doesntHave失效问题</title><link>https://laeo.me/php/eloquent%E6%A8%A1%E5%9E%8B%E5%AD%90%E7%B1%BBmorphtomany%E8%B0%83%E7%94%A8doesnthave%E5%A4%B1%E6%95%88%E9%97%AE%E9%A2%98/</link><pubDate>Sat, 11 Aug 2018 00:00:00 +0000</pubDate><guid>https://laeo.me/php/eloquent%E6%A8%A1%E5%9E%8B%E5%AD%90%E7%B1%BBmorphtomany%E8%B0%83%E7%94%A8doesnthave%E5%A4%B1%E6%95%88%E9%97%AE%E9%A2%98/</guid><description>LAEO https://laeo.me/php/eloquent%E6%A8%A1%E5%9E%8B%E5%AD%90%E7%B1%BBmorphtomany%E8%B0%83%E7%94%A8doesnthave%E5%A4%B1%E6%95%88%E9%97%AE%E9%A2%98/ -&lt;h2 id="编写bug之路">编写BUG之路&lt;/h2>
+&lt;p>在私人项目中使用了 &lt;code>laravel-permission&lt;/code> 包做权限管理，用户表 &lt;code>users&lt;/code> 需要扩展出不同的角色。考虑到项目规模，我将用户数据和后台客服数据统一存放在用户表中，然后根据角色信息来判断账户的归类。如此，我在 &lt;code>App\User&lt;/code> 模型中进行登录认证等统一的用户操作，但是新建 &lt;code>App\Client&lt;/code> 模型来专门管理普通用户的数据，该类继承自用户模型类，可以方便的共享一些通用属性。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-php" data-lang="php">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span> App;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Client&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">extends&lt;/span> User
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8b008b;font-weight:bold">protected&lt;/span> &lt;span style="color:#00688b">$table&lt;/span> = &lt;span style="color:#cd5555">&amp;#39;users&amp;#39;&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>为了方便使用用户模型查找数据，我在 &lt;code>App\Client&lt;/code> 中增加了 &lt;code>全局作用域&lt;/code> 来自动过滤有权限的用户：&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-php" data-lang="php">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">// 在 app/Client.php 中
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">static&lt;/span>::&lt;span style="color:#658b00">addGlobalScope&lt;/span>(&lt;span style="color:#cd5555">&amp;#39;client&amp;#39;&lt;/span>, &lt;span style="color:#8b008b;font-weight:bold">function&lt;/span> (Builder &lt;span style="color:#00688b">$builder&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#00688b">$builder&lt;/span>-&amp;gt;&lt;span style="color:#658b00">doesntHave&lt;/span>(&lt;span style="color:#cd5555">&amp;#39;roles&amp;#39;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>});
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>原本我以为加上上述代码后，就可以正常取出没有权限的普通账户了，可惜事实并非如此，该作用域完全没有起到作用，所有用户数据都被取出来了。我写了一个BUG！&lt;/p>
+&lt;h2 id="解决bug之路">解决BUG之路&lt;/h2>
+&lt;p>出现这样的问题，首先想到的就是去该包的 issue 页面搜索，看看有没有相关的资料，可能是我关键词有问题，并没有搜索到相关资料。搜索引擎也是相同的结果，没查到 &lt;code>doesntHave&lt;/code> 失效的原因。&lt;/p>
+&lt;p>那就只能自己动手咯。&lt;/p>
+&lt;p>首先想到打印执行的 SQL 出来看看：&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-php" data-lang="php">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">// app/Providers/EventServiceProvider.php 中
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>DB::&lt;span style="color:#658b00">listen&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">function&lt;/span> (&lt;span style="color:#00688b">$query&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Log::&lt;span style="color:#658b00">debug&lt;/span>(&lt;span style="color:#00688b">$query&lt;/span>-&amp;gt;&lt;span style="color:#658b00">time&lt;/span> . &lt;span style="color:#cd5555">&amp;#39;@&amp;#39;&lt;/span> . &lt;span style="color:#00688b">$query&lt;/span>-&amp;gt;&lt;span style="color:#658b00">sql&lt;/span>, &lt;span style="color:#00688b">$query&lt;/span>-&amp;gt;&lt;span style="color:#658b00">bindings&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>});
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>通过注册上述监听器后，在日志文件中找到了相关的 SQL 记录。看了下提交的参数，其中有个 &lt;code>App\\Client&lt;/code> 引起我的注意，在我从数据库中查询到的数据里，都是存储的原始的 &lt;code>App\User&lt;/code> ，那么只需要将这个参数改正确就行了。我猜测是因为普通用户的模型是继承的，多对多关联的代码在执行的时候自动获取了当前实例的类名，所以才导致查询不到记录。&lt;/p>
+&lt;p>找到问题所在就好办了，编辑器里跟着源码挨个跳转，最终找到了它&lt;/p>
+&lt;p>&lt;img src="https://laeo.me/static/images/2018-08-11-eloquent-morphToMany.png" alt="screenshot">&lt;/p>
+&lt;p>在 &lt;code>Illuminate\Database\Eloquent\Relations\MorphToMany&lt;/code> 中我找到了一个关键函数 &lt;code>getMorphClass&lt;/code> ，这货就是给多对多关联提供模型类名的，所以我果断在 &lt;code>App\Client&lt;/code> 中重写了该方法，以使之返回固定的 &lt;code>App\User&lt;/code> 。&lt;/p>
+&lt;p>修改过后，系统运行果断正常起来。&lt;strong>BUG FIXED！&lt;/strong>&lt;/p>
+- https://laeo.me/php/eloquent%E6%A8%A1%E5%9E%8B%E5%AD%90%E7%B1%BBmorphtomany%E8%B0%83%E7%94%A8doesnthave%E5%A4%B1%E6%95%88%E9%97%AE%E9%A2%98/ -</description></item><item><title>ARCH安装Plasma桌面环境及美化记录</title><link>https://laeo.me/linux/arch%E5%AE%89%E8%A3%85plasma%E6%A1%8C%E9%9D%A2%E7%8E%AF%E5%A2%83%E5%8F%8A%E7%BE%8E%E5%8C%96%E8%AE%B0%E5%BD%95/</link><pubDate>Tue, 24 Jul 2018 00:00:00 +0000</pubDate><guid>https://laeo.me/linux/arch%E5%AE%89%E8%A3%85plasma%E6%A1%8C%E9%9D%A2%E7%8E%AF%E5%A2%83%E5%8F%8A%E7%BE%8E%E5%8C%96%E8%AE%B0%E5%BD%95/</guid><description>LAEO https://laeo.me/linux/arch%E5%AE%89%E8%A3%85plasma%E6%A1%8C%E9%9D%A2%E7%8E%AF%E5%A2%83%E5%8F%8A%E7%BE%8E%E5%8C%96%E8%AE%B0%E5%BD%95/ -&lt;p>&lt;img src="https://laeo.me/static/images/2018-07-25-screenshot.png" alt="screenshot">&lt;/p>
+&lt;h2 id="安装-kde-环境">安装 KDE 环境&lt;/h2>
+&lt;p>终端下执行 &lt;code>sudo pacman -S plasma-meta&lt;/code> 命令以最小化安装 KDE 环境，然后还有官方推荐的 SDDM 显示管理器，执行 &lt;code>sudo pacman -S sddm&lt;/code> ，然后加入开机启动项中 &lt;code>sudo systemctl enable sddm&lt;/code> ，接着重启电脑即可看到登录窗口了。&lt;/p>
+&lt;h2 id="系统设置">系统设置&lt;/h2>
+&lt;h3 id="工作空间主题">工作空间主题&lt;/h3>
+&lt;p>通过 &lt;code>系统设置&lt;/code> 中 &lt;code>工作空间主题&lt;/code> 子项对桌面环境进行美化。&lt;/p>
+&lt;p>首先， &lt;code>观感&lt;/code> 中我选择使用 &lt;code>微风&lt;/code> ；然后， &lt;code>桌面主题&lt;/code> 里通过内置的 &lt;code>获得新主题&lt;/code> 按钮在线下载安装桌面主题 &lt;code>Breeze Transparent Dark&lt;/code> 并启用它；在 &lt;code>光标主题&lt;/code> 中使用工作空间主题相同的 &lt;code>微风&lt;/code> 系列光标主题；最后，在 &lt;code>欢迎屏幕&lt;/code> 中同样使用获得新主题按钮在线安装 &lt;code>Arc Dark&lt;/code> 主题并启用。&lt;/p>
+&lt;p>到这里就可以获得一个稍微好看的桌面环境了，不过还不够。&lt;/p>
+&lt;h3 id="颜色">颜色&lt;/h3>
+&lt;p>这个设置项所设置的颜色，就是系统 UI 框架的各个组件所使用的颜色。我多次调整后，最终选择了 &lt;code>Zion&lt;/code> ，同样可以通过界面中的 &lt;code>获取新方案&lt;/code> 按钮在线安装。&lt;/p>
+&lt;h3 id="图标">图标&lt;/h3>
+&lt;p>图标的选择，翻来翻去我最后选择了 MacOS 的图标，哈哈哈，不得不说 KDE 真好用，还是可以在线安装，直接搜 macos 然后选择一个匹配的即可。&lt;/p>
+&lt;h3 id="字体">字体&lt;/h3>
+&lt;p>沿袭 DDE 的选择，字体我用的 &lt;code>Noto Sans CJK SC&lt;/code> 系列，等宽字体用的也是同品牌的 &lt;code>Noto Sans Mono SJK SC&lt;/code> ，其余的还有 &lt;code>思源宋体&lt;/code> &lt;code>Dejavu&lt;/code> 之类的。&lt;/p>
+&lt;h3 id="应用程序风格">应用程序风格&lt;/h3>
+&lt;ul>
+&lt;li>
+&lt;p>部件风格
+部件风格我选择的是 &lt;code>Fusion&lt;/code> ，这个貌似没有在线搜索安装的。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>窗口装饰
+窗口装饰就是标题栏那块，可以自定义最大化、最小化、关闭等按钮，在线安装 &lt;code>Breezemite&lt;/code> 进入新世界。注意右下角 &lt;code>边框大小&lt;/code> 选项记得选 &lt;code>无边框&lt;/code> 。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>GNOME 程序风格（GTK）
+这货不是自带的，需要手动安装 &lt;code>kde-gtk-config&lt;/code> 后才会出现，这货用来调整 GTK 的组件风格，否则安装 sublime text 后，菜单栏的 UI 会丑哭你的。我将 GTK 的主题全部调整为 &lt;code>X-Arc-Plus&lt;/code> ，然后把字体调整成与全局相同，果然要好很多了。&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="桌面细节调整">桌面细节调整&lt;/h2>
+&lt;p>顶部 Topbar 解锁后进入 &lt;code>面板设置&lt;/code> 菜单，通过按住 &lt;code>屏幕边缘&lt;/code> 不放并拖动到屏幕底部，将面板放置到屏幕底部。接着通过添加 &lt;code>添加部件&lt;/code> 在面板中依次添加 &lt;code>程序启动器&lt;/code> &lt;code>任务管理器&lt;/code> &lt;code>系统托盘&lt;/code> &lt;code>网络&lt;/code> &lt;code>音频音量&lt;/code> &lt;code>数字时钟&lt;/code> 并锁定部件。一个类似 windows 的任务栏就搞定了，多开程序的时候就方便切换了。&lt;/p>
+&lt;blockquote>
+&lt;p>我发现 &lt;code>win&lt;/code> 键无法正常唤起程序启动器，搜索后发现可以通过设置 &lt;code>全局快捷键&lt;/code> 来解决，代表其的是 &lt;code>alt + F1&lt;/code> 组合键，设置后即可正常调起它了。&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="安装-latte-dock">安装 Latte Dock&lt;/h2>
+&lt;p>虽然弄好了任务栏，但是任务栏宽度有限，为了能适应需求的改变，还是要装上 dock 程序的，那么就来安装 Latte Dock 吧。执行 &lt;code>sudo pacman -S latte-dock&lt;/code> 安装后，通过启动器运行它（工具/Latte）。&lt;/p>
+&lt;p>启动成功后，右键点击器界面弹出菜单进行自定义，不管是显示的位置，还是显示的延迟时间，还是可见性，都可以配置。&lt;/p>
+&lt;h2 id="美化终端">美化终端&lt;/h2>
+&lt;p>KDE 内置的 konsole 终端挺不错的，在美化后可以与 iterm2 相比。&lt;/p>
+&lt;p>&lt;img src="https://laeo.me/static/images/2018-07-25-terminal.png" alt="terminal">&lt;/p>
+&lt;p>其余的如隐藏菜单栏，然后调整窗口大小， &lt;code>外观&lt;/code> 中在线安装 &lt;code>Monokai-Flat&lt;/code> ，调整字体，关闭粗体绘制强调色等等需要根据自身意愿进行选择。&lt;/p>
+- https://laeo.me/linux/arch%E5%AE%89%E8%A3%85plasma%E6%A1%8C%E9%9D%A2%E7%8E%AF%E5%A2%83%E5%8F%8A%E7%BE%8E%E5%8C%96%E8%AE%B0%E5%BD%95/ -</description></item><item><title>ARCH安装指北</title><link>https://laeo.me/linux/arch%E5%AE%89%E8%A3%85%E6%8C%87%E5%8C%97/</link><pubDate>Wed, 13 Jun 2018 00:00:00 +0000</pubDate><guid>https://laeo.me/linux/arch%E5%AE%89%E8%A3%85%E6%8C%87%E5%8C%97/</guid><description>LAEO https://laeo.me/linux/arch%E5%AE%89%E8%A3%85%E6%8C%87%E5%8C%97/ -&lt;h2 id="制作安装盘">制作安装盘&lt;/h2>
+&lt;p>首先去 ARCH 官网 &lt;a href="https://www.archlinux.org/download/">下载&lt;/a> 最新版本的 ISO 镜像文件。&lt;/p>
+&lt;p>下载好后，使用启动盘制作工具制作U盘启动盘，制作工具推荐 &lt;a href="https://rufus.ie">rufus&lt;/a>。&lt;/p>
+&lt;h2 id="设置安装环境">设置安装环境&lt;/h2>
+&lt;p>开机选择 U盘 进行引导，大部分情况下即可正常进入到命令行模式的安装环境了。&lt;/p>
+&lt;blockquote>
+&lt;p>ARCH 安装环境并没有图形界面，因为安装非常简单。&lt;/p>
+&lt;/blockquote>
+&lt;p>安装需要联网下载系统依赖包，我这里使用 WIFI 进行联网。&lt;/p>
+&lt;p>在终端执行 &lt;code>wifi-menu&lt;/code> 进入简单的图形界面，选择要连接的 WIFI 名称，点击回车后输入密码，稍等片刻即可连接成功。&lt;/p>
+&lt;blockquote>
+&lt;p>可以使用 &lt;code>ping -c4 www.baidu.com&lt;/code> 确定联网是否成功。&lt;/p>
+&lt;/blockquote>
+&lt;p>联网成功后，执行 &lt;code>pacman -Syy&lt;/code> 同步包管理数据，然后执行 &lt;code>pacman -S reflector&lt;/code> 安装用于筛选软件源的工具。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>reflector -c CN -l &lt;span style="color:#b452cd">3&lt;/span> --sort=rate -p https --save /etc/pacman.d/mirrorlist
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上述命令用于测试并挑选出下载速率最快的、所属中国区并使用 HTTPS 协议的三个源，并将其写入配置文件中。
+如此一来，就不会因为下载速度而影响安装速度了。&lt;/p>
+&lt;blockquote>
+&lt;p>注意，由于 ARCH 的软件更新非常频繁，各大镜像节点速度的限制，安装时有可能出现找不到软件包的 404 报错，稍候再试即可。&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="硬盘分区">硬盘分区&lt;/h2>
+&lt;p>首先需要查看系统分区信息&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>lsblk
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>输出的内容类似于&lt;/p>
+&lt;pre tabindex="0">&lt;code>NAME MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+sda 8:0 0 931.5G 0 disk
+└─sda1 8:1 0 931.5G 0 part
+nvme0n1 259:0 0 953.9G 0 disk
+├─nvme0n1p1 259:1 0 565M 0 part
+├─nvme0n1p2 259:2 0 100.6G 0 part
+├─nvme0n1p3 259:3 0 101G 0 part
+├─nvme0n1p4 259:4 0 750.9G 0 part
+└─nvme0n1p5 259:5 0 1003M 0 part
+&lt;/code>&lt;/pre>&lt;p>我系统的分区如上， &lt;code>nvme0n1p1&lt;/code> 是 &lt;code>UEFI&lt;/code> 分区， &lt;code>nvme0n1p2&lt;/code> 是 WIN10 所在分区， &lt;code>nvme0n1p3&lt;/code> 将用于安装 ARCH， &lt;code>nvme0n1p4&lt;/code> 用于存储数据。&lt;/p>
+&lt;p>双系统可以在 WIN10 下使用磁盘管理器先调整好分区，也可以使用 ARCH 提供的 &lt;code>cfdisk&lt;/code> 来进行可视化分区。必须要记住的是，至少要分一个 &lt;code>EFI System&lt;/code> 分区和一个 &lt;code>Linux File System&lt;/code> 分区。&lt;/p>
+&lt;blockquote>
+&lt;p>根据网上资料，EFI 分区至少要保证有 500MB 容量。&lt;/p>
+&lt;/blockquote>
+&lt;p>分区完成后，使用 Linux 命令对分区进行格式化&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">#格式化EFI分区&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>mkfs.fat -F &lt;span style="color:#b452cd">32&lt;/span> /dev/nvme0n1p1
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">#格式化Linux分区&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>mkfs.ext4 /dev/nvme0n1p3
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;blockquote>
+&lt;p>存储设备在未挂载到系统前，都以设备文件的形式存在于 &lt;code>/dev&lt;/code> 路径下，格式化之前可以先挂载到系统检查下。&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="安装基础系统">安装基础系统&lt;/h2>
+&lt;p>首先挂载系统分区&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>mount /dev/nvme0n1p3 /mnt
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>mkdir /mnt/boot
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>mount /dev/nvme0n1p1 /mnt/boot
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>将系统分区挂载到 &lt;code>/mnt&lt;/code> ，然后手动创建 &lt;code>/mnt/boot&lt;/code> ，再将引导分区挂载过去。
+然后只需简单的执行 &lt;code>pacstrap /mnt base&lt;/code> 即可自动安装系统。&lt;/p>
+&lt;blockquote>
+&lt;p>可选的 &lt;code>base-devel&lt;/code> 用于支撑 &lt;code>AUR&lt;/code> 上的软件包的本地编译。&lt;/p>
+&lt;/blockquote>
+&lt;p>当命令执行完毕后，需要更新 &lt;code>fstab&lt;/code> 文件&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>genfstab -U /mnt /mnt/etc/fstab
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>最后需要安装 &lt;code>systemd-boot&lt;/code> 引导，但是留到下一节写吧。&lt;/p>
+&lt;h2 id="初始化系统">初始化系统&lt;/h2>
+&lt;p>通过执行 &lt;code>arch-chroot /mnt&lt;/code> 切换到刚安装好的系统中，然后我需要对系统做一些初始的操作，以便第一次启动能够正常运行&lt;/p>
+&lt;h3 id="安装-uefi-引导">安装 UEFI 引导&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>bootctl --path=/boot installl
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>简单快捷，装好了，但是还没彻底完成，需要手动处理配置文件（这点没有 GRUB 省心）。&lt;/p>
+&lt;blockquote>
+&lt;p>注意，双系统在执行上述命令前需要安装 &lt;code>efibootmgr&lt;/code> 软件来检测开机引导信息。&lt;/p>
+&lt;/blockquote>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>cp /usr/share/systemd/bootctl/arch.conf /boot/loader/entries/
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>将内置的配置模板拷贝到配置文件目录下，然后执行 &lt;code>blkid /dev/nvme0n1p3&lt;/code> 查询系统所在分区的 UUID。&lt;/p>
+&lt;p>修改上述配置文件中的 &lt;code>PARTUUID&lt;/code> 为分区的 UUID，将 &lt;code>rootfstype&lt;/code> 改为 &lt;code>ext4&lt;/code> 。&lt;/p>
+&lt;p>最后，执行&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>mkinitcpio -p linux
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>生成初始内存盘。&lt;/p>
+&lt;h3 id="设置主机名">设置主机名&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#658b00">echo&lt;/span> laptop &amp;gt; /etc/hostname
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="设置时区">设置时区&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="创建个人账户">创建个人账户&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>useradd -m -G users,wheel -s /bin/bash laeo
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="修改登录密码">修改登录密码&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>passwd root
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>passwd laeo
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="安装基础程序">安装基础程序&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>pacman -S vim git dialog wpa_supplicant wireless_tools sudo
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="设置账户权限">设置账户权限&lt;/h3>
+&lt;p>执行 &lt;code>vim /etc/sudoers&lt;/code> 并删除文件中 &lt;code>%wheel&lt;/code> 前的注释符，现在所有处于 &lt;code>wheel&lt;/code> 用户组的账号都可以使用 &lt;code>sudo&lt;/code> 命令来调用管理员权限了。&lt;/p>
+&lt;h3 id="重启系统">重启系统&lt;/h3>
+&lt;p>至此，整个安装流程就基本完成了，所有操作都可以从 ARCH 官方 WIKI 中找到。&lt;/p>
+&lt;h2 id="其它">其它&lt;/h2>
+&lt;h3 id="安装桌面环境">安装桌面环境&lt;/h3>
+&lt;p>重启后还是一块黑白屏，我需要图形界面！&lt;/p>
+&lt;p>图形界面我个人习惯 &lt;code>KDE&lt;/code> 和 &lt;code>DDE&lt;/code> ，两者皆是开源产物，只不过后者是国内企业开发并开源的，所以后者对国内软件支持比较优秀。&lt;/p>
+&lt;p>无论哪一个，都需要安装最基础的 &lt;code>xorg-server&lt;/code> 全家桶，当然你也可以使用 &lt;code>wayland&lt;/code> ，但是 DDE 目前为止不支持，理由是不够稳定。&lt;/p>
+&lt;p>安装非常简单，依照 ARCH WIKI 中的指导一步步安装就行了，懒得写了。&lt;/p>
+&lt;h3 id="英伟达易爆炸">英伟达“易爆炸”&lt;/h3>
+&lt;p>双显卡机器安装 Linux 很容易遇到双显卡引起的各种扯淡毛病，我自己就遇到过各种各样的。&lt;/p>
+&lt;p>有系统的安装环境是图形界面，加载不进去。有的装好了系统，开机黑屏。有的开机进了登录界面，刚登录进桌面就卡死。&lt;/p>
+&lt;p>各种搜索，无非就是内核参数加 &lt;code>nomodeset&lt;/code> ，屏蔽开源独显驱动 &lt;code>nouveau&lt;/code> ，甚至还有疯到让屏蔽集显驱动的……&lt;/p>
+&lt;p>我都试了，没用， &lt;code>lspci&lt;/code> 执行就卡死。后来在 Gayhub 搜到个 &lt;a href="https://github.com/Bumblebee-Project/Bumblebee/issues/764#issuecomment-234494238">Issue&lt;/a>，照着回复里尝试加了内核参数后，总算不卡死了。&lt;/p>
+&lt;p>现在我是每天开电脑第一件事，就是执行 &lt;code>sudo pacman -Syyu&lt;/code> 滚动更新，我等着下一次的“卡死”。&lt;/p>
+- https://laeo.me/linux/arch%E5%AE%89%E8%A3%85%E6%8C%87%E5%8C%97/ -</description></item><item><title>深度Linux下SS智能分流</title><link>https://laeo.me/linux/%E6%B7%B1%E5%BA%A6linux%E4%B8%8Bss%E6%99%BA%E8%83%BD%E5%88%86%E6%B5%81/</link><pubDate>Thu, 05 Apr 2018 00:00:00 +0000</pubDate><guid>https://laeo.me/linux/%E6%B7%B1%E5%BA%A6linux%E4%B8%8Bss%E6%99%BA%E8%83%BD%E5%88%86%E6%B5%81/</guid><description>LAEO https://laeo.me/linux/%E6%B7%B1%E5%BA%A6linux%E4%B8%8Bss%E6%99%BA%E8%83%BD%E5%88%86%E6%B5%81/ -&lt;h2 id="起因">起因&lt;/h2>
+&lt;p>今天在使用 &lt;code>dep&lt;/code> 包管理器接管以前写的一个 Go 语言项目时，突然报错无法下载某个包。仔细检查后，无奈的宣布系统设置的全局代理没起作用。&lt;/p>
+&lt;h2 id="处理">处理&lt;/h2>
+&lt;p>查了资料，发现可以用 &lt;code>ss-redir&lt;/code> + &lt;code>iptables&lt;/code> + &lt;code>chnroute&lt;/code> 来做智能分流。&lt;/p>
+&lt;p>首先，我需要从 &lt;code>shadowsocks-libev&lt;/code> 中取得 &lt;code>ss-redir&lt;/code> 程序，在终端中执行&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>sudo apt install shadowsocks-libev
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>即可取得我想要的程序，其所在目录为 &lt;code>/usr/bin/ss-redir&lt;/code> 。&lt;/p>
+&lt;p>然后，我需要获取所有属于中国的 IP 地址，这个可以从 apnic 网站获得，经搜索后找到如下命令&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>wget -qO- http://ftp.apnic.net/stats/apnic/delegated-apnic-latest | awk -F &lt;span style="color:#cd5555">&amp;#39;|&amp;#39;&lt;/span> &lt;span style="color:#cd5555">&amp;#39;/CN/&amp;amp;&amp;amp;/ipv4/ {print $4 &amp;#34;/&amp;#34; 32-log($5)/log(2)}&amp;#39;&lt;/span> | cat &amp;gt; chnroutes.txt
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>经过过滤处理后的路由列表存放于当前目录，名为 &lt;code>chnroutes.txt&lt;/code> 的文本文件。&lt;/p>
+&lt;p>最后，我只需想办法将该路由表导入到 iptables 中，然后将符合规则的数据包转发到 ss-redir 提供的透明代理地址即可。&lt;/p>
+&lt;p>经过搜索，我发现可以使用 &lt;code>ipset&lt;/code> 程序来完成这一操作，使用下述命令创建路由集&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>ipset -N chnroute hash:net maxelem &lt;span style="color:#b452cd">65536&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>然后循环将之前路由表中取得的路由添加进去&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> ip in &lt;span style="color:#8b008b;font-weight:bold">$(&lt;/span>cat chnroutes.txt&lt;span style="color:#8b008b;font-weight:bold">)&lt;/span>; &lt;span style="color:#8b008b;font-weight:bold">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ipset add chnroute &lt;span style="color:#00688b">$ip&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">&amp;#34;added &lt;/span>&lt;span style="color:#00688b">$ip&lt;/span>&lt;span style="color:#cd5555">&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">done&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>然后创建 iptables 规则&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># 在nat表中新增一个链，名叫：SHADOWSOCKS&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -N SHADOWSOCKS
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># #&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># 这里记住要替换为 SS 后端服务器地址！！！ #&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># #&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -d &lt;span style="color:#00688b">$SOCKS_SERVER&lt;/span> -j RETURN
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># Ignore LANs and any other addresses you&amp;#39;d like to bypass the proxy&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># See Wikipedia and RFC5735 for full list of reserved networks.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># See ashi009/bestroutetb for a highly optimized CHN route list.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -d 0.0.0.0/8 -j RETURN
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -d 10.0.0.0/8 -j RETURN
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -d 127.0.0.0/8 -j RETURN
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -d 169.254.0.0/16 -j RETURN
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -d 172.16.0.0/12 -j RETURN
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -d 192.168.0.0/16 -j RETURN
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -d 224.0.0.0/4 -j RETURN
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -d 240.0.0.0/4 -j RETURN
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># Allow connection to chinese IPs&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -p tcp -m &lt;span style="color:#658b00">set&lt;/span> --match-set chnroute dst -j RETURN
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -p udp -m &lt;span style="color:#658b00">set&lt;/span> --match-set chnroute dst -j RETURN
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># 如果你想对 icmp 协议也实现智能分流，可以加上下面这一条&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># iptables -t nat -A SHADOWSOCKS -p icmp -m set --match-set chnroute dst -j RETURN&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">#&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># 如果 ss-redir 配置的本地代理端口不是 1080，则必须将下述命令中的 1080 改为正确的值&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">#&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -p tcp -j REDIRECT --to-port &lt;span style="color:#b452cd">1080&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -p udp -j REDIRECT --to-port &lt;span style="color:#b452cd">1080&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># 如果你想对 icmp 协议也实现智能分流，可以加上下面这一条&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># iptables -t nat -A SHADOWSOCKS -p icmp -j REDIRECT --to-port 1080&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># 将SHADOWSOCKS链中所有的规则追加到OUTPUT链中&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A OUTPUT -p tcp -j SHADOWSOCKS
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A OUTPUT -p udp -j SHADOWSOCKS
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># 如果你想对 icmp 协议也实现智能分流，可以加上下面这一条&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># iptables -t nat -A OUTPUT -p icmp -j SHADOWSOCKS&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上述操作执行完成后，通过修改配置文件 &lt;code>/etc/shadowsocks-libev/config.json&lt;/code> 填写好连接信息，然后通过该配置文件运行 ss-redir 即可。&lt;/p>
+&lt;p>为了方便我创建了一个 systemd 服务文件&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>sudo cat &amp;gt; /etc/systemd/system/deepin-xwall.service &lt;span style="color:#cd5555">&amp;lt;&amp;lt;EOF
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">[Unit]
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">Description=Deepin Xwall Service
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">After=network.target
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">[Service]
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">ExecStart=/usr/bin/ss-redir -u -n 65535 -c &amp;#34;/etc/shadowsocks-libev/config.json&amp;#34;
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">[Install]
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">WantedBy=multi-user.target
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">EOF&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>然后将其设为开机启动即可&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>sudo systemctl start deepin-xwall
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>sudo systemctl &lt;span style="color:#658b00">enable&lt;/span> deepin-xwall
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>至此，整个系统所有程序都进入了翻墙模式，不需要再设置什么环境变量啥的，也不需要程序自身做兼容。我的 Go 语言项目的依赖包也能正常下载了，真是美滋滋。&lt;/p>
+- https://laeo.me/linux/%E6%B7%B1%E5%BA%A6linux%E4%B8%8Bss%E6%99%BA%E8%83%BD%E5%88%86%E6%B5%81/ -</description></item></channel></rss>

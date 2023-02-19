@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Phps on LAEO</title><link>https://laeo.me/php/</link><description>Recent content in Phps on LAEO</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sat, 11 Aug 2018 00:00:00 +0000</lastBuildDate><atom:link href="https://laeo.me/php/index.xml" rel="self" type="application/rss+xml"/><item><title>Eloquent模型子类MorphToMany调用doesntHave失效问题</title><link>https://laeo.me/php/eloquent%E6%A8%A1%E5%9E%8B%E5%AD%90%E7%B1%BBmorphtomany%E8%B0%83%E7%94%A8doesnthave%E5%A4%B1%E6%95%88%E9%97%AE%E9%A2%98/</link><pubDate>Sat, 11 Aug 2018 00:00:00 +0000</pubDate><guid>https://laeo.me/php/eloquent%E6%A8%A1%E5%9E%8B%E5%AD%90%E7%B1%BBmorphtomany%E8%B0%83%E7%94%A8doesnthave%E5%A4%B1%E6%95%88%E9%97%AE%E9%A2%98/</guid><description>编写BUG之路 在私人项目中使用了 laravel-permission 包做权限管理，用户表 users 需要扩展出不同的角色。考虑到项目规模，我将用户数据和后台客服数据统一存放在用户表中，然后根据角色信息来判断账户的归类。如此，我在 App\User 模型中进行登录认证等统一的用户操作，但是新建 App\Client 模型来专门管理普通用户的数据，该类继承自用户模型类，可以方便的共享一些通用属性。
+namespace App; class Client extends User { protected $table = &amp;#39;users&amp;#39;; } 为了方便使用用户模型查找数据，我在 App\Client 中增加了 全局作用域 来自动过滤有权限的用户：
+// 在 app/Client.php 中 static::addGlobalScope(&amp;#39;client&amp;#39;, function (Builder $builder) { $builder-&amp;gt;doesntHave(&amp;#39;roles&amp;#39;); }); 原本我以为加上上述代码后，就可以正常取出没有权限的普通账户了，可惜事实并非如此，该作用域完全没有起到作用，所有用户数据都被取出来了。我写了一个BUG！
+解决BUG之路 出现这样的问题，首先想到的就是去该包的 issue 页面搜索，看看有没有相关的资料，可能是我关键词有问题，并没有搜索到相关资料。搜索引擎也是相同的结果，没查到 doesntHave 失效的原因。
+那就只能自己动手咯。
+首先想到打印执行的 SQL 出来看看：
+// app/Providers/EventServiceProvider.php 中 DB::listen(function ($query) { Log::debug($query-&amp;gt;time . &amp;#39;@&amp;#39; . $query-&amp;gt;sql, $query-&amp;gt;bindings); }); 通过注册上述监听器后，在日志文件中找到了相关的 SQL 记录。看了下提交的参数，其中有个 App\\Client 引起我的注意，在我从数据库中查询到的数据里，都是存储的原始的 App\User ，那么只需要将这个参数改正确就行了。我猜测是因为普通用户的模型是继承的，多对多关联的代码在执行的时候自动获取了当前实例的类名，所以才导致查询不到记录。
+找到问题所在就好办了，编辑器里跟着源码挨个跳转，最终找到了它</description></item><item><title>使用Docker快速构建Laravel开发环境</title><link>https://laeo.me/php/%E4%BD%BF%E7%94%A8docker%E5%BF%AB%E9%80%9F%E6%9E%84%E5%BB%BAlaravel%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/</link><pubDate>Fri, 21 Oct 2016 00:00:00 +0000</pubDate><guid>https://laeo.me/php/%E4%BD%BF%E7%94%A8docker%E5%BF%AB%E9%80%9F%E6%9E%84%E5%BB%BAlaravel%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/</guid><description>Docker简介 Docker是一个虚拟化容器引擎，跟虚拟机类似，不过更加轻量级。对于开发者来说，Docker的出现无疑是种福音。借助Docker，我们可以快速批量构建相同的环境，可以更加方便的对应用进行伸缩，以便更加灵活的控制应用的负载能力。我们还可以将其应用在开发中，使用Dockerfile快速构建统一的开发环境，避免因环境问题导致的BUG。许多云服务企业提供商业化的Docker容器资源，通过可定制的Dockerfile脚本来描述你需要的环境，以便快速构建生产环境和对生产环境进行伸缩控制。
+Dockerfile简介 Dockerfile是Docker容器的“说明书”，用来描述Docker容器的构建过程。在同一份Dockerfile下，只能生成同一种环境，这种 唯一性 一定程度上保证了应用运行在容器中的可靠性。
+Dockerfile的关键字只有寥寥几个，所以学习成本非常低。你可以很快速的学会Dockerfile的编写，但是要写出好的Dockerfile，还得多多琢磨。
+Dockerfile中常用的关键词大概就 FROM RUN WORKDIR CMD ENTRY ，搞清楚它们的用法就基本学会了Dockerfile的编写方法，所以说它非常简单。
+docker-compose简介 docker-compose 是一种快速整合Docker容器的辅助工具，它通过读取 docker-compose.yml 文件来分析其中所定义的各项 service 之间关系，然后自动关联好。这大大简化了应用运行环境的构建，使我们可以更加方便的构建出完整的应用运行环境。
+大多数情况下，一个应用所需要依赖的服务都不止一个。以一个最基础的PHP应用来说，一般情况下至少会依赖 NginX MySQL PHP 三种软件，为了充分体现出容器化应用的优势，我们一般会将这三种软件独立构建成三种服务（service），然后相互关联起来（NginX关联PHP，PHP关联MySQL），这样一旦某一服务的负载过高，我们就可以通过使用相同的Dockerfile快速生成相同的服务，提高整个系统的吞吐能力。
+构建Laravel开发环境 需求分析 Laravel作为一个PHP应用框架，最基础的运行环境就是 LNMP 。现代WEB应用的运行环境大多需要使用到NoSQL服务，所以一个 Redis 服务就显得很有存在的必要了。
+所以需要构建的服务大致如下列：
+Linux NginX MySQL PHP Redis 软件挑选 确定了要构建的服务，我们需要为服务所用软件挑选一个合适的版本，既不能太过”时髦“，也不能太过”守旧“。
+为了压缩生成好的容器的大小，我选择了 Alpine 作为容器的系统，版本则选用其最新稳定版本3.4。
+Alpine是一个非常非常小的Linux系统，非常适合作为Docker容器的操作系统，其内置的包管理器存放了大部分常用软件，强烈推荐。
+由于系统软件仓库的限制，以及对开发环境下的具体要求的考虑，其余软件都是直接使用官方仓库最新版本。
+编写Dockerfile 因为是开发环境，不要求负载和伸缩能力，所以我将PHP和NginX放在一个容器中，这样可以方便配置NginX和PHP-FPM。
+取一个Redis容器的Dockerfile贴这方便看，当个例子吧。
+FROM alpine:3.4 RUN apk -f update RUN apk -f add redis COPY redis.conf /etc/redis.conf EXPOSE 6379 CMD [&amp;#34;/usr/bin/redis-server&amp;#34;, &amp;#34;/etc/redis.conf&amp;#34;] 编写docker-compose.yml 容器的构建脚本编写好后，我们需要将各个容器关联起来，这样才能形成一个完整的应用运行环境。</description></item><item><title>Base32编码算法介绍及PHP实现</title><link>https://laeo.me/php/base32%E7%BC%96%E7%A0%81%E7%AE%97%E6%B3%95%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0/</link><pubDate>Wed, 27 Jul 2016 00:00:00 +0000</pubDate><guid>https://laeo.me/php/base32%E7%BC%96%E7%A0%81%E7%AE%97%E6%B3%95%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0/</guid><description>什么是Base32编码算法 Base32不知道，那么Base64你肯定知道吧？它们都是用于对字符串数据进行编码的一种算法。Base64比Base32更加常见，PHP只内置了Base64编码算法的实现函数。如果不是研究 TOTP 的时候发现谷歌的两步验证软件使用到了这种算法，我都不会知道有它。
+有什么作用 限于我个人的认知范围，目前只知道谷歌两步验证功能中使用到了它。它与Base64是差不多的，差异只在于字符集的大小。
+字符集哈希表 该字符集哈希表来源于算法文章 RFC4648
+index value index value index value index value 0 A 8 I 16 Q 24 Y 1 B 9 J 17 R 25 Z 2 C 10 K 18 S 26 2 3 D 11 L 19 T 27 3 4 E 12 M 20 U 28 4 5 F 13 N 21 V 29 5 6 G 14 O 22 W 30 6 7 H 15 P 23 X 31 7 ABCDEFGHIJKLMNOPQRSTUVWXYZ234567</description></item><item><title>TOTP原理介绍及PHP实现展示</title><link>https://laeo.me/php/totp%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0%E5%B1%95%E7%A4%BA/</link><pubDate>Tue, 26 Jul 2016 00:00:00 +0000</pubDate><guid>https://laeo.me/php/totp%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0%E5%B1%95%E7%A4%BA/</guid><description>什么是 “TOTP” TOTP 是 Time-based One-time Password 的英文缩写，翻译为中文即“基于时间的一次性密码”。
+有什么作用 快节奏的社会，一切讲究快捷、方便，但是安全相关，实在方便不起来， TOTP 应运而生。使用该技术可以在降低身份认证复杂度的同时，将安全系数大幅度提高。君不见现在多少网站使用的动态口令功能，基本都是以该技术的为基础。Google Authenticator、Authy 等等软件都使用的该技术，我个人的域名注册商、服务器商也都接入了该技术。
+使用该技术来进行身份认证，可以加快认证速度，提高安全性。每个用户的认证口令是随着时间而变化的，无疑给 “黑手党” 们加大了许多难度。
+“TOTP” 的原理 该技术的着重点就在于基于时间，时间是不断变化的，所以基于时间而计算出来的 “密码” 也会是不断变化的。如果我们要使用该技术来进行身份认证，那么就一定要控制好时间变化的速度，否则时间无时无刻都在变化，我们如何进行认证？连输入密码也做不到吧。
+所以，控制时间是务必要做到的。那么，这就有点扯淡了。区区凡人还想控制时间？╭(╯^╰)╮
+看看下面的PHP代码：
+$time = time(); //取得实际时间，单位秒（unix时间戳） $validity = 30; //设置动态密码有效期，给用户输入密码的时间 $realtime = $time / $validity; //相除得到 “真实时间” 发明该算法的大师们很厉害，既然无法控制时间，那么我们就换个方式，变相控制时间。什么方式呢？除法！如果把时间看做被除数，把我们设置的密码有效期看做除数，把计算的结果看做我们取到的 真实时间 。如此一来，每当 实际时间 走过 密码有效期 那么久后，我们取到的 真实时间 的数值才会 +1 。
+说到这里，如果我的表述没有问题的话，看官一定已经大致明白 TOTP 到底如何实现了。使用这种方式取到的“时间”，就不必担心时间不停的流逝，毕竟只要没有超过密码有效期，该数值是不会变化的。
+细心的朋友一定注意到了，除法可能还有小数呢，到时候小数不停变化，不也一样影响最终结果么？
+这是肯定的，所以我推荐使用PHP内置的 floor() 函数，该函数可以直接抹去浮点数的小数点后的部分。
+其实我自己使用的是 Math 函数库提供的 intdiv() 函数，效果都是一样的，甚至你可以直接 intval() 。
+代码实例 最主要的问题解决后，其它问题基本就不是问题了。下面附上实现代码：
+class TwoFactor { /** * @var integer */ private $delay = 30; /** * @var string */ private $secret = null; /** * Create TwoFactor instance * * @param string $secret */ public function __construct($secret) { $this-&amp;gt;secret = $secret; } /** * Returns the authenticate code * * @return string */ public function getCode() { $atom = floor(time() / $this-&amp;gt;delay); $hash = sha1($this-&amp;gt;secret .</description></item></channel></rss>
