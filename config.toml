@@ -1,4 +1,4 @@
-baseURL = 'https://laeo.me/'
+baseURL = 'https://laeo.github.io/'
 DefaultContentLanguage = 'zh'
 languageCode = 'zh-cn'
 title = 'LAEO'
