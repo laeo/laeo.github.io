@@ -1,38 +1,117 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Golangs on LAEO</title><link>https://laeo.me/golang/</link><description>Recent content in Golangs on LAEO</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Fri, 25 Sep 2020 00:00:00 +0000</lastBuildDate><atom:link href="https://laeo.me/golang/index.xml" rel="self" type="application/rss+xml"/><item><title>记一次失败到连面试题都没过去的Go语言面试</title><link>https://laeo.me/golang/%E8%AE%B0%E4%B8%80%E6%AC%A1%E5%A4%B1%E8%B4%A5%E5%88%B0%E8%BF%9E%E9%9D%A2%E8%AF%95%E9%A2%98%E9%83%BD%E6%B2%A1%E8%BF%87%E5%8E%BB%E7%9A%84go%E8%AF%AD%E8%A8%80%E9%9D%A2%E8%AF%95/</link><pubDate>Fri, 25 Sep 2020 00:00:00 +0000</pubDate><guid>https://laeo.me/golang/%E8%AE%B0%E4%B8%80%E6%AC%A1%E5%A4%B1%E8%B4%A5%E5%88%B0%E8%BF%9E%E9%9D%A2%E8%AF%95%E9%A2%98%E9%83%BD%E6%B2%A1%E8%BF%87%E5%8E%BB%E7%9A%84go%E8%AF%AD%E8%A8%80%E9%9D%A2%E8%AF%95/</guid><description>断断续续学习、关注 Go 语言相关技术也有段时间了（大概一两年吧），今年是靠着疫情后的大段休息时间，狠下心决定要找找 Go 语言方面的岗位，简历投出去却是如石沉大海，不是已查阅，就是不合适。考虑到自身学历和工作经历，也觉得有这般结果是正常的，但仍是不甘心如此结束，也就偶尔看到合适的岗位就尝试投一投。功夫不负有心人，总算是有一家公司的人事联系让我去面试，这篇文章就是记录我在面试前、面试中、面试后的各种准备、思考。
-准备时 第一次参加 Go 语言岗位的面试，也不知道会问些什么问题，根据自身情况，我投的都是偏业务逻辑开发的岗位，所以猜测最多也就是常规的语言知识，后端技术栈相关的东西吧。于是我就主要搜索了下 Go 语言相关的面试题，优先看语言方面的题目，对于数据库、缓存之类的题就没去看。坐一路的公交，就低头看了一路的面试题，着重看了其中与语言特性有关的各种题目，比如结构的值接收者方法与指针接收者方法的差异、chan 与协程的搭配使用、defer 关键词等等，都是平时在 IDE 的帮助下，处理过，但未曾关注过的信息。
-面试题 拿到面试题的一瞬间，我就开始懵逼了，有一部分“大庭广众之下”的紧张感（或许是担心作弊，该公司并没有让我在会议室做题，而是应该在两个部门办公桌之间过道的桌子上做题），也有一部分第一次参加此语言岗位的紧张感，整个人都不好了，于是大脑一片空白。
-看题目，
-协程，线程，进程的区别。
-我的答案： 协程是用户态的，由软件实现。线程分内核态和用户态，存在于进程中。线程是 CPU 执行的最小单元。
-相关资料：
-【面试高频问题】线程、进程、协程 进程、线程、协程与goruntine What is the difference between a process and a thread? Difference between a “coroutine” and a “thread”? 点评： 进程是分配资源的最小单位，线程是CPU调度的最小单位，协程是工程师或语言自建的调度单位。一步步看过来，就是在层层拆分调度时的“块”，提升调度的精度。
-最开始以进程来调度，发现成本太高，然后将进程的计算逻辑拆分成多个小块，根据情况进行调度，结果发现在大规模系统下资源耗费还是很高，于是继续拆为更小的计算块，在线程内部再次进行调度。而最高层级的进程，反而成为了只存储数据的模型层，线程倒是变成了控制器层，协程成了控制器中完成逻辑所调用到的各种方法。不知道这样理解是否正确，但确实是我看了这几份资料后的感觉。
-无缓冲 Chan 的发送和接收是否同步？
-我的答案： 是
-相关资料：
-Go Doc Spec Golang 中是否需要重入锁？
-我的答案： 不清楚此概念。
-相关资料：
-到底什么是重入锁，拜托，一次搞清楚！ golang 如何解决重入锁的问题？有没有代替方案？ Recursive locking in Go 点评： 自是不必！
-最开始看到这个重入锁我就有点奇怪，从来没在任何所学语言的文档、注释、教程中看到过这个概念，回家的路上一搜，果不其然——JAVA……想来也对，只有这门语言毛病最多。地铁上把第一篇文章看完了，对这概念有了个了解，下意识就觉得这设计有点反人类，又想到 Go 中肯定不需要用到，如果有，那肯定是代码写的有问题。</description></item><item><title>Go 语言中的依赖注入解决方案</title><link>https://laeo.me/golang/go%E8%AF%AD%E8%A8%80%E4%B8%AD%E7%9A%84%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/</link><pubDate>Sun, 16 Aug 2020 00:00:00 +0000</pubDate><guid>https://laeo.me/golang/go%E8%AF%AD%E8%A8%80%E4%B8%AD%E7%9A%84%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/</guid><description>Go 语言在我的认知中，是一种面向过程的函数式编程语言。所以通常我开发时，基本都是一把梭，并没有太过注重代码的结构。但是最近在开发“奋斗社”社区系统时，一直有感于代码结构太冗杂、混乱，所以有寻找相应的工具来处理。
-根据我在实际开发过程中的感受，我认为我首先就需要一个能够对结构体注入给定数据的工具，比如数据库连接实例，如果没有自动注入的工具，那么在我调用各种函数时
-要么手动在初始化结构体时注入连接实例。 要么将实例存储在独立包中的导出变量中。 之前一直是使用的第二种方式，但不管那种方式，都没有写 PHP 这类动态脚本语言的方便顺手，因此我在社区搜索了相关的依赖注入的实现。
-依赖注入（DI） 依赖注入是面向对象编程常用的代码解耦方法，通常是通过 反射 来获取调用者所需的参数信息，并根据相应的类型，从对象容器中查找相应的实例，最后将确定出的依赖以参数的形式传递给调用者。
-从实现的逻辑来看，依赖注入就是很简单直接的，将“我要”转变为“给我”，从主动的强依赖，变为被动的弱依赖。并且使用注入的形式提供调用依赖，可以方便的进行测试。
-Go 语言的 DI 我所搜到的热门的依赖注入工具有三个，分别是由谷歌推出的 wire 和由 Uber 推出的 dig。当然还有其它的一些实现，但是时间精力有限，我就先看这两个✨数量比较高的。
-从各自文档以及示例中可以看出两个仓库虽然实现方式不同，但总的工作逻辑还是相同的，都是基于预设的基础依赖项，解析并填充关联的依赖项，直到最终的入口点。
-wire 是通过代码生成完成的依赖分析与注入， dig 则是运行时通过“反射”进行依赖分析与注入，明显前者性能要比后者好，所以我选择用前者。
-wire 在接入 wire 之前，我先从现有代码结构上观察，哪些是需要（且能够）进行依赖分析注入的。我从 “奋斗社” 的代码中，找出了需要依赖注入的地方
-控制器 Controller 数据服务 Service 其它的比如模型、钩子函数、纯函数之类的，无法用代码生成的形式处理依赖问题，只能手写。
-为了达到为控制器注入依赖的目的，我为每个控制器结构添加了一个构造函数，比如用户控制器的构造函数如下
-func NewUserController() runtime.Controller { wire.Build( pkg.ApplicationSet, wire.Struct(new(User), &amp;#34;*&amp;#34;), wire.Bind(new(runtime.Controller), new(*User)), ) return nil } 通过在同级目录下执行 wire 命令，自动生成同名函数，外部可直接调用并获取注入完依赖的控制器实例。
-然后在将 控制器 注入到 路由器 时，遇到问题了。每个控制器都是一个 Provider，如果要为控制器注册相应路由规则，那么就需要另一个 Provider 依赖一个控制器，这样的话，有多少个控制器就要写多少个相应的 Provider。最大的问题是，wire 不支持同一个类型作为入参与出参，也不支持没有出参，所以无法直接使用它来处理路由规则的注册。
-为了处理路由规则注册的问题，我为项目添加了一个接口 runtime.Controller ，这个接口要求结构必须实现一个函数 RegisterRoute ，在这个函数中注册控制器下的各个方法到路由。然后我们就可以在提供者（Provider）中声明，需要注入控制器切片（[]runtime.</description></item><item><title>使用GO语言实现基础路由功能</title><link>https://laeo.me/golang/%E4%BD%BF%E7%94%A8go%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E5%9F%BA%E7%A1%80%E8%B7%AF%E7%94%B1%E5%8A%9F%E8%83%BD/</link><pubDate>Sun, 04 Sep 2016 00:00:00 +0000</pubDate><guid>https://laeo.me/golang/%E4%BD%BF%E7%94%A8go%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E5%9F%BA%E7%A1%80%E8%B7%AF%E7%94%B1%E5%8A%9F%E8%83%BD/</guid><description>什么是 “路由器” ？ “路由器” 是一个抽象的描述，是对WEB框架中负责解析、管理URL的组件的统一称呼。使用 “路由器” 来方便URL的管理（生成、解析），由于现代WEB应用的复杂程度日渐加深，“路由器” 的使用变得愈加普遍。
-“路由器” 的基本原理 “路由器” 本质上是通过对客户端请求的 URI 进行解析，从而对系统的运行加以引导的工具。在PHP中可以使用 $_SERVER 全局变量获取到用户请求的URI，然后通过解析该URI，执行 路由器 中注册的对应的 控制器方法 ，到此路由器的工作就已完成。
-GO语言下的 “路由器” 实现 在实现该功能之前，我们需要先搞清楚自己到底需要做些什么，这样才不会漫无目的的 “瞎整”。
-看看以下摘自GO语言官方文档的代码
-http.HandleFunc(&amp;#34;/bar&amp;#34;, func(w http.ResponseWriter, r *http.Request) { fmt.Fprintf(w, &amp;#34;Hello, %q&amp;#34;, html.EscapeString(r.URL.Path)) }) log.Fatal(http.ListenAndServe(&amp;#34;:8080&amp;#34;, nil)) 它实现了一个基本的WEB服务器功能，通过引入 net/http 包来快速构建WEB服务器，使用 http.HandleFunc 来注册控制器函数，使用 http.ListenAndServe 来启动WEB服务器。
-查看文档之后发现该方法不足以称之为 “路由器”，因为其只能简单的实现 URI到控制器函数 的导航，并不能满足大部分WEB应用的实现需要。我们需要对它进行扩展，增强它的功能。
-在 net/http 包的文档中可以查找到， http.ListenAndServe 方法支持两个参数，第一个参数接收HTTP服务监听的地址，而第二个参数接收的是一个 接口实例 。我们要实现自己的 路由器 ，该接口是重点。
-根据官方文档描述，开发者可以自由定义属于自己的WEB服务器，通过实现 ServeHTTP 方法来手动分发客户端请求。
-type router struct{} func (r *router) ServeHTTP(rw http.ResponseWriter, rq *http.</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Golangs on LAEO</title><link>https://laeo.github.io/golang/</link><description>Recent content in Golangs on LAEO</description><generator>Hugo</generator><language>zh-cn</language><lastBuildDate>Fri, 25 Sep 2020 00:00:00 +0000</lastBuildDate><atom:link href="https://laeo.github.io/golang/index.xml" rel="self" type="application/rss+xml"/><item><title>记一次失败到连面试题都没过去的Go语言面试</title><link>https://laeo.github.io/golang/%E8%AE%B0%E4%B8%80%E6%AC%A1%E5%A4%B1%E8%B4%A5%E5%88%B0%E8%BF%9E%E9%9D%A2%E8%AF%95%E9%A2%98%E9%83%BD%E6%B2%A1%E8%BF%87%E5%8E%BB%E7%9A%84go%E8%AF%AD%E8%A8%80%E9%9D%A2%E8%AF%95/</link><pubDate>Fri, 25 Sep 2020 00:00:00 +0000</pubDate><guid>https://laeo.github.io/golang/%E8%AE%B0%E4%B8%80%E6%AC%A1%E5%A4%B1%E8%B4%A5%E5%88%B0%E8%BF%9E%E9%9D%A2%E8%AF%95%E9%A2%98%E9%83%BD%E6%B2%A1%E8%BF%87%E5%8E%BB%E7%9A%84go%E8%AF%AD%E8%A8%80%E9%9D%A2%E8%AF%95/</guid><description>&lt;p>断断续续学习、关注 Go 语言相关技术也有段时间了（大概一两年吧），今年是靠着疫情后的大段休息时间，狠下心决定要找找 Go 语言方面的岗位，简历投出去却是如石沉大海，不是已查阅，就是不合适。考虑到自身学历和工作经历，也觉得有这般结果是正常的，但仍是不甘心如此结束，也就偶尔看到合适的岗位就尝试投一投。功夫不负有心人，总算是有一家公司的人事联系让我去面试，这篇文章就是记录我在面试前、面试中、面试后的各种准备、思考。&lt;/p>
+&lt;h2 id="准备时">准备时&lt;/h2>
+&lt;p>第一次参加 Go 语言岗位的面试，也不知道会问些什么问题，根据自身情况，我投的都是偏业务逻辑开发的岗位，所以猜测最多也就是常规的语言知识，后端技术栈相关的东西吧。于是我就主要搜索了下 Go 语言相关的面试题，优先看语言方面的题目，对于数据库、缓存之类的题就没去看。坐一路的公交，就低头看了一路的面试题，着重看了其中与语言特性有关的各种题目，比如结构的值接收者方法与指针接收者方法的差异、chan 与协程的搭配使用、defer 关键词等等，都是平时在 IDE 的帮助下，处理过，但未曾关注过的信息。&lt;/p>
+&lt;h2 id="面试题">面试题&lt;/h2>
+&lt;p>拿到面试题的一瞬间，我就开始懵逼了，有一部分“大庭广众之下”的紧张感（或许是担心作弊，该公司并没有让我在会议室做题，而是应该在两个部门办公桌之间过道的桌子上做题），也有一部分第一次参加此语言岗位的紧张感，整个人都不好了，于是大脑一片空白。&lt;/p>
+&lt;p>看题目，&lt;/p>
+&lt;ol>
+&lt;li>
+&lt;p>协程，线程，进程的区别。&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>我的答案：
+协程是用户态的，由软件实现。线程分内核态和用户态，存在于进程中。线程是 CPU 执行的最小单元。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>相关资料：&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://zhuanlan.zhihu.com/p/70256971">【面试高频问题】线程、进程、协程&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://zhuanlan.zhihu.com/p/27245377">进程、线程、协程与goruntine&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://stackoverflow.com/questions/200469/what-is-the-difference-between-a-process-and-a-thread">What is the difference between a process and a thread?&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://stackoverflow.com/questions/1934715/difference-between-a-coroutine-and-a-thread">Difference between a “coroutine” and a “thread”?&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;p>点评：
+进程是分配资源的最小单位，线程是CPU调度的最小单位，协程是工程师或语言自建的调度单位。一步步看过来，就是在层层拆分调度时的“块”，提升调度的精度。&lt;/p>
+&lt;p>最开始以进程来调度，发现成本太高，然后将进程的计算逻辑拆分成多个小块，根据情况进行调度，结果发现在大规模系统下资源耗费还是很高，于是继续拆为更小的计算块，在线程内部再次进行调度。而最高层级的进程，反而成为了只存储数据的&lt;em>模型层&lt;/em>，线程倒是变成了&lt;em>控制器层&lt;/em>，协程成了控制器中完成逻辑所调用到的各种&lt;em>方法&lt;/em>。不知道这样理解是否正确，但确实是我看了这几份资料后的感觉。&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;p>无缓冲 Chan 的发送和接收是否同步？&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>我的答案：
+是&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>相关资料：&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://golang.org/ref/spec#Channel_types">Go Doc Spec&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;p>Golang 中是否需要重入锁？&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>我的答案：
+不清楚此概念。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>相关资料：&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://zhuanlan.zhihu.com/p/71018541">到底什么是重入锁，拜托，一次搞清楚！&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://studygolang.com/topics/6139">golang 如何解决重入锁的问题？有没有代替方案？&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://stackoverflow.com/questions/14670979/recursive-locking-in-go#14671462">Recursive locking in Go&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;p>点评：
+自是不必！&lt;/p>
+&lt;p>最开始看到这个重入锁我就有点奇怪，从来没在任何所学语言的文档、注释、教程中看到过这个概念，回家的路上一搜，果不其然——JAVA……想来也对，只有这门语言毛病最多。地铁上把第一篇文章看完了，对这概念有了个了解，下意识就觉得这设计有点反人类，又想到 Go 中肯定不需要用到，如果有，那肯定是代码写的有问题。&lt;/p></description></item><item><title>Go 语言中的依赖注入解决方案</title><link>https://laeo.github.io/golang/go%E8%AF%AD%E8%A8%80%E4%B8%AD%E7%9A%84%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/</link><pubDate>Sun, 16 Aug 2020 00:00:00 +0000</pubDate><guid>https://laeo.github.io/golang/go%E8%AF%AD%E8%A8%80%E4%B8%AD%E7%9A%84%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/</guid><description>&lt;p>Go 语言在我的认知中，是一种面向过程的函数式编程语言。所以通常我开发时，基本都是一把梭，并没有太过注重代码的结构。但是最近在开发“奋斗社”社区系统时，一直有感于代码结构太冗杂、混乱，所以有寻找相应的工具来处理。&lt;/p>
+&lt;p>根据我在实际开发过程中的感受，我认为我首先就需要一个能够对结构体注入给定数据的工具，比如数据库连接实例，如果没有自动注入的工具，那么在我调用各种函数时&lt;/p>
+&lt;ol>
+&lt;li>要么手动在初始化结构体时注入连接实例。&lt;/li>
+&lt;li>要么将实例存储在独立包中的导出变量中。&lt;/li>
+&lt;/ol>
+&lt;p>之前一直是使用的第二种方式，但不管那种方式，都没有写 PHP 这类动态脚本语言的方便顺手，因此我在社区搜索了相关的依赖注入的实现。&lt;/p>
+&lt;h2 id="依赖注入di">依赖注入（DI）&lt;/h2>
+&lt;p>依赖注入是面向对象编程常用的代码解耦方法，通常是通过 &lt;code>反射&lt;/code> 来获取调用者所需的参数信息，并根据相应的类型，从对象容器中查找相应的实例，最后将确定出的依赖以参数的形式传递给调用者。&lt;/p>
+&lt;p>从实现的逻辑来看，依赖注入就是很简单直接的，将“我要”转变为“给我”，从主动的强依赖，变为被动的弱依赖。并且使用注入的形式提供调用依赖，可以方便的进行测试。&lt;/p>
+&lt;h2 id="go-语言的-di">Go 语言的 DI&lt;/h2>
+&lt;p>我所搜到的热门的依赖注入工具有三个，分别是由谷歌推出的 &lt;a href="https://github.com/google/wire">wire&lt;/a> 和由 Uber 推出的 &lt;a href="https://github.com/uber-go/dig">dig&lt;/a>。当然还有其它的一些实现，但是时间精力有限，我就先看这两个✨数量比较高的。&lt;/p>
+&lt;p>从各自文档以及示例中可以看出两个仓库虽然实现方式不同，但总的工作逻辑还是相同的，都是基于预设的基础依赖项，解析并填充关联的依赖项，直到最终的入口点。&lt;/p>
+&lt;p>&lt;code>wire&lt;/code> 是通过代码生成完成的依赖分析与注入， &lt;code>dig&lt;/code> 则是运行时通过“反射”进行依赖分析与注入，明显前者性能要比后者好，所以我选择用前者。&lt;/p>
+&lt;h2 id="wire">wire&lt;/h2>
+&lt;p>在接入 wire 之前，我先从现有代码结构上观察，哪些是需要（且能够）进行依赖分析注入的。我从 “奋斗社” 的代码中，找出了需要依赖注入的地方&lt;/p>
+&lt;ul>
+&lt;li>控制器 Controller&lt;/li>
+&lt;li>数据服务 Service&lt;/li>
+&lt;/ul>
+&lt;p>其它的比如模型、钩子函数、纯函数之类的，无法用代码生成的形式处理依赖问题，只能手写。&lt;/p>
+&lt;p>为了达到为控制器注入依赖的目的，我为每个控制器结构添加了一个构造函数，比如用户控制器的构造函数如下&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">func&lt;/span> &lt;span style="color:#008b45">NewUserController&lt;/span>() runtime.Controller {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	wire.&lt;span style="color:#008b45">Build&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		pkg.ApplicationSet,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		wire.&lt;span style="color:#008b45">Struct&lt;/span>(&lt;span style="color:#658b00">new&lt;/span>(User), &lt;span style="color:#cd5555">&amp;#34;*&amp;#34;&lt;/span>),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		wire.&lt;span style="color:#008b45">Bind&lt;/span>(&lt;span style="color:#658b00">new&lt;/span>(runtime.Controller), &lt;span style="color:#658b00">new&lt;/span>(*User)),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">nil&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>通过在同级目录下执行 &lt;code>wire&lt;/code> 命令，自动生成同名函数，外部可直接调用并获取注入完依赖的控制器实例。&lt;/p>
+&lt;p>然后在将 &lt;code>控制器&lt;/code> 注入到 &lt;code>路由器&lt;/code> 时，遇到问题了。每个控制器都是一个 Provider，如果要为控制器注册相应路由规则，那么就需要另一个 Provider 依赖一个控制器，这样的话，有多少个控制器就要写多少个相应的 Provider。最大的问题是，wire 不支持同一个类型作为入参与出参，也不支持没有出参，所以无法直接使用它来处理路由规则的注册。&lt;/p>
+&lt;p>为了处理路由规则注册的问题，我为项目添加了一个接口 &lt;code>runtime.Controller&lt;/code> ，这个接口要求结构必须实现一个函数 &lt;code>RegisterRoute&lt;/code> ，在这个函数中注册控制器下的各个方法到路由。然后我们就可以在提供者（Provider）中声明，需要注入控制器切片（[]runtime. Controller）类型的依赖项。&lt;/p></description></item><item><title>使用GO语言实现基础路由功能</title><link>https://laeo.github.io/golang/%E4%BD%BF%E7%94%A8go%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E5%9F%BA%E7%A1%80%E8%B7%AF%E7%94%B1%E5%8A%9F%E8%83%BD/</link><pubDate>Sun, 04 Sep 2016 00:00:00 +0000</pubDate><guid>https://laeo.github.io/golang/%E4%BD%BF%E7%94%A8go%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E5%9F%BA%E7%A1%80%E8%B7%AF%E7%94%B1%E5%8A%9F%E8%83%BD/</guid><description>&lt;h2 id="什么是-路由器-">什么是 “路由器” ？&lt;/h2>
+&lt;p>“路由器” 是一个抽象的描述，是对WEB框架中负责解析、管理URL的组件的统一称呼。使用 “路由器” 来方便URL的管理（生成、解析），由于现代WEB应用的复杂程度日渐加深，“路由器” 的使用变得愈加普遍。&lt;/p>
+&lt;h2 id="路由器-的基本原理">“路由器” 的基本原理&lt;/h2>
+&lt;p>“路由器” 本质上是通过对客户端请求的 &lt;code>URI&lt;/code> 进行解析，从而对系统的运行加以引导的工具。在PHP中可以使用 &lt;code>$_SERVER&lt;/code> 全局变量获取到用户请求的URI，然后通过解析该URI，执行 &lt;code>路由器&lt;/code> 中注册的对应的 &lt;code>控制器方法&lt;/code> ，到此路由器的工作就已完成。&lt;/p>
+&lt;h2 id="go语言下的-路由器-实现">GO语言下的 “路由器” 实现&lt;/h2>
+&lt;p>在实现该功能之前，我们需要先搞清楚自己到底需要做些什么，这样才不会漫无目的的 “瞎整”。&lt;/p>
+&lt;p>看看以下摘自GO语言官方文档的代码&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>http.&lt;span style="color:#008b45">HandleFunc&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;/bar&amp;#34;&lt;/span>, &lt;span style="color:#8b008b;font-weight:bold">func&lt;/span>(w http.ResponseWriter, r *http.Request) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fmt.&lt;span style="color:#008b45">Fprintf&lt;/span>(w, &lt;span style="color:#cd5555">&amp;#34;Hello, %q&amp;#34;&lt;/span>, html.&lt;span style="color:#008b45">EscapeString&lt;/span>(r.URL.Path))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>})
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>log.&lt;span style="color:#008b45">Fatal&lt;/span>(http.&lt;span style="color:#008b45">ListenAndServe&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;:8080&amp;#34;&lt;/span>, &lt;span style="color:#8b008b;font-weight:bold">nil&lt;/span>))
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>它实现了一个基本的WEB服务器功能，通过引入 &lt;code>net/http&lt;/code> 包来快速构建WEB服务器，使用 &lt;code>http.HandleFunc&lt;/code> 来注册控制器函数，使用 &lt;code>http.ListenAndServe&lt;/code> 来启动WEB服务器。&lt;/p>
+&lt;p>查看文档之后发现该方法不足以称之为 “路由器”，因为其只能简单的实现 &lt;code>URI到控制器函数&lt;/code> 的导航，并不能满足大部分WEB应用的实现需要。我们需要对它进行扩展，增强它的功能。&lt;/p>
+&lt;p>在 &lt;code>net/http&lt;/code> 包的文档中可以查找到， &lt;code>http.ListenAndServe&lt;/code> 方法支持两个参数，第一个参数接收HTTP服务监听的地址，而第二个参数接收的是一个 &lt;code>接口实例&lt;/code> 。我们要实现自己的 &lt;code>路由器&lt;/code> ，该接口是重点。&lt;/p>
+&lt;p>根据官方文档描述，开发者可以自由定义属于自己的WEB服务器，通过实现 &lt;code>ServeHTTP&lt;/code> 方法来手动分发客户端请求。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-golang" data-lang="golang">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">type&lt;/span> router &lt;span style="color:#8b008b;font-weight:bold">struct&lt;/span>{}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">func&lt;/span> (r *router) &lt;span style="color:#008b45">ServeHTTP&lt;/span>(rw http.ResponseWriter, rq *http.Request) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#228b22">// 在此处分发客户端请求
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">&lt;/span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>如上述方式构建一个属于你的 &lt;code>路由器&lt;/code> 组件，通过实现 &lt;code>ServeHTTP&lt;/code> 接收者来增强其功能，比如增加URI参数提取、模糊匹配等等。&lt;/p></description></item></channel></rss>

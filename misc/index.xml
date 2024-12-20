@@ -1,14 +1,59 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Miscs on LAEO</title><link>https://laeo.me/misc/</link><description>Recent content in Miscs on LAEO</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sun, 17 Mar 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://laeo.me/misc/index.xml" rel="self" type="application/rss+xml"/><item><title>网站接入Cloudflare后静态资源加载失败问题</title><link>https://laeo.me/misc/%E7%BD%91%E7%AB%99%E6%8E%A5%E5%85%A5cloudflare%E5%90%8E%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90%E5%8A%A0%E8%BD%BD%E5%A4%B1%E8%B4%A5%E9%97%AE%E9%A2%98/</link><pubDate>Sun, 17 Mar 2019 00:00:00 +0000</pubDate><guid>https://laeo.me/misc/%E7%BD%91%E7%AB%99%E6%8E%A5%E5%85%A5cloudflare%E5%90%8E%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90%E5%8A%A0%E8%BD%BD%E5%A4%B1%E8%B4%A5%E9%97%AE%E9%A2%98/</guid><description>发现问题 将一个新建的图片站接入了 Cloudflare，可是访问后却发现页面不正常，就是静态资源没有加载成功一样。网站系统基于 Django 框架开发，通过 uwsgi 在容器中部署，静态资源也是通过框架在管理，本以为是配置出错导致的 404 错误，结果手动访问静态资源却是正常的。
-迷一般的问题……
-打开控制台，发现打印出了几个类似的错误，大概就是
-指向 &amp;#34;/static/js/app.js&amp;#34; 的 &amp;lt;script&amp;gt; 加载失败。 这个样子的错误信息，刷新了页面，通过网络记录发现出现错误的静态文件的 mime 类型都是 application/x-unknown-type-content ，就很奇怪了，记忆中浏览器会自动通过文件内容猜测其类型才对，就算没有类型也不会出现这种问题的。
-于是又搜索了下相关资料，发现有提到 CSP 这个词，在 MDN 看了相关文档，发现并不是该设置的问题。于是找了一个报未知文件类型的请求记录，一一查看其响应的头信息。在其中找到了 X-Content-Type-Options: nosniff 这个指令，查了下其资料后得知，这指令会 导致浏览器停止类型探测 ，我想就是它了。
-解决问题 知道可能是什么原因导致的问题就好，跑到 CF 的网站仔细找了下，最后在 HSTS 设置引导中找到了相关的设置。在停用了该特性之后，网站恢复正常加载。
-技术发展日新月异，稍微慢一点，就会让头发少几根，想想还是痛苦。</description></item><item><title>GIT修改提交者信息</title><link>https://laeo.me/misc/git%E4%BF%AE%E6%94%B9%E6%8F%90%E4%BA%A4%E8%80%85%E4%BF%A1%E6%81%AF/</link><pubDate>Tue, 03 Apr 2018 00:00:00 +0000</pubDate><guid>https://laeo.me/misc/git%E4%BF%AE%E6%94%B9%E6%8F%90%E4%BA%A4%E8%80%85%E4%BF%A1%E6%81%AF/</guid><description>终端切换到项目目录，切换到需要更改的分支，执行以下 shell 命令。
-手动修改命令中的 author 和 author@example.org 为目标值。
-git filter-branch --commit-filter &amp;#39; export GIT_AUTHOR_NAME=author; export GIT_AUTHOR_EMAIL=author@example.org; export GIT_COMMITTER_NAME=author; export GIT_COMMITTER_EMAIL=author@example.org; git commit-tree &amp;#34;$@&amp;#34; &amp;#39; 执行完成后，使用以下命令将改动提交到远程仓库。
-git push --force --tags origin &amp;#39;refs/heads/*&amp;#39; 多人合作中改动过往记录会对提交历史产生破坏，谨慎操作！</description></item><item><title>SublimeText3配置记录</title><link>https://laeo.me/misc/sublimetext3%E9%85%8D%E7%BD%AE%E8%AE%B0%E5%BD%95/</link><pubDate>Fri, 14 Oct 2016 00:00:00 +0000</pubDate><guid>https://laeo.me/misc/sublimetext3%E9%85%8D%E7%BD%AE%E8%AE%B0%E5%BD%95/</guid><description>一直以来，Sublime Text 3都是我搬砖的主力工具，我实在太喜欢轻量级的软件了。使用方便、启动迅速、插件丰富、扩展性强，是我选择它的主要理由。
-搜索一款插件的资料时，突然想到我应该将环境的配置步骤都一一记录下来，以免以后的工作中出现配置缺漏的情况，导致开发效率降低。
-设置 对于新安装的 Sublime Text 3 首要安装的就是 Package Control ，然后是选择一款自己喜爱的主题，我选择的是 Material Theme ，它有一款扩展的 Appbar 组件，建议同时安装，增强体（zhuang）验（13）。
-安装完主题之后，仿照系统自身的配置文件，修改出属于自己的个性化配置文件。我的配置文件如下：
-{ &amp;#34;always_show_minimap_viewport&amp;#34;: true, &amp;#34;auto_find_in_selection&amp;#34;: true, &amp;#34;color_scheme&amp;#34;: &amp;#34;Packages/Material Theme/schemes/Material-Theme.tmTheme&amp;#34;, &amp;#34;default_line_ending&amp;#34;: &amp;#34;unix&amp;#34;, &amp;#34;font_face&amp;#34;: &amp;#34;DejaVu Sans Mono&amp;#34;, &amp;#34;font_size&amp;#34;: 10, &amp;#34;ignored_packages&amp;#34;: [ &amp;#34;Vintage&amp;#34; ], &amp;#34;indent_guide_options&amp;#34;: [ &amp;#34;draw_normal&amp;#34;, &amp;#34;draw_active&amp;#34; ], &amp;#34;indent_to_bracket&amp;#34;: true, &amp;#34;line_padding_bottom&amp;#34;: 3, &amp;#34;line_padding_top&amp;#34;: 3, &amp;#34;match_brackets_angle&amp;#34;: true, &amp;#34;material_theme_tree_headings&amp;#34;: true, &amp;#34;overlay_scroll_bars&amp;#34;: &amp;#34;enabled&amp;#34;, &amp;#34;shift_tab_unindent&amp;#34;: true, &amp;#34;show_encoding&amp;#34;: true, &amp;#34;show_line_endings&amp;#34;: true, &amp;#34;theme&amp;#34;: &amp;#34;Material-Theme.sublime-theme&amp;#34;, &amp;#34;translate_tabs_to_spaces&amp;#34;: true, &amp;#34;trim_trailing_white_space_on_save&amp;#34;: true } 可以看出字体方面我选择的是 YaHei-Consolas-Hybrid ，大体上还不错。之前一直使用的 Source-Code-Pro Yahei Hybrid ，不是对称字体，效果不怎么好。</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Miscs on LAEO</title><link>https://laeo.github.io/misc/</link><description>Recent content in Miscs on LAEO</description><generator>Hugo</generator><language>zh-cn</language><lastBuildDate>Sun, 17 Mar 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://laeo.github.io/misc/index.xml" rel="self" type="application/rss+xml"/><item><title>网站接入Cloudflare后静态资源加载失败问题</title><link>https://laeo.github.io/misc/%E7%BD%91%E7%AB%99%E6%8E%A5%E5%85%A5cloudflare%E5%90%8E%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90%E5%8A%A0%E8%BD%BD%E5%A4%B1%E8%B4%A5%E9%97%AE%E9%A2%98/</link><pubDate>Sun, 17 Mar 2019 00:00:00 +0000</pubDate><guid>https://laeo.github.io/misc/%E7%BD%91%E7%AB%99%E6%8E%A5%E5%85%A5cloudflare%E5%90%8E%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90%E5%8A%A0%E8%BD%BD%E5%A4%B1%E8%B4%A5%E9%97%AE%E9%A2%98/</guid><description>&lt;h2 id="发现问题">发现问题&lt;/h2>
+&lt;p>将一个新建的图片站接入了 Cloudflare，可是访问后却发现页面不正常，就是静态资源没有加载成功一样。网站系统基于 Django 框架开发，通过 uwsgi 在容器中部署，静态资源也是通过框架在管理，本以为是配置出错导致的 404 错误，结果手动访问静态资源却是正常的。&lt;/p>
+&lt;p>迷一般的问题……&lt;/p>
+&lt;p>打开控制台，发现打印出了几个类似的错误，大概就是&lt;/p>
+&lt;pre tabindex="0">&lt;code>指向 &amp;#34;/static/js/app.js&amp;#34; 的 &amp;lt;script&amp;gt; 加载失败。
+&lt;/code>&lt;/pre>&lt;p>这个样子的错误信息，刷新了页面，通过网络记录发现出现错误的静态文件的 mime 类型都是 &lt;code>application/x-unknown-type-content&lt;/code> ，就很奇怪了，记忆中浏览器会自动通过文件内容猜测其类型才对，就算没有类型也不会出现这种问题的。&lt;/p>
+&lt;p>于是又搜索了下相关资料，发现有提到 CSP 这个词，在 MDN 看了相关文档，发现并不是该设置的问题。于是找了一个报未知文件类型的请求记录，一一查看其响应的头信息。在其中找到了 &lt;code>X-Content-Type-Options: nosniff&lt;/code> 这个指令，查了下其资料后得知，这指令会 &lt;code>导致浏览器停止类型探测&lt;/code> ，我想就是它了。&lt;/p>
+&lt;h2 id="解决问题">解决问题&lt;/h2>
+&lt;p>知道可能是什么原因导致的问题就好，跑到 CF 的网站仔细找了下，最后在 HSTS 设置引导中找到了相关的设置。在停用了该特性之后，网站恢复正常加载。&lt;/p>
+&lt;p>技术发展日新月异，稍微慢一点，就会让头发少几根，想想还是痛苦。&lt;/p></description></item><item><title>GIT修改提交者信息</title><link>https://laeo.github.io/misc/git%E4%BF%AE%E6%94%B9%E6%8F%90%E4%BA%A4%E8%80%85%E4%BF%A1%E6%81%AF/</link><pubDate>Tue, 03 Apr 2018 00:00:00 +0000</pubDate><guid>https://laeo.github.io/misc/git%E4%BF%AE%E6%94%B9%E6%8F%90%E4%BA%A4%E8%80%85%E4%BF%A1%E6%81%AF/</guid><description>&lt;p>终端切换到项目目录，切换到需要更改的分支，执行以下 &lt;code>shell&lt;/code> 命令。&lt;/p>
+&lt;blockquote>
+&lt;p>手动修改命令中的 &lt;code>author&lt;/code> 和 &lt;code>author@example.org&lt;/code> 为目标值。&lt;/p>
+&lt;/blockquote>
+&lt;pre tabindex="0">&lt;code>git filter-branch --commit-filter &amp;#39;
+ export GIT_AUTHOR_NAME=author;
+ export GIT_AUTHOR_EMAIL=author@example.org;
+ export GIT_COMMITTER_NAME=author;
+ export GIT_COMMITTER_EMAIL=author@example.org;
+ git commit-tree &amp;#34;$@&amp;#34;
+&amp;#39;
+&lt;/code>&lt;/pre>&lt;p>执行完成后，使用以下命令将改动提交到远程仓库。&lt;/p>
+&lt;pre tabindex="0">&lt;code>git push --force --tags origin &amp;#39;refs/heads/*&amp;#39;
+&lt;/code>&lt;/pre>&lt;blockquote>
+&lt;p>多人合作中改动过往记录会对提交历史产生破坏，谨慎操作！&lt;/p>
+&lt;/blockquote></description></item><item><title>SublimeText3配置记录</title><link>https://laeo.github.io/misc/sublimetext3%E9%85%8D%E7%BD%AE%E8%AE%B0%E5%BD%95/</link><pubDate>Fri, 14 Oct 2016 00:00:00 +0000</pubDate><guid>https://laeo.github.io/misc/sublimetext3%E9%85%8D%E7%BD%AE%E8%AE%B0%E5%BD%95/</guid><description>&lt;p>一直以来，Sublime Text 3都是我搬砖的主力工具，我实在太喜欢轻量级的软件了。使用方便、启动迅速、插件丰富、扩展性强，是我选择它的主要理由。&lt;/p>
+&lt;p>搜索一款插件的资料时，突然想到我应该将环境的配置步骤都一一记录下来，以免以后的工作中出现配置缺漏的情况，导致开发效率降低。&lt;/p>
+&lt;h2 id="设置">设置&lt;/h2>
+&lt;p>对于新安装的 &lt;code>Sublime Text 3&lt;/code> 首要安装的就是 &lt;code>Package Control&lt;/code> ，然后是选择一款自己喜爱的主题，我选择的是 &lt;code>Material Theme&lt;/code> ，它有一款扩展的 &lt;code>Appbar&lt;/code> 组件，建议同时安装，增强体（zhuang）验（13）。&lt;/p>
+&lt;p>安装完主题之后，仿照系统自身的配置文件，修改出属于自己的个性化配置文件。我的配置文件如下：&lt;/p>
+&lt;pre tabindex="0">&lt;code>{
+ &amp;#34;always_show_minimap_viewport&amp;#34;: true,
+ &amp;#34;auto_find_in_selection&amp;#34;: true,
+ &amp;#34;color_scheme&amp;#34;: &amp;#34;Packages/Material Theme/schemes/Material-Theme.tmTheme&amp;#34;,
+ &amp;#34;default_line_ending&amp;#34;: &amp;#34;unix&amp;#34;,
+ &amp;#34;font_face&amp;#34;: &amp;#34;DejaVu Sans Mono&amp;#34;,
+ &amp;#34;font_size&amp;#34;: 10,
+ &amp;#34;ignored_packages&amp;#34;:
+ [
+ &amp;#34;Vintage&amp;#34;
+ ],
+ &amp;#34;indent_guide_options&amp;#34;:
+ [
+ &amp;#34;draw_normal&amp;#34;,
+ &amp;#34;draw_active&amp;#34;
+ ],
+ &amp;#34;indent_to_bracket&amp;#34;: true,
+ &amp;#34;line_padding_bottom&amp;#34;: 3,
+ &amp;#34;line_padding_top&amp;#34;: 3,
+ &amp;#34;match_brackets_angle&amp;#34;: true,
+ &amp;#34;material_theme_tree_headings&amp;#34;: true,
+ &amp;#34;overlay_scroll_bars&amp;#34;: &amp;#34;enabled&amp;#34;,
+ &amp;#34;shift_tab_unindent&amp;#34;: true,
+ &amp;#34;show_encoding&amp;#34;: true,
+ &amp;#34;show_line_endings&amp;#34;: true,
+ &amp;#34;theme&amp;#34;: &amp;#34;Material-Theme.sublime-theme&amp;#34;,
+ &amp;#34;translate_tabs_to_spaces&amp;#34;: true,
+ &amp;#34;trim_trailing_white_space_on_save&amp;#34;: true
+}
+&lt;/code>&lt;/pre>&lt;p>可以看出字体方面我选择的是 &lt;code>YaHei-Consolas-Hybrid&lt;/code> ，大体上还不错。之前一直使用的 &lt;code>Source-Code-Pro Yahei Hybrid&lt;/code> ，不是对称字体，效果不怎么好。&lt;/p></description></item></channel></rss>

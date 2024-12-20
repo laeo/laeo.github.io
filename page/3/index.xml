@@ -1,4 +1,82 @@
-<?xml-stylesheet href="/rss.xsl" type="text/xsl"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>LAEO</title><link>https://laeo.me/</link><description>Recent content on LAEO</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Fri, 25 Sep 2020 00:00:00 +0000</lastBuildDate><atom:link href="https://laeo.me/index.xml" rel="self" type="application/rss+xml"/><item><title>GIT修改提交者信息</title><link>https://laeo.me/misc/git%E4%BF%AE%E6%94%B9%E6%8F%90%E4%BA%A4%E8%80%85%E4%BF%A1%E6%81%AF/</link><pubDate>Tue, 03 Apr 2018 00:00:00 +0000</pubDate><guid>https://laeo.me/misc/git%E4%BF%AE%E6%94%B9%E6%8F%90%E4%BA%A4%E8%80%85%E4%BF%A1%E6%81%AF/</guid><description>LAEO https://laeo.me/misc/git%E4%BF%AE%E6%94%B9%E6%8F%90%E4%BA%A4%E8%80%85%E4%BF%A1%E6%81%AF/ -&lt;p>终端切换到项目目录，切换到需要更改的分支，执行以下 &lt;code>shell&lt;/code> 命令。&lt;/p>
+<?xml-stylesheet href="/rss.xsl" type="text/xsl"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>LAEO</title><link>https://laeo.github.io/</link><description>Recent content on LAEO</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Fri, 25 Sep 2020 00:00:00 +0000</lastBuildDate><atom:link href="https://laeo.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>深度Linux下SS智能分流</title><link>https://laeo.github.io/linux/%E6%B7%B1%E5%BA%A6linux%E4%B8%8Bss%E6%99%BA%E8%83%BD%E5%88%86%E6%B5%81/</link><pubDate>Thu, 05 Apr 2018 00:00:00 +0000</pubDate><guid>https://laeo.github.io/linux/%E6%B7%B1%E5%BA%A6linux%E4%B8%8Bss%E6%99%BA%E8%83%BD%E5%88%86%E6%B5%81/</guid><description>LAEO https://laeo.github.io/linux/%E6%B7%B1%E5%BA%A6linux%E4%B8%8Bss%E6%99%BA%E8%83%BD%E5%88%86%E6%B5%81/ -&lt;h2 id="起因">起因&lt;/h2>
+&lt;p>今天在使用 &lt;code>dep&lt;/code> 包管理器接管以前写的一个 Go 语言项目时，突然报错无法下载某个包。仔细检查后，无奈的宣布系统设置的全局代理没起作用。&lt;/p>
+&lt;h2 id="处理">处理&lt;/h2>
+&lt;p>查了资料，发现可以用 &lt;code>ss-redir&lt;/code> + &lt;code>iptables&lt;/code> + &lt;code>chnroute&lt;/code> 来做智能分流。&lt;/p>
+&lt;p>首先，我需要从 &lt;code>shadowsocks-libev&lt;/code> 中取得 &lt;code>ss-redir&lt;/code> 程序，在终端中执行&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>sudo apt install shadowsocks-libev
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>即可取得我想要的程序，其所在目录为 &lt;code>/usr/bin/ss-redir&lt;/code> 。&lt;/p>
+&lt;p>然后，我需要获取所有属于中国的 IP 地址，这个可以从 apnic 网站获得，经搜索后找到如下命令&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>wget -qO- http://ftp.apnic.net/stats/apnic/delegated-apnic-latest | awk -F &lt;span style="color:#cd5555">&amp;#39;|&amp;#39;&lt;/span> &lt;span style="color:#cd5555">&amp;#39;/CN/&amp;amp;&amp;amp;/ipv4/ {print $4 &amp;#34;/&amp;#34; 32-log($5)/log(2)}&amp;#39;&lt;/span> | cat &amp;gt; chnroutes.txt
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>经过过滤处理后的路由列表存放于当前目录，名为 &lt;code>chnroutes.txt&lt;/code> 的文本文件。&lt;/p>
+&lt;p>最后，我只需想办法将该路由表导入到 iptables 中，然后将符合规则的数据包转发到 ss-redir 提供的透明代理地址即可。&lt;/p>
+&lt;p>经过搜索，我发现可以使用 &lt;code>ipset&lt;/code> 程序来完成这一操作，使用下述命令创建路由集&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>ipset -N chnroute hash:net maxelem &lt;span style="color:#b452cd">65536&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>然后循环将之前路由表中取得的路由添加进去&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> ip in &lt;span style="color:#8b008b;font-weight:bold">$(&lt;/span>cat chnroutes.txt&lt;span style="color:#8b008b;font-weight:bold">)&lt;/span>; &lt;span style="color:#8b008b;font-weight:bold">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ipset add chnroute &lt;span style="color:#00688b">$ip&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">&amp;#34;added &lt;/span>&lt;span style="color:#00688b">$ip&lt;/span>&lt;span style="color:#cd5555">&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8b008b;font-weight:bold">done&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>然后创建 iptables 规则&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># 在nat表中新增一个链，名叫：SHADOWSOCKS&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -N SHADOWSOCKS
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># #&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># 这里记住要替换为 SS 后端服务器地址！！！ #&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># #&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -d &lt;span style="color:#00688b">$SOCKS_SERVER&lt;/span> -j RETURN
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># Ignore LANs and any other addresses you&amp;#39;d like to bypass the proxy&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># See Wikipedia and RFC5735 for full list of reserved networks.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># See ashi009/bestroutetb for a highly optimized CHN route list.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -d 0.0.0.0/8 -j RETURN
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -d 10.0.0.0/8 -j RETURN
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -d 127.0.0.0/8 -j RETURN
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -d 169.254.0.0/16 -j RETURN
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -d 172.16.0.0/12 -j RETURN
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -d 192.168.0.0/16 -j RETURN
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -d 224.0.0.0/4 -j RETURN
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -d 240.0.0.0/4 -j RETURN
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># Allow connection to chinese IPs&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -p tcp -m &lt;span style="color:#658b00">set&lt;/span> --match-set chnroute dst -j RETURN
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -p udp -m &lt;span style="color:#658b00">set&lt;/span> --match-set chnroute dst -j RETURN
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># 如果你想对 icmp 协议也实现智能分流，可以加上下面这一条&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># iptables -t nat -A SHADOWSOCKS -p icmp -m set --match-set chnroute dst -j RETURN&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">#&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># 如果 ss-redir 配置的本地代理端口不是 1080，则必须将下述命令中的 1080 改为正确的值&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22">#&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -p tcp -j REDIRECT --to-port &lt;span style="color:#b452cd">1080&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A SHADOWSOCKS -p udp -j REDIRECT --to-port &lt;span style="color:#b452cd">1080&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># 如果你想对 icmp 协议也实现智能分流，可以加上下面这一条&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># iptables -t nat -A SHADOWSOCKS -p icmp -j REDIRECT --to-port 1080&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># 将SHADOWSOCKS链中所有的规则追加到OUTPUT链中&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A OUTPUT -p tcp -j SHADOWSOCKS
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>iptables -t nat -A OUTPUT -p udp -j SHADOWSOCKS
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># 如果你想对 icmp 协议也实现智能分流，可以加上下面这一条&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#228b22"># iptables -t nat -A OUTPUT -p icmp -j SHADOWSOCKS&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上述操作执行完成后，通过修改配置文件 &lt;code>/etc/shadowsocks-libev/config.json&lt;/code> 填写好连接信息，然后通过该配置文件运行 ss-redir 即可。&lt;/p>
+&lt;p>为了方便我创建了一个 systemd 服务文件&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>sudo cat &amp;gt; /etc/systemd/system/deepin-xwall.service &lt;span style="color:#cd5555">&amp;lt;&amp;lt;EOF
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">[Unit]
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">Description=Deepin Xwall Service
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">After=network.target
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">[Service]
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">ExecStart=/usr/bin/ss-redir -u -n 65535 -c &amp;#34;/etc/shadowsocks-libev/config.json&amp;#34;
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">[Install]
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">WantedBy=multi-user.target
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#cd5555">EOF&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>然后将其设为开机启动即可&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>sudo systemctl start deepin-xwall
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>sudo systemctl &lt;span style="color:#658b00">enable&lt;/span> deepin-xwall
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>至此，整个系统所有程序都进入了翻墙模式，不需要再设置什么环境变量啥的，也不需要程序自身做兼容。我的 Go 语言项目的依赖包也能正常下载了，真是美滋滋。&lt;/p>
+- https://laeo.github.io/linux/%E6%B7%B1%E5%BA%A6linux%E4%B8%8Bss%E6%99%BA%E8%83%BD%E5%88%86%E6%B5%81/ -</description></item><item><title>GIT修改提交者信息</title><link>https://laeo.github.io/misc/git%E4%BF%AE%E6%94%B9%E6%8F%90%E4%BA%A4%E8%80%85%E4%BF%A1%E6%81%AF/</link><pubDate>Tue, 03 Apr 2018 00:00:00 +0000</pubDate><guid>https://laeo.github.io/misc/git%E4%BF%AE%E6%94%B9%E6%8F%90%E4%BA%A4%E8%80%85%E4%BF%A1%E6%81%AF/</guid><description>LAEO https://laeo.github.io/misc/git%E4%BF%AE%E6%94%B9%E6%8F%90%E4%BA%A4%E8%80%85%E4%BF%A1%E6%81%AF/ -&lt;p>终端切换到项目目录，切换到需要更改的分支，执行以下 &lt;code>shell&lt;/code> 命令。&lt;/p>
 &lt;blockquote>
 &lt;p>手动修改命令中的 &lt;code>author&lt;/code> 和 &lt;code>author@example.org&lt;/code> 为目标值。&lt;/p>
 &lt;/blockquote>
@@ -14,7 +92,7 @@ git commit-tree &amp;#34;$@&amp;#34;
 &lt;/code>&lt;/pre>&lt;blockquote>
 &lt;p>多人合作中改动过往记录会对提交历史产生破坏，谨慎操作！&lt;/p>
 &lt;/blockquote>
-- https://laeo.me/misc/git%E4%BF%AE%E6%94%B9%E6%8F%90%E4%BA%A4%E8%80%85%E4%BF%A1%E6%81%AF/ -</description></item><item><title>一道面试时遇到的MySQL索引题</title><link>https://laeo.me/mysql/%E4%B8%80%E9%81%93%E9%9D%A2%E8%AF%95%E6%97%B6%E9%81%87%E5%88%B0%E7%9A%84mysql%E7%B4%A2%E5%BC%95%E9%A2%98/</link><pubDate>Thu, 27 Oct 2016 00:00:00 +0000</pubDate><guid>https://laeo.me/mysql/%E4%B8%80%E9%81%93%E9%9D%A2%E8%AF%95%E6%97%B6%E9%81%87%E5%88%B0%E7%9A%84mysql%E7%B4%A2%E5%BC%95%E9%A2%98/</guid><description>LAEO https://laeo.me/mysql/%E4%B8%80%E9%81%93%E9%9D%A2%E8%AF%95%E6%97%B6%E9%81%87%E5%88%B0%E7%9A%84mysql%E7%B4%A2%E5%BC%95%E9%A2%98/ -&lt;h2 id="题目内容">题目内容&lt;/h2>
+- https://laeo.github.io/misc/git%E4%BF%AE%E6%94%B9%E6%8F%90%E4%BA%A4%E8%80%85%E4%BF%A1%E6%81%AF/ -</description></item><item><title>一道面试时遇到的MySQL索引题</title><link>https://laeo.github.io/mysql/%E4%B8%80%E9%81%93%E9%9D%A2%E8%AF%95%E6%97%B6%E9%81%87%E5%88%B0%E7%9A%84mysql%E7%B4%A2%E5%BC%95%E9%A2%98/</link><pubDate>Thu, 27 Oct 2016 00:00:00 +0000</pubDate><guid>https://laeo.github.io/mysql/%E4%B8%80%E9%81%93%E9%9D%A2%E8%AF%95%E6%97%B6%E9%81%87%E5%88%B0%E7%9A%84mysql%E7%B4%A2%E5%BC%95%E9%A2%98/</guid><description>LAEO https://laeo.github.io/mysql/%E4%B8%80%E9%81%93%E9%9D%A2%E8%AF%95%E6%97%B6%E9%81%87%E5%88%B0%E7%9A%84mysql%E7%B4%A2%E5%BC%95%E9%A2%98/ -&lt;h2 id="题目内容">题目内容&lt;/h2>
 &lt;p>假设有一个整数类型的字段 &lt;code>status&lt;/code> ，其用来存储一条记录的状态，状态的数量是有限个，这里我们就当做一共有10种不同的状态。现在因为查询速度的原因，需要对MySQL进行优化。请问，该字段是否需要加上索引？已知该字段频繁被读取和修改。&lt;/p>
 &lt;h2 id="我的回答">我的回答&lt;/h2>
 &lt;p>在我的记忆中，热点数据一般需要做缓存和索引，一遍提高查询速度。我当时一听，需要频繁读写，那肯定也是热点数据啊，那肯定要加啊，于是就回答需要加。&lt;/p>
@@ -29,7 +107,7 @@ git commit-tree &amp;#34;$@&amp;#34;
 &lt;h2 id="总结">总结&lt;/h2>
 &lt;p>这或许就是我之前看到的一些文章里面介绍的，enum之类的类型不需要加索引的原因，因为它的数据相似度是非常高的，加了索引起到的作用微乎其微，反而会占用不少空间，所以不需要加上索引。&lt;/p>
 &lt;p>只要同字段中存储的数据的相似度足够的小，索引起到的缩小检索范围的作用就会足够大。&lt;/p>
-- https://laeo.me/mysql/%E4%B8%80%E9%81%93%E9%9D%A2%E8%AF%95%E6%97%B6%E9%81%87%E5%88%B0%E7%9A%84mysql%E7%B4%A2%E5%BC%95%E9%A2%98/ -</description></item><item><title>使用Docker快速构建Laravel开发环境</title><link>https://laeo.me/php/%E4%BD%BF%E7%94%A8docker%E5%BF%AB%E9%80%9F%E6%9E%84%E5%BB%BAlaravel%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/</link><pubDate>Fri, 21 Oct 2016 00:00:00 +0000</pubDate><guid>https://laeo.me/php/%E4%BD%BF%E7%94%A8docker%E5%BF%AB%E9%80%9F%E6%9E%84%E5%BB%BAlaravel%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/</guid><description>LAEO https://laeo.me/php/%E4%BD%BF%E7%94%A8docker%E5%BF%AB%E9%80%9F%E6%9E%84%E5%BB%BAlaravel%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/ -&lt;h2 id="docker简介">Docker简介&lt;/h2>
+- https://laeo.github.io/mysql/%E4%B8%80%E9%81%93%E9%9D%A2%E8%AF%95%E6%97%B6%E9%81%87%E5%88%B0%E7%9A%84mysql%E7%B4%A2%E5%BC%95%E9%A2%98/ -</description></item><item><title>使用Docker快速构建Laravel开发环境</title><link>https://laeo.github.io/php/%E4%BD%BF%E7%94%A8docker%E5%BF%AB%E9%80%9F%E6%9E%84%E5%BB%BAlaravel%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/</link><pubDate>Fri, 21 Oct 2016 00:00:00 +0000</pubDate><guid>https://laeo.github.io/php/%E4%BD%BF%E7%94%A8docker%E5%BF%AB%E9%80%9F%E6%9E%84%E5%BB%BAlaravel%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/</guid><description>LAEO https://laeo.github.io/php/%E4%BD%BF%E7%94%A8docker%E5%BF%AB%E9%80%9F%E6%9E%84%E5%BB%BAlaravel%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/ -&lt;h2 id="docker简介">Docker简介&lt;/h2>
 &lt;p>Docker是一个虚拟化容器引擎，跟虚拟机类似，不过更加轻量级。对于开发者来说，Docker的出现无疑是种福音。借助Docker，我们可以快速批量构建相同的环境，可以更加方便的对应用进行伸缩，以便更加灵活的控制应用的负载能力。我们还可以将其应用在开发中，使用Dockerfile快速构建统一的开发环境，避免因环境问题导致的BUG。许多云服务企业提供商业化的Docker容器资源，通过可定制的Dockerfile脚本来描述你需要的环境，以便快速构建生产环境和对生产环境进行伸缩控制。&lt;/p>
 &lt;h2 id="dockerfile简介">Dockerfile简介&lt;/h2>
 &lt;p>Dockerfile是Docker容器的“说明书”，用来描述Docker容器的构建过程。在同一份Dockerfile下，只能生成同一种环境，这种 &lt;code>唯一性&lt;/code> 一定程度上保证了应用运行在容器中的可靠性。&lt;/p>
@@ -105,7 +183,7 @@ CMD [&amp;#34;/usr/bin/redis-server&amp;#34;, &amp;#34;/etc/redis.conf&amp;#34;]
 &lt;h2 id="总结">总结&lt;/h2>
 &lt;p>Docker容器技术大大方便了开发者统一开发环境，也增强了应用的抗压能力。它的出现，无论是对于开发者，还是对于运维，都是一件大好事。我对Docker的认知还很浅薄，并没有系统的去查看其官方文档，也没有阅读任何有关书籍，文中内容难免有不当之处，看官请海涵。&lt;/p>
 &lt;p>我将自己写好的构建脚本开源在了Github上，如果您有兴趣，可以访问 &lt;a href="https://github.com/laeo/booster">laeo/booster&lt;/a> 进行查看。&lt;/p>
-- https://laeo.me/php/%E4%BD%BF%E7%94%A8docker%E5%BF%AB%E9%80%9F%E6%9E%84%E5%BB%BAlaravel%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/ -</description></item><item><title>SublimeText3配置记录</title><link>https://laeo.me/misc/sublimetext3%E9%85%8D%E7%BD%AE%E8%AE%B0%E5%BD%95/</link><pubDate>Fri, 14 Oct 2016 00:00:00 +0000</pubDate><guid>https://laeo.me/misc/sublimetext3%E9%85%8D%E7%BD%AE%E8%AE%B0%E5%BD%95/</guid><description>LAEO https://laeo.me/misc/sublimetext3%E9%85%8D%E7%BD%AE%E8%AE%B0%E5%BD%95/ -&lt;p>一直以来，Sublime Text 3都是我搬砖的主力工具，我实在太喜欢轻量级的软件了。使用方便、启动迅速、插件丰富、扩展性强，是我选择它的主要理由。&lt;/p>
+- https://laeo.github.io/php/%E4%BD%BF%E7%94%A8docker%E5%BF%AB%E9%80%9F%E6%9E%84%E5%BB%BAlaravel%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/ -</description></item><item><title>SublimeText3配置记录</title><link>https://laeo.github.io/misc/sublimetext3%E9%85%8D%E7%BD%AE%E8%AE%B0%E5%BD%95/</link><pubDate>Fri, 14 Oct 2016 00:00:00 +0000</pubDate><guid>https://laeo.github.io/misc/sublimetext3%E9%85%8D%E7%BD%AE%E8%AE%B0%E5%BD%95/</guid><description>LAEO https://laeo.github.io/misc/sublimetext3%E9%85%8D%E7%BD%AE%E8%AE%B0%E5%BD%95/ -&lt;p>一直以来，Sublime Text 3都是我搬砖的主力工具，我实在太喜欢轻量级的软件了。使用方便、启动迅速、插件丰富、扩展性强，是我选择它的主要理由。&lt;/p>
 &lt;p>搜索一款插件的资料时，突然想到我应该将环境的配置步骤都一一记录下来，以免以后的工作中出现配置缺漏的情况，导致开发效率降低。&lt;/p>
 &lt;h2 id="设置">设置&lt;/h2>
 &lt;p>对于新安装的 &lt;code>Sublime Text 3&lt;/code> 首要安装的就是 &lt;code>Package Control&lt;/code> ，然后是选择一款自己喜爱的主题，我选择的是 &lt;code>Material Theme&lt;/code> ，它有一款扩展的 &lt;code>Appbar&lt;/code> 组件，建议同时安装，增强体（zhuang）验（13）。&lt;/p>
@@ -178,7 +256,7 @@ CMD [&amp;#34;/usr/bin/redis-server&amp;#34;, &amp;#34;/etc/redis.conf&amp;#34;]
 }
 &lt;/code>&lt;/pre>&lt;h2 id="未完待更">未完待更&lt;/h2>
 &lt;p>等以后有改动了，会不停修改本文，也算是增强记忆吧。&lt;/p>
-- https://laeo.me/misc/sublimetext3%E9%85%8D%E7%BD%AE%E8%AE%B0%E5%BD%95/ -</description></item><item><title>使用GO语言实现基础路由功能</title><link>https://laeo.me/golang/%E4%BD%BF%E7%94%A8go%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E5%9F%BA%E7%A1%80%E8%B7%AF%E7%94%B1%E5%8A%9F%E8%83%BD/</link><pubDate>Sun, 04 Sep 2016 00:00:00 +0000</pubDate><guid>https://laeo.me/golang/%E4%BD%BF%E7%94%A8go%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E5%9F%BA%E7%A1%80%E8%B7%AF%E7%94%B1%E5%8A%9F%E8%83%BD/</guid><description>LAEO https://laeo.me/golang/%E4%BD%BF%E7%94%A8go%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E5%9F%BA%E7%A1%80%E8%B7%AF%E7%94%B1%E5%8A%9F%E8%83%BD/ -&lt;h2 id="什么是-路由器-">什么是 “路由器” ？&lt;/h2>
+- https://laeo.github.io/misc/sublimetext3%E9%85%8D%E7%BD%AE%E8%AE%B0%E5%BD%95/ -</description></item><item><title>使用GO语言实现基础路由功能</title><link>https://laeo.github.io/golang/%E4%BD%BF%E7%94%A8go%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E5%9F%BA%E7%A1%80%E8%B7%AF%E7%94%B1%E5%8A%9F%E8%83%BD/</link><pubDate>Sun, 04 Sep 2016 00:00:00 +0000</pubDate><guid>https://laeo.github.io/golang/%E4%BD%BF%E7%94%A8go%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E5%9F%BA%E7%A1%80%E8%B7%AF%E7%94%B1%E5%8A%9F%E8%83%BD/</guid><description>LAEO https://laeo.github.io/golang/%E4%BD%BF%E7%94%A8go%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E5%9F%BA%E7%A1%80%E8%B7%AF%E7%94%B1%E5%8A%9F%E8%83%BD/ -&lt;h2 id="什么是-路由器-">什么是 “路由器” ？&lt;/h2>
 &lt;p>“路由器” 是一个抽象的描述，是对WEB框架中负责解析、管理URL的组件的统一称呼。使用 “路由器” 来方便URL的管理（生成、解析），由于现代WEB应用的复杂程度日渐加深，“路由器” 的使用变得愈加普遍。&lt;/p>
 &lt;h2 id="路由器-的基本原理">“路由器” 的基本原理&lt;/h2>
 &lt;p>“路由器” 本质上是通过对客户端请求的 &lt;code>URI&lt;/code> 进行解析，从而对系统的运行加以引导的工具。在PHP中可以使用 &lt;code>$_SERVER&lt;/code> 全局变量获取到用户请求的URI，然后通过解析该URI，执行 &lt;code>路由器&lt;/code> 中注册的对应的 &lt;code>控制器方法&lt;/code> ，到此路由器的工作就已完成。&lt;/p>
@@ -242,7 +320,7 @@ CMD [&amp;#34;/usr/bin/redis-server&amp;#34;, &amp;#34;/etc/redis.conf&amp;#34;]
 &lt;/blockquote>
 &lt;h2 id="最后">最后&lt;/h2>
 &lt;p>写得或许有些浅薄，不过我学习golang也并不久，还有很多坑等着我踩，这算是预热吧。&lt;/p>
-- https://laeo.me/golang/%E4%BD%BF%E7%94%A8go%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E5%9F%BA%E7%A1%80%E8%B7%AF%E7%94%B1%E5%8A%9F%E8%83%BD/ -</description></item><item><title>Base32编码算法介绍及PHP实现</title><link>https://laeo.me/php/base32%E7%BC%96%E7%A0%81%E7%AE%97%E6%B3%95%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0/</link><pubDate>Wed, 27 Jul 2016 00:00:00 +0000</pubDate><guid>https://laeo.me/php/base32%E7%BC%96%E7%A0%81%E7%AE%97%E6%B3%95%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0/</guid><description>LAEO https://laeo.me/php/base32%E7%BC%96%E7%A0%81%E7%AE%97%E6%B3%95%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0/ -&lt;h2 id="什么是base32编码算法">什么是Base32编码算法&lt;/h2>
+- https://laeo.github.io/golang/%E4%BD%BF%E7%94%A8go%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E5%9F%BA%E7%A1%80%E8%B7%AF%E7%94%B1%E5%8A%9F%E8%83%BD/ -</description></item><item><title>Base32编码算法介绍及PHP实现</title><link>https://laeo.github.io/php/base32%E7%BC%96%E7%A0%81%E7%AE%97%E6%B3%95%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0/</link><pubDate>Wed, 27 Jul 2016 00:00:00 +0000</pubDate><guid>https://laeo.github.io/php/base32%E7%BC%96%E7%A0%81%E7%AE%97%E6%B3%95%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0/</guid><description>LAEO https://laeo.github.io/php/base32%E7%BC%96%E7%A0%81%E7%AE%97%E6%B3%95%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0/ -&lt;h2 id="什么是base32编码算法">什么是Base32编码算法&lt;/h2>
 &lt;p>Base32不知道，那么Base64你肯定知道吧？它们都是用于对字符串数据进行编码的一种算法。Base64比Base32更加常见，PHP只内置了Base64编码算法的实现函数。如果不是研究 &lt;code>TOTP&lt;/code> 的时候发现谷歌的两步验证软件使用到了这种算法，我都不会知道有它。&lt;/p>
 &lt;h2 id="有什么作用">有什么作用&lt;/h2>
 &lt;p>限于我个人的认知范围，目前只知道谷歌两步验证功能中使用到了它。它与Base64是差不多的，差异只在于字符集的大小。&lt;/p>
@@ -454,7 +532,7 @@ CMD [&amp;#34;/usr/bin/redis-server&amp;#34;, &amp;#34;/etc/redis.conf&amp;#34;]
 &lt;h2 id="最后">最后&lt;/h2>
 &lt;p>代码写得比较乱，主要是方便一步步弄懂。其中各种函数的使用、闭包的使用，都是为了方便查看，顺便熟悉它们。上述代码已经经过我自己的测试，编码、解码的结果跟某在线编、解码的网站计算的结果完全相同。&lt;/p>
 &lt;p>才疏学浅，万望见谅。&lt;/p>
-- https://laeo.me/php/base32%E7%BC%96%E7%A0%81%E7%AE%97%E6%B3%95%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0/ -</description></item><item><title>TOTP原理介绍及PHP实现展示</title><link>https://laeo.me/php/totp%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0%E5%B1%95%E7%A4%BA/</link><pubDate>Tue, 26 Jul 2016 00:00:00 +0000</pubDate><guid>https://laeo.me/php/totp%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0%E5%B1%95%E7%A4%BA/</guid><description>LAEO https://laeo.me/php/totp%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0%E5%B1%95%E7%A4%BA/ -&lt;h2 id="什么是-totp">什么是 “TOTP”&lt;/h2>
+- https://laeo.github.io/php/base32%E7%BC%96%E7%A0%81%E7%AE%97%E6%B3%95%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0/ -</description></item><item><title>TOTP原理介绍及PHP实现展示</title><link>https://laeo.github.io/php/totp%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0%E5%B1%95%E7%A4%BA/</link><pubDate>Tue, 26 Jul 2016 00:00:00 +0000</pubDate><guid>https://laeo.github.io/php/totp%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0%E5%B1%95%E7%A4%BA/</guid><description>LAEO https://laeo.github.io/php/totp%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0%E5%B1%95%E7%A4%BA/ -&lt;h2 id="什么是-totp">什么是 “TOTP”&lt;/h2>
 &lt;p>&lt;code>TOTP&lt;/code> 是 &lt;code>Time-based One-time Password&lt;/code> 的英文缩写，翻译为中文即“基于时间的一次性密码”。&lt;/p>
 &lt;h2 id="有什么作用">有什么作用&lt;/h2>
 &lt;p>快节奏的社会，一切讲究快捷、方便，但是安全相关，实在方便不起来， &lt;code>TOTP&lt;/code> 应运而生。使用该技术可以在降低身份认证复杂度的同时，将安全系数大幅度提高。君不见现在多少网站使用的动态口令功能，基本都是以该技术的为基础。Google Authenticator、Authy 等等软件都使用的该技术，我个人的域名注册商、服务器商也都接入了该技术。&lt;/p>
@@ -532,4 +610,4 @@ CMD [&amp;#34;/usr/bin/redis-server&amp;#34;, &amp;#34;/etc/redis.conf&amp;#34;]
 &lt;/blockquote>
 &lt;h2 id="最后">最后&lt;/h2>
 &lt;p>仅个人粗浅见识，如有遗漏、误缺，还请见谅。&lt;/p>
-- https://laeo.me/php/totp%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0%E5%B1%95%E7%A4%BA/ -</description></item></channel></rss>
+- https://laeo.github.io/php/totp%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0%E5%B1%95%E7%A4%BA/ -</description></item></channel></rss>
