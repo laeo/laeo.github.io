@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh"><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+<title>Eloquent模型子类MorphToMany调用doesntHave失效问题</title>
+
+
+
+
+<meta charset="utf-8">
+<meta name="X-UA-Compatible" content="IE=edge">
+<meta name="google-site-verification" content="">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=5, user-scalable=5" name="viewport">
+<meta content="telephone=no" name="format-detection">
+<meta name="description" content="">
+<meta name="renderer" content="webkit">
+<meta name="theme-color" content="#ffffff">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+
+
+
+      <script src="/js/toc.js"></script>
+    
+    <link type="text/css" rel="stylesheet" href="/vendor/css/bootstrap.min.css">
+
+<link rel="stylesheet" href="/scss/dark-mode.min.cb53f1bee2b8900cb4f082afbf00175d6618f281cf9a2fe8619e3b52d20b5721.css" integrity="sha256-y1PxvuK4kAy08IKvvwAXXWYY8oHPmi/oYZ47UtILVyE=" media="screen">
+
+
+<link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Material+Icons">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script src="/vendor/js/md5.min.js"></script><script>
+  var gitalk = new Gitalk({
+  clientID: 'bcb3ff802edb45ae15c3',
+  clientSecret: '541b0675cacbdad87ef5e31dcff14d28f843b34a',
+  repo: 'laeo.github.io',
+  owner: 'laeo',
+  admin: ['laeo'],
+  id: md5(location.pathname),
+  distractionFreeMode: 'false'
+  });
+  window.onload = function () {
+        gitalk.render('gitalk-container')
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+    	<div id="app"><div class="single-column-drawer-container" id="drawer"
+     v-bind:class="{ 'single-column-drawer-container-active': isDrawerOpen }">
+    <div class="drawer-content">
+        <div class="drawer-menu">
+            
+            
+            
+            
+            <div class="toc">
+
+
+	<div class="toc-content">
+	
+		
+		
+		
+		<center>- 目录 -</center>
+		
+		
+		<ul>
+			
+				
+				
+					
+						
+						
+						
+						
+							
+								
+									<ul>
+								
+							
+						
+						
+							<li>
+								<a href="#%e7%bc%96%e5%86%99bug%e4%b9%8b%e8%b7%af" class="nav-编写bug之路">
+									编写BUG之路
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+						
+							<li>
+								<a href="#%e8%a7%a3%e5%86%b3bug%e4%b9%8b%e8%b7%af" class="nav-解决bug之路">
+									解决BUG之路
+								</a>
+							</li>
+						
+						
+					
+				
+			
+		</ul>
+	</div>
+
+</div>
+            
+        </div>
+    </div>
+</div>
+<transition name="fade">
+    <div id="drawer-mask" v-bind:class="{ 'single-column-drawer-mask': mounted }" v-if="isDrawerOpen" v-on:click="toggleDrawer"></div>
+</transition>
+<nav id="navBar" class="navbar sticky-top navbar-light single-column-nav-container">
+    <div id="navBackground" class="nav-background"></div>
+    <div class="container container-narrow nav-content">
+        <button id="nav_dropdown_btn" class="nav-dropdown-toggle" type="button" v-on:click="toggleDrawer">
+            <i class="material-icons">
+                menu
+            </i>
+        </button>
+        <a id="navTitle" class="navbar-brand" href="http://localhost:1313/">
+            LAEO
+        </a>
+        
+        <button type="button" class="nav-darkmode-toggle" id="darkModeToggleButton2">
+            <i class="material-icons" id="darkModeToggleIcon2">
+                dark_mode
+            </i>
+        </button>
+        
+    </div>
+</nav>
+<div class="single-column-header-container" id="pageHead"
+     v-bind:style="{ transform: 'translateZ(0px) translateY('+.3*scrollY+'px)', opacity: 1-navOpacity }">
+    <a href="http://localhost:1313/">
+        <div class="single-column-header-title">LAEO</div>
+        
+        <div class="single-column-header-subtitle">桀桀桀</div>
+        
+
+    </a>
+</div>
+
+            <div id="content">
+                <div id="streamContainer" class="stream-container">
+
+    <div class="post-list-container post-list-container-shadow">
+        <div class="post">
+            
+            
+            
+
+            <div class="post-head-wrapper-text-only"
+                
+            >
+                <div class="post-title">
+                    Eloquent模型子类MorphToMany调用doesntHave失效问题
+                    
+                    <div class="post-meta">
+                        
+                        <time itemprop="datePublished">
+                            2018-08-11 00:00
+                        </time>
+                        
+
+                        
+
+                        
+                        
+                            <i class="material-icons" style="">schedule</i>
+                            
+
+                            
+                            
+
+                            
+                            3 min
+                            
+                            4 s.
+                        
+                    </div>
+                </div>
+            </div>
+            
+            <div class="post-body-wrapper">
+                
+                <div class="post-body" v-pre>
+                
+                    <h2 id="编写bug之路">编写BUG之路</h2>
+<p>在私人项目中使用了 <code>laravel-permission</code> 包做权限管理，用户表 <code>users</code> 需要扩展出不同的角色。考虑到项目规模，我将用户数据和后台客服数据统一存放在用户表中，然后根据角色信息来判断账户的归类。如此，我在 <code>App\User</code> 模型中进行登录认证等统一的用户操作，但是新建 <code>App\Client</code> 模型来专门管理普通用户的数据，该类继承自用户模型类，可以方便的共享一些通用属性。</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-php" data-lang="php"><span style="display:flex;"><span><span style="color:#8b008b;font-weight:bold">namespace</span> App;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8b008b;font-weight:bold">class</span> <span style="color:#008b45;font-weight:bold">Client</span> <span style="color:#8b008b;font-weight:bold">extends</span> User
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#8b008b;font-weight:bold">protected</span> <span style="color:#00688b">$table</span> = <span style="color:#cd5555">&#39;users&#39;</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>为了方便使用用户模型查找数据，我在 <code>App\Client</code> 中增加了 <code>全局作用域</code> 来自动过滤有权限的用户：</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-php" data-lang="php"><span style="display:flex;"><span><span style="color:#228b22">// 在 app/Client.php 中
+</span></span></span><span style="display:flex;"><span><span style="color:#228b22"></span><span style="color:#8b008b;font-weight:bold">static</span>::<span style="color:#658b00">addGlobalScope</span>(<span style="color:#cd5555">&#39;client&#39;</span>, <span style="color:#8b008b;font-weight:bold">function</span> (Builder <span style="color:#00688b">$builder</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#00688b">$builder</span>-&gt;<span style="color:#658b00">doesntHave</span>(<span style="color:#cd5555">&#39;roles&#39;</span>);
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div><p>原本我以为加上上述代码后，就可以正常取出没有权限的普通账户了，可惜事实并非如此，该作用域完全没有起到作用，所有用户数据都被取出来了。我写了一个BUG！</p>
+<h2 id="解决bug之路">解决BUG之路</h2>
+<p>出现这样的问题，首先想到的就是去该包的 issue 页面搜索，看看有没有相关的资料，可能是我关键词有问题，并没有搜索到相关资料。搜索引擎也是相同的结果，没查到 <code>doesntHave</code> 失效的原因。</p>
+<p>那就只能自己动手咯。</p>
+<p>首先想到打印执行的 SQL 出来看看：</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-php" data-lang="php"><span style="display:flex;"><span><span style="color:#228b22">// app/Providers/EventServiceProvider.php 中
+</span></span></span><span style="display:flex;"><span><span style="color:#228b22"></span>
+</span></span><span style="display:flex;"><span>DB::<span style="color:#658b00">listen</span>(<span style="color:#8b008b;font-weight:bold">function</span> (<span style="color:#00688b">$query</span>) {
+</span></span><span style="display:flex;"><span>    Log::<span style="color:#658b00">debug</span>(<span style="color:#00688b">$query</span>-&gt;<span style="color:#658b00">time</span> . <span style="color:#cd5555">&#39;@&#39;</span> . <span style="color:#00688b">$query</span>-&gt;<span style="color:#658b00">sql</span>, <span style="color:#00688b">$query</span>-&gt;<span style="color:#658b00">bindings</span>);
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div><p>通过注册上述监听器后，在日志文件中找到了相关的 SQL 记录。看了下提交的参数，其中有个 <code>App\\Client</code> 引起我的注意，在我从数据库中查询到的数据里，都是存储的原始的 <code>App\User</code> ，那么只需要将这个参数改正确就行了。我猜测是因为普通用户的模型是继承的，多对多关联的代码在执行的时候自动获取了当前实例的类名，所以才导致查询不到记录。</p>
+<p>找到问题所在就好办了，编辑器里跟着源码挨个跳转，最终找到了它</p>
+<p><img src="/static/images/2018-08-11-eloquent-morphToMany.png" alt="screenshot"></p>
+<p>在 <code>Illuminate\Database\Eloquent\Relations\MorphToMany</code> 中我找到了一个关键函数 <code>getMorphClass</code> ，这货就是给多对多关联提供模型类名的，所以我果断在 <code>App\Client</code> 中重写了该方法，以使之返回固定的 <code>App\User</code> 。</p>
+<p>修改过后，系统运行果断正常起来。<strong>BUG FIXED！</strong></p>
+
+                    
+                    <HR width="100%" id="EOF">
+		    <p style="color:#777;">最后修改于 2018-08-11</p>
+                    
+                </div>
+            </div>
+            
+            
+            <nav class="post-pagination">
+
+                
+                <a class="newer-posts" href="/container/docker%E5%AE%9E%E7%8E%B0%E6%96%B0%E5%BB%BA%E5%AE%B9%E5%99%A8%E5%90%8E%E8%87%AA%E5%8A%A8%E5%88%9B%E5%BB%BAnginx%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86/">
+			下回<br>docker 实现新建容器后自动创建 nginx 反向代理
+                </a>
+                
+                
+                
+                <a class="older-posts" href="/linux/arch%E5%AE%89%E8%A3%85plasma%E6%A1%8C%E9%9D%A2%E7%8E%AF%E5%A2%83%E5%8F%8A%E7%BE%8E%E5%8C%96%E8%AE%B0%E5%BD%95/">
+			上回<br>ARCH安装Plasma桌面环境及美化记录
+                </a>
+                
+            </nav>
+            <div class="post-comment-wrapper">
+                
+
+
+<div id="gitalk-container"></div>
+
+
+
+
+
+
+
+
+
+
+
+            </div>
+        </div>
+    </div>
+
+
+                    </div>
+            </div><div id="sideContainer" class="side-container">
+    
+    <a class="a-block nav-head false" href="http://localhost:1313/">
+    
+        <div class="nav-title">
+            LAEO
+        </div>
+        
+        <div class="nav-subtitle">
+            桀桀桀
+        </div>
+        
+    </a>
+
+    <div class="nav-link-list">
+        
+        
+    </div>
+
+    
+
+    <div class="nav-footer">
+        
+Hugo Theme <a href="https://github.com/amazingrise/hugo-theme-diary">Diary</a> by <a href="https://risehere.net/">Rise</a>
+<br>
+移植自 <a href="https://mak1t0.cc/" target="_blank" rel="noreferrer noopener">Makito</a>'s <a href="https://github.com/SumiMakito/hexo-theme-journal/" target="_blank" rel="noreferrer noopener">Journal.</a> <br>
+<br>
+
+&copy;
+	
+	2020 LAEO
+	
+
+    </div>
+    
+</div><div id="extraContainer" class="extra-container">
+    <div class="toc-wrapper">
+        
+
+        
+        <div class="toc">
+
+
+	<div class="toc-content">
+	
+		
+		
+		
+		<center>- 目录 -</center>
+		
+		
+		<ul>
+			
+				
+				
+					
+						
+						
+						
+						
+							
+								
+									<ul>
+								
+							
+						
+						
+							<li>
+								<a href="#%e7%bc%96%e5%86%99bug%e4%b9%8b%e8%b7%af" class="nav-编写bug之路">
+									编写BUG之路
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+						
+							<li>
+								<a href="#%e8%a7%a3%e5%86%b3bug%e4%b9%8b%e8%b7%af" class="nav-解决bug之路">
+									解决BUG之路
+								</a>
+							</li>
+						
+						
+					
+				
+			
+		</ul>
+	</div>
+
+</div>
+        
+    </div>
+    <div class="pagination">
+        <a id="globalBackToTop" class="pagination-action animated-visibility" href="#top"
+            :class="{ invisible: scrollY == 0 }">
+            <i class="material-icons pagination-action-icon">
+                keyboard_arrow_up
+            </i>
+        </a>
+        
+        <a type="button" class="pagination-action" id="darkModeToggleButton">
+            <span class="material-icons pagination-action-icon" id="darkModeToggleIcon">
+                dark_mode
+            </span>
+        </a>
+        
+        
+    </div>
+</div>
+
+<div id="single-column-footer">
+Hugo Theme <a href="https://github.com/amazingrise/hugo-theme-diary">Diary</a> by <a href="https://risehere.net/">Rise</a>
+<br>
+移植自 <a href="https://mak1t0.cc/" target="_blank" rel="noreferrer noopener">Makito</a>'s <a href="https://github.com/SumiMakito/hexo-theme-journal/" target="_blank" rel="noreferrer noopener">Journal.</a> <br>
+<br>
+
+&copy;
+	
+	2020 LAEO
+	
+</div>
+            </div>
+    
+    <script src="/js/journal.js"></script></body>
+</html>

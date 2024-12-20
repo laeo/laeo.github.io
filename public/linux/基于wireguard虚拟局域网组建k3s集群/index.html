@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="zh"><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+<title>基于WireGuard虚拟局域网组建k3s集群</title>
+
+
+
+
+<meta charset="utf-8">
+<meta name="X-UA-Compatible" content="IE=edge">
+<meta name="google-site-verification" content="">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=5, user-scalable=5" name="viewport">
+<meta content="telephone=no" name="format-detection">
+<meta name="description" content="">
+<meta name="renderer" content="webkit">
+<meta name="theme-color" content="#ffffff">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+
+
+
+      <script src="/js/toc.js"></script>
+    
+    <link type="text/css" rel="stylesheet" href="/vendor/css/bootstrap.min.css">
+
+<link rel="stylesheet" href="/scss/dark-mode.min.cb53f1bee2b8900cb4f082afbf00175d6618f281cf9a2fe8619e3b52d20b5721.css" integrity="sha256-y1PxvuK4kAy08IKvvwAXXWYY8oHPmi/oYZ47UtILVyE=" media="screen">
+
+
+<link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Material+Icons">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script src="/vendor/js/md5.min.js"></script><script>
+  var gitalk = new Gitalk({
+  clientID: 'bcb3ff802edb45ae15c3',
+  clientSecret: '541b0675cacbdad87ef5e31dcff14d28f843b34a',
+  repo: 'laeo.github.io',
+  owner: 'laeo',
+  admin: ['laeo'],
+  id: md5(location.pathname),
+  distractionFreeMode: 'false'
+  });
+  window.onload = function () {
+        gitalk.render('gitalk-container')
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+    	<div id="app"><div class="single-column-drawer-container" id="drawer"
+     v-bind:class="{ 'single-column-drawer-container-active': isDrawerOpen }">
+    <div class="drawer-content">
+        <div class="drawer-menu">
+            
+            
+            
+            
+            <div class="toc">
+
+
+	<div class="toc-content">
+	
+		
+		
+		
+		<center>- 目录 -</center>
+		
+		
+		<ul>
+			
+				
+				
+					
+						
+						
+						
+						
+							
+								
+									<ul>
+								
+							
+						
+						
+							<li>
+								<a href="#k3s" class="nav-k3s">
+									k3s
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+						
+							<li>
+								<a href="#%e7%8e%af%e5%a2%83%e5%88%9d%e5%a7%8b%e5%8c%96" class="nav-环境初始化">
+									环境初始化
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+						
+							<li>
+								<a href="#%e5%ae%89%e8%a3%85%e8%ae%b0%e5%bd%95" class="nav-安装记录">
+									安装记录
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+							
+								
+									<ul>
+								
+							
+						
+						
+							<li>
+								<a href="#%e4%b8%bb%e6%8e%a7" class="nav-主控">
+									主控
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+						
+							<li>
+								<a href="#%e8%a2%ab%e6%8e%a7" class="nav-被控">
+									被控
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+							
+								</ul>
+							
+						
+						
+						
+							<li>
+								<a href="#%e7%bb%84%e4%bb%b6" class="nav-组件">
+									组件
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+							
+								
+									<ul>
+								
+							
+						
+						
+							<li>
+								<a href="#nginx--certmanager" class="nav-nginx--certmanager">
+									Nginx &#43; CertManager
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+						
+							<li>
+								<a href="#longhorn%e5%ad%98%e5%82%a8" class="nav-longhorn存储">
+									Longhorn存储
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+						
+							<li>
+								<a href="#kubernetes-dashboard" class="nav-kubernetes-dashboard">
+									Kubernetes Dashboard
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+							
+								</ul>
+							
+						
+						
+						
+							<li>
+								<a href="#%e6%80%bb%e7%bb%93" class="nav-总结">
+									总结
+								</a>
+							</li>
+						
+						
+					
+				
+			
+		</ul>
+	</div>
+
+</div>
+            
+        </div>
+    </div>
+</div>
+<transition name="fade">
+    <div id="drawer-mask" v-bind:class="{ 'single-column-drawer-mask': mounted }" v-if="isDrawerOpen" v-on:click="toggleDrawer"></div>
+</transition>
+<nav id="navBar" class="navbar sticky-top navbar-light single-column-nav-container">
+    <div id="navBackground" class="nav-background"></div>
+    <div class="container container-narrow nav-content">
+        <button id="nav_dropdown_btn" class="nav-dropdown-toggle" type="button" v-on:click="toggleDrawer">
+            <i class="material-icons">
+                menu
+            </i>
+        </button>
+        <a id="navTitle" class="navbar-brand" href="http://localhost:1313/">
+            LAEO
+        </a>
+        
+        <button type="button" class="nav-darkmode-toggle" id="darkModeToggleButton2">
+            <i class="material-icons" id="darkModeToggleIcon2">
+                dark_mode
+            </i>
+        </button>
+        
+    </div>
+</nav>
+<div class="single-column-header-container" id="pageHead"
+     v-bind:style="{ transform: 'translateZ(0px) translateY('+.3*scrollY+'px)', opacity: 1-navOpacity }">
+    <a href="http://localhost:1313/">
+        <div class="single-column-header-title">LAEO</div>
+        
+        <div class="single-column-header-subtitle">桀桀桀</div>
+        
+
+    </a>
+</div>
+
+            <div id="content">
+                <div id="streamContainer" class="stream-container">
+
+    <div class="post-list-container post-list-container-shadow">
+        <div class="post">
+            
+            
+            
+
+            <div class="post-head-wrapper-text-only"
+                
+            >
+                <div class="post-title">
+                    基于WireGuard虚拟局域网组建k3s集群
+                    
+                    <div class="post-meta">
+                        
+                        <time itemprop="datePublished">
+                            2020-07-07 00:00
+                        </time>
+                        
+
+                        
+
+                        
+                        
+                            <i class="material-icons" style="">schedule</i>
+                            
+
+                            
+                            
+
+                            
+                            9 min
+                            
+                            58 s.
+                        
+                    </div>
+                </div>
+            </div>
+            
+            <div class="post-body-wrapper">
+                
+                <div class="post-body" v-pre>
+                
+                    <p>上一篇文章记录了在VPS上通过 WireGuard 组建虚拟局域网的过程，也提到是在为搭建k3s集群做准备，这两天总算是搞定了 <code>Longhorn</code> 存储系统的问题，可以把搭建的流程以及所需的 YAML 文件都贴出来，也方便以后再用到时查找。</p>
+<h2 id="k3s">k3s</h2>
+<p><code>k3s</code> (官网是 <a href="https://k3s.io">k3s.io</a>)是一个精简版本的 Kubernetes(k8s)，也是用于实现容器编排与管理功能，但它更加轻量，精简了许多复杂的内容，却能达到与k8s差不多的功能。官网上写着 “The certified Kubernetes distribution built for IoT &amp; Edge computing”，但是个人项目或者小型项目也是可以用用的，比较相对于k8s所需的硬件配置，它的需求简直不值一提。</p>
+<h2 id="环境初始化">环境初始化</h2>
+<ul>
+<li>VPC: 阿里云国际站 轻量服务器 新加坡节点 2C2G80G30M</li>
+<li>OS: CentOS 7 with kernel 5.7</li>
+</ul>
+<p>配置好 WireGuard 后，根据 Rancher 官方文档中的 <a href="https://rancher2.docs.rancher.cn/docs/best-practices/optimize/os/_index/">节点调优</a> 小节，处理系统参数的优化、打开流量转发等工作。</p>
+<h2 id="安装记录">安装记录</h2>
+<p>根据官方文档的说明，安装主控节点，个人使用不考虑主控的高可用，单主即可。然后添加被控，参数改改就行，非常简单。</p>
+<h3 id="主控">主控</h3>
+<p>由于我此次使用了阿里云的VPC，又通过WireGuard进行了虚拟组网，因此需要设置部分初始化参数，以兼容当前环境。最终调整后的结果如下所示</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -sfL https://get.k3s.io | sh -s - --node-label <span style="color:#00688b">region</span>=sg --node-external-ip 149.172.63.24 --advertise-address 149.172.63.24 --disable traefik --node-ip 10.20.30.1 --flannel-iface wg0
+</span></span></code></pre></div><p>解释下上述参数的作用</p>
+<ul>
+<li><code>--node-label region=sg</code> 为节点打上region标签，这样在创建部署时，就可以根据业务需要，调整Pod或其它资源分布的节点。</li>
+<li><code>--node-external-ip 149.172.63.24</code> 为节点设置外部IP，阿里云VPC的外网IP并未直接绑定到虚拟机网卡上，所以我要设置这个参数，避免k3s组件在设置loadbalance时，将内网IP当作公网IP使用。</li>
+<li><code>--advertise-address 149.172.63.24</code> 用于设置kubectl工具以及子节点进行通讯使用的地址，可以是IP，也可以是域名，在创建apiserver证书时会将此设置到有效域中。</li>
+<li><code>--disable traefik</code> k3s自带Ingress组件 Traefik，但是并不好用，我使用后无法正常生成 ACME 免费证书，所以禁用它，换成 ingress-nginx 与 certmanager 的组合。</li>
+<li><code>--node-ip 10.20.30.1</code> 如果不设置这个参数，那么第一张网卡设备上的IP就会被选中，所以这个IP常是内网IP。但我自行组建了虚拟局域网，所以需要指定虚拟局域网的IP（也就是WireGuard的IP）。</li>
+<li><code>--flannel-iface wg0</code> wg0是WireGuard创建的网卡设备，我需要使用虚拟局域网来进行节点间的通信，所以这里需要指定为wg0。</li>
+</ul>
+<p>另外就是，由于WireGuard的所有流量都是加密传输的，通过它来进行节点间的通信，就已经能够保证通信安全，也就没有必要改用其它的CNI驱动，使用默认的就可以了。</p>
+<p>在主节点执行上述命令后，一分钟不到就可以看到脚本提示安装完成。通过命令查看下主控端的运行情况</p>
+<pre tabindex="0"><code>sudo systemctl status k3s
+</code></pre><p>如果运行正常，那么就看看容器的运行状态是否正常</p>
+<pre tabindex="0"><code>kubectl get pod -A -o wide
+</code></pre><p><code>-A</code> 参数用于查看所有命名空间，如果容器都处于 running 状态，那么安装就成功了，接下来要可以添加被控节点。</p>
+<h3 id="被控">被控</h3>
+<p>有了上述安装主控的经验，被控安装更加简单，参数需要一定的调整</p>
+<pre tabindex="0"><code>curl -sfL https://get.k3s.io | K3S_TOKEN=K10b5a114775238ba75568d6387a31633a2c08bd377271b59e8797568b7cf56a841::server:54340df706c7090febf56ed0ae553492 K3S_URL=https://10.20.30.1:6443 sh -s - --node-label region=hk --node-external-ip 8.210.153.27 --node-ip 10.20.30.2 --flannel-iface wg0
+</code></pre><p>参数不必过多解释</p>
+<ul>
+<li><code>K3S_Token</code> 根据文档说明，去 <code>/var/lib/rancher/k3s/server/node-token</code> 获取即可。</li>
+<li><code>K3S_URL</code> 需要设置主控的通信地址端口，端口默认是6443，IP地址就是虚拟网域的IP，这样流量就会通过WireGuard加密传输。</li>
+<li><code>--node-label</code> 不必多说，这服务器是香港节点。</li>
+</ul>
+<p>另外两个参数也不必多说，与主控一样的逻辑。执行后稍等一会，安装成功后，照例查看服务运行状态</p>
+<pre tabindex="0"><code>sudo systemctl status k3s-agent
+</code></pre><p>如果有报错就根据报错查找解决方案。</p>
+<h2 id="组件">组件</h2>
+<h3 id="nginx--certmanager">Nginx + CertManager</h3>
+<p>前面提到我弃用了 Traefik，改用 Nginx，下面把相关 YAML 文件贴出来</p>
+<p><em>nginx.yaml</em></p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#8b008b;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>helm.cattle.io/v1<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>HelmChart<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">metadata</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">name</span>:<span style="color:#bbb"> </span>nginx-ingress<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">namespace</span>:<span style="color:#bbb"> </span>kube-system<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">spec</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">chart</span>:<span style="color:#bbb"> </span>stable/nginx-ingress<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">valuesContent</span>:<span style="color:#bbb"> </span>|-<span style="color:#cd5555">
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">    controller:
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">      kind: DaemonSet
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">      daemonset:
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">        useHostPort: true
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">      nodeSelector:
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">        role: edge
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">      service:
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">        type: ClusterIP</span><span style="color:#bbb">    
+</span></span></span></code></pre></div><p>安装 Nginx Ingress 非常简单，创建一个 HelmChart 类型的资源即可通过控制器自动部署好，非常方便，不知是 K8S 新增的，还是 k3s 添加的。</p>
+<p>另外就是 CertManager 了，直接使用官方文档中提供的命令来安装</p>
+<pre tabindex="0"><code>kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.15.0/cert-manager.yaml
+</code></pre><p>然后 <code>kubectl -n cert-manager get pod -w</code> 等待所有Pod都正常运行后就可以继续下一步了。创建 ClusterIssuer 资源，YAML如下</p>
+<p><em>acme-issuer.yaml</em></p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#8b008b;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>cert-manager.io/v1alpha2<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>ClusterIssuer<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">metadata</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">name</span>:<span style="color:#bbb"> </span>acme<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">spec</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">acme</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">email</span>:<span style="color:#bbb"> </span>acme@example.org<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">server</span>:<span style="color:#bbb"> </span>https://acme-staging-v02.api.letsencrypt.org/directory<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">privateKeySecretRef</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span><span style="color:#8b008b;font-weight:bold">name</span>:<span style="color:#bbb"> </span>acme<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">solvers</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span>- <span style="color:#8b008b;font-weight:bold">http01</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span><span style="color:#8b008b;font-weight:bold">ingress</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">          </span><span style="color:#8b008b;font-weight:bold">class</span>:<span style="color:#bbb"> </span>nginx<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008b45;text-decoration:underline">---</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>cert-manager.io/v1alpha2<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>ClusterIssuer<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">metadata</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">name</span>:<span style="color:#bbb"> </span>acme-prod<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">spec</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">acme</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">email</span>:<span style="color:#bbb"> </span>acme@example.org<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">server</span>:<span style="color:#bbb"> </span>https://acme-v02.api.letsencrypt.org/directory<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">privateKeySecretRef</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span><span style="color:#8b008b;font-weight:bold">name</span>:<span style="color:#bbb"> </span>acme-prod<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">solvers</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span>- <span style="color:#8b008b;font-weight:bold">http01</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span><span style="color:#8b008b;font-weight:bold">ingress</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">          </span><span style="color:#8b008b;font-weight:bold">class</span>:<span style="color:#bbb"> </span>nginx<span style="color:#bbb">
+</span></span></span></code></pre></div><p>修改其中 <code>email</code> 字段并创建，然后我们就能够通过设置 Ingress 的注解，来指定使用哪一个 Issuer 签发证书了。 <code>acme</code> 是用于调试的, 生成无效证书，不确定YAML编写是否有问题、部署是否成功前，最好都使用它来进行证书签发，避免出发频率限制。 <code>acme-prod</code> 自然就是用于签发有效证书的。</p>
+<p>如果证书签发失败或遇到问题，可以检查下 <code>CertificateRequest</code> 类型的资源，查看其事件记录来排错。</p>
+<h3 id="longhorn存储">Longhorn存储</h3>
+<p><code>Longhorn</code> 是k3s官方文档中，存储相关文档中提及的分布式块存储解决方案。迫于 local-path 不好用，rook-ceph 又太重，别无选择，只能用它。</p>
+<p>首先需要在每一台需要部署 Longhorn 的节点上安装一个软件包，在 CentOS 7 下是 <code>iscsi-initiator-utils</code> , 直接yum安装就好，其它发行版的只能搜索下了。</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/master/deploy/longhorn.yaml
+</span></span></code></pre></div><p>执行上述指令，安装好 Longhorn 后，等待容器全部正常运行，然后为其WEB面板创建 Ingress 入口</p>
+<p><em>longhorn-ingress.yaml</em></p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#8b008b;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>networking.k8s.io/v1beta1<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>Ingress<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">metadata</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">name</span>:<span style="color:#bbb"> </span>longhorn-ingress<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">namespace</span>:<span style="color:#bbb"> </span>longhorn-system<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">annotations</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">nginx.ingress.kubernetes.io/auth-type</span>:<span style="color:#bbb"> </span>basic<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">nginx.ingress.kubernetes.io/ssl-redirect</span>:<span style="color:#bbb"> </span><span style="color:#cd5555">&#39;false&#39;</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">nginx.ingress.kubernetes.io/auth-secret</span>:<span style="color:#bbb"> </span>basic-auth<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">nginx.ingress.kubernetes.io/auth-realm</span>:<span style="color:#bbb"> </span><span style="color:#cd5555">&#39;Authentication Required &#39;</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">spec</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">tls</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span>- <span style="color:#8b008b;font-weight:bold">hosts</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span>- long.example.org<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">secretName</span>:<span style="color:#bbb"> </span>longhorn-tls<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">rules</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span>- <span style="color:#8b008b;font-weight:bold">host</span>:<span style="color:#bbb"> </span>long.example.org<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">http</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span><span style="color:#8b008b;font-weight:bold">paths</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span>- <span style="color:#8b008b;font-weight:bold">path</span>:<span style="color:#bbb"> </span>/<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span><span style="color:#8b008b;font-weight:bold">backend</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">          </span><span style="color:#8b008b;font-weight:bold">serviceName</span>:<span style="color:#bbb"> </span>longhorn-frontend<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">          </span><span style="color:#8b008b;font-weight:bold">servicePort</span>:<span style="color:#bbb"> </span><span style="color:#b452cd">80</span><span style="color:#bbb">
+</span></span></span></code></pre></div><p>修改域名并创建，然后创建用于认证所使用的账号密码</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#00688b">USER</span>=&lt;USERNAME_HERE&gt;; <span style="color:#00688b">PASSWORD</span>=&lt;PASSWORD_HERE&gt;; <span style="color:#658b00">echo</span> <span style="color:#cd5555">&#34;</span><span style="color:#cd5555">${</span><span style="color:#00688b">USER</span><span style="color:#cd5555">}</span><span style="color:#cd5555">:</span><span style="color:#8b008b;font-weight:bold">$(</span>openssl passwd -stdin -apr1 &lt;&lt;&lt; <span style="color:#cd5555">${</span><span style="color:#00688b">PASSWORD</span><span style="color:#cd5555">}</span><span style="color:#8b008b;font-weight:bold">)</span><span style="color:#cd5555">&#34;</span> &gt;&gt; auth
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>kubectl -n longhorn-system create secret generic basic-auth --from-file=auth
+</span></span></code></pre></div><p>然后就可以访问域名，登录并管理存储引擎了。</p>
+<blockquote>
+<p>k3s与longhorn配合似乎有问题，一定要有WEB面板进行操作后才能正常挂载到容器中。</p>
+</blockquote>
+<h3 id="kubernetes-dashboard">Kubernetes Dashboard</h3>
+<p>参照 <a href="https://rancher.com/docs/k3s/latest/en/installation/kube-dashboard/">文档</a> 创建好相关部署与角色，然后创建一个Ingress开放访问即可。</p>
+<p><em>dashboard-ingress.yaml</em></p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#8b008b;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>networking.k8s.io/v1beta1<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>Ingress<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">metadata</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">annotations</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">nginx.ingress.kubernetes.io/proxy-body-size</span>:<span style="color:#bbb"> </span><span style="color:#cd5555">&#34;0&#34;</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">nginx.ingress.kubernetes.io/proxy-read-timeout</span>:<span style="color:#bbb"> </span><span style="color:#cd5555">&#34;600&#34;</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">nginx.ingress.kubernetes.io/proxy-send-timeout</span>:<span style="color:#bbb"> </span><span style="color:#cd5555">&#34;600&#34;</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">cert-manager.io/cluster-issuer</span>:<span style="color:#bbb"> </span><span style="color:#cd5555">&#34;acme-prod&#34;</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">kubernetes.io/ingress.class</span>:<span style="color:#bbb"> </span><span style="color:#cd5555">&#34;nginx&#34;</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">ingress.kubernetes.io/protocol</span>:<span style="color:#bbb"> </span>https<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">nginx.ingress.kubernetes.io/backend-protocol</span>:<span style="color:#bbb"> </span>https<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">name</span>:<span style="color:#bbb"> </span>dashboard<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">namespace</span>:<span style="color:#bbb"> </span>kubernetes-dashboard<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">spec</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">tls</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span>- <span style="color:#8b008b;font-weight:bold">hosts</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span>- dash.example.org<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">secretName</span>:<span style="color:#bbb"> </span>dashboard-tls<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">rules</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span>- <span style="color:#8b008b;font-weight:bold">host</span>:<span style="color:#bbb"> </span>dash.example.org<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">http</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span><span style="color:#8b008b;font-weight:bold">paths</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span>- <span style="color:#8b008b;font-weight:bold">backend</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">          </span><span style="color:#8b008b;font-weight:bold">serviceName</span>:<span style="color:#bbb"> </span>kubernetes-dashboard<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">          </span><span style="color:#8b008b;font-weight:bold">servicePort</span>:<span style="color:#bbb"> </span><span style="color:#b452cd">443</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span><span style="color:#8b008b;font-weight:bold">path</span>:<span style="color:#bbb"> </span>/<span style="color:#bbb">
+</span></span></span></code></pre></div><p>等待一会，访问试试，选用Token认证并填入Token即可。</p>
+<h2 id="总结">总结</h2>
+<p>至此所有必须的组件都部署完成，下一篇会记录如何在集群中部署 <code>gitea</code> 服务，并恢复老的备份到其中。</p>
+
+                    
+                    <HR width="100%" id="EOF">
+		    <p style="color:#777;">最后修改于 2020-07-07</p>
+                    
+                </div>
+            </div>
+            
+            
+            <nav class="post-pagination">
+
+                
+                <a class="newer-posts" href="/container/%E4%B8%89%E8%8A%82%E7%82%B9k3s%E9%9B%86%E7%BE%A4%E9%83%A8%E7%BD%B2gitea%E8%AE%B0%E5%BD%95/">
+			下回<br>三节点K3S集群部署Gitea记录
+                </a>
+                
+                
+                
+                <a class="older-posts" href="/linux/%E4%BD%BF%E7%94%A8wireguard%E6%90%AD%E5%BB%BA%E5%AF%B9%E7%AD%89%E7%BD%91%E7%BB%9C%E9%80%9A%E9%81%93/">
+			上回<br>使用WireGuard搭建对等网络通道
+                </a>
+                
+            </nav>
+            <div class="post-comment-wrapper">
+                
+
+
+<div id="gitalk-container"></div>
+
+
+
+
+
+
+
+
+
+
+
+            </div>
+        </div>
+    </div>
+
+
+                    </div>
+            </div><div id="sideContainer" class="side-container">
+    
+    <a class="a-block nav-head false" href="http://localhost:1313/">
+    
+        <div class="nav-title">
+            LAEO
+        </div>
+        
+        <div class="nav-subtitle">
+            桀桀桀
+        </div>
+        
+    </a>
+
+    <div class="nav-link-list">
+        
+        
+    </div>
+
+    
+
+    <div class="nav-footer">
+        
+Hugo Theme <a href="https://github.com/amazingrise/hugo-theme-diary">Diary</a> by <a href="https://risehere.net/">Rise</a>
+<br>
+移植自 <a href="https://mak1t0.cc/" target="_blank" rel="noreferrer noopener">Makito</a>'s <a href="https://github.com/SumiMakito/hexo-theme-journal/" target="_blank" rel="noreferrer noopener">Journal.</a> <br>
+<br>
+
+&copy;
+	
+	2020 LAEO
+	
+
+    </div>
+    
+</div><div id="extraContainer" class="extra-container">
+    <div class="toc-wrapper">
+        
+
+        
+        <div class="toc">
+
+
+	<div class="toc-content">
+	
+		
+		
+		
+		<center>- 目录 -</center>
+		
+		
+		<ul>
+			
+				
+				
+					
+						
+						
+						
+						
+							
+								
+									<ul>
+								
+							
+						
+						
+							<li>
+								<a href="#k3s" class="nav-k3s">
+									k3s
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+						
+							<li>
+								<a href="#%e7%8e%af%e5%a2%83%e5%88%9d%e5%a7%8b%e5%8c%96" class="nav-环境初始化">
+									环境初始化
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+						
+							<li>
+								<a href="#%e5%ae%89%e8%a3%85%e8%ae%b0%e5%bd%95" class="nav-安装记录">
+									安装记录
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+							
+								
+									<ul>
+								
+							
+						
+						
+							<li>
+								<a href="#%e4%b8%bb%e6%8e%a7" class="nav-主控">
+									主控
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+						
+							<li>
+								<a href="#%e8%a2%ab%e6%8e%a7" class="nav-被控">
+									被控
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+							
+								</ul>
+							
+						
+						
+						
+							<li>
+								<a href="#%e7%bb%84%e4%bb%b6" class="nav-组件">
+									组件
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+							
+								
+									<ul>
+								
+							
+						
+						
+							<li>
+								<a href="#nginx--certmanager" class="nav-nginx--certmanager">
+									Nginx &#43; CertManager
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+						
+							<li>
+								<a href="#longhorn%e5%ad%98%e5%82%a8" class="nav-longhorn存储">
+									Longhorn存储
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+						
+							<li>
+								<a href="#kubernetes-dashboard" class="nav-kubernetes-dashboard">
+									Kubernetes Dashboard
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+							
+								</ul>
+							
+						
+						
+						
+							<li>
+								<a href="#%e6%80%bb%e7%bb%93" class="nav-总结">
+									总结
+								</a>
+							</li>
+						
+						
+					
+				
+			
+		</ul>
+	</div>
+
+</div>
+        
+    </div>
+    <div class="pagination">
+        <a id="globalBackToTop" class="pagination-action animated-visibility" href="#top"
+            :class="{ invisible: scrollY == 0 }">
+            <i class="material-icons pagination-action-icon">
+                keyboard_arrow_up
+            </i>
+        </a>
+        
+        <a type="button" class="pagination-action" id="darkModeToggleButton">
+            <span class="material-icons pagination-action-icon" id="darkModeToggleIcon">
+                dark_mode
+            </span>
+        </a>
+        
+        
+    </div>
+</div>
+
+<div id="single-column-footer">
+Hugo Theme <a href="https://github.com/amazingrise/hugo-theme-diary">Diary</a> by <a href="https://risehere.net/">Rise</a>
+<br>
+移植自 <a href="https://mak1t0.cc/" target="_blank" rel="noreferrer noopener">Makito</a>'s <a href="https://github.com/SumiMakito/hexo-theme-journal/" target="_blank" rel="noreferrer noopener">Journal.</a> <br>
+<br>
+
+&copy;
+	
+	2020 LAEO
+	
+</div>
+            </div>
+    
+    <script src="/js/journal.js"></script></body>
+</html>

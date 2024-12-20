@@ -1,0 +1,719 @@
+<?xml-stylesheet href="/rss.xsl" type="text/xsl"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>LAEO</title>
+    <link>http://localhost:1313/</link>
+    <description>Recent content on LAEO</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Fri, 25 Sep 2020 00:00:00 +0000</lastBuildDate>
+    
+        <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    
+        <item>
+        <title>深度Linux下SS智能分流</title>
+        <link>http://localhost:1313/linux/%E6%B7%B1%E5%BA%A6linux%E4%B8%8Bss%E6%99%BA%E8%83%BD%E5%88%86%E6%B5%81/</link>
+        <pubDate>Thu, 05 Apr 2018 00:00:00 +0000</pubDate>
+        
+        <guid>http://localhost:1313/linux/%E6%B7%B1%E5%BA%A6linux%E4%B8%8Bss%E6%99%BA%E8%83%BD%E5%88%86%E6%B5%81/</guid>
+        <description>LAEO http://localhost:1313/linux/%E6%B7%B1%E5%BA%A6linux%E4%B8%8Bss%E6%99%BA%E8%83%BD%E5%88%86%E6%B5%81/ -&lt;h2 id=&#34;起因&#34;&gt;起因&lt;/h2&gt;
+&lt;p&gt;今天在使用 &lt;code&gt;dep&lt;/code&gt; 包管理器接管以前写的一个 Go 语言项目时，突然报错无法下载某个包。仔细检查后，无奈的宣布系统设置的全局代理没起作用。&lt;/p&gt;
+&lt;h2 id=&#34;处理&#34;&gt;处理&lt;/h2&gt;
+&lt;p&gt;查了资料，发现可以用 &lt;code&gt;ss-redir&lt;/code&gt; + &lt;code&gt;iptables&lt;/code&gt; + &lt;code&gt;chnroute&lt;/code&gt; 来做智能分流。&lt;/p&gt;
+&lt;p&gt;首先，我需要从 &lt;code&gt;shadowsocks-libev&lt;/code&gt; 中取得 &lt;code&gt;ss-redir&lt;/code&gt; 程序，在终端中执行&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo apt install shadowsocks-libev
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;即可取得我想要的程序，其所在目录为 &lt;code&gt;/usr/bin/ss-redir&lt;/code&gt; 。&lt;/p&gt;
+&lt;p&gt;然后，我需要获取所有属于中国的 IP 地址，这个可以从 apnic 网站获得，经搜索后找到如下命令&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;wget -qO- http://ftp.apnic.net/stats/apnic/delegated-apnic-latest | awk -F &lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#39;|&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#39;/CN/&amp;amp;&amp;amp;/ipv4/ {print $4 &amp;#34;/&amp;#34; 32-log($5)/log(2)}&amp;#39;&lt;/span&gt; | cat &amp;gt; chnroutes.txt
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;经过过滤处理后的路由列表存放于当前目录，名为 &lt;code&gt;chnroutes.txt&lt;/code&gt; 的文本文件。&lt;/p&gt;
+&lt;p&gt;最后，我只需想办法将该路由表导入到 iptables 中，然后将符合规则的数据包转发到 ss-redir 提供的透明代理地址即可。&lt;/p&gt;
+&lt;p&gt;经过搜索，我发现可以使用 &lt;code&gt;ipset&lt;/code&gt; 程序来完成这一操作，使用下述命令创建路由集&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ipset -N chnroute hash:net maxelem &lt;span style=&#34;color:#b452cd&#34;&gt;65536&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;然后循环将之前路由表中取得的路由添加进去&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;for&lt;/span&gt; ip in &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;$(&lt;/span&gt;cat chnroutes.txt&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;)&lt;/span&gt;; &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;do&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  ipset add chnroute &lt;span style=&#34;color:#00688b&#34;&gt;$ip&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#658b00&#34;&gt;echo&lt;/span&gt; &lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#34;added &lt;/span&gt;&lt;span style=&#34;color:#00688b&#34;&gt;$ip&lt;/span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;done&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;然后创建 iptables 规则&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;# 在nat表中新增一个链，名叫：SHADOWSOCKS&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;iptables -t nat -N SHADOWSOCKS
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;#                                    #&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;# 这里记住要替换为 SS 后端服务器地址！！！ #&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;#                                    #&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;iptables -t nat -A SHADOWSOCKS -d &lt;span style=&#34;color:#00688b&#34;&gt;$SOCKS_SERVER&lt;/span&gt; -j RETURN
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;# Ignore LANs and any other addresses you&amp;#39;d like to bypass the proxy&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;# See Wikipedia and RFC5735 for full list of reserved networks.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;# See ashi009/bestroutetb for a highly optimized CHN route list.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;iptables -t nat -A SHADOWSOCKS -d 0.0.0.0/8 -j RETURN
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;iptables -t nat -A SHADOWSOCKS -d 10.0.0.0/8 -j RETURN
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;iptables -t nat -A SHADOWSOCKS -d 127.0.0.0/8 -j RETURN
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;iptables -t nat -A SHADOWSOCKS -d 169.254.0.0/16 -j RETURN
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;iptables -t nat -A SHADOWSOCKS -d 172.16.0.0/12 -j RETURN
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;iptables -t nat -A SHADOWSOCKS -d 192.168.0.0/16 -j RETURN
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;iptables -t nat -A SHADOWSOCKS -d 224.0.0.0/4 -j RETURN
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;iptables -t nat -A SHADOWSOCKS -d 240.0.0.0/4 -j RETURN
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;# Allow connection to chinese IPs&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;iptables -t nat -A SHADOWSOCKS -p tcp -m &lt;span style=&#34;color:#658b00&#34;&gt;set&lt;/span&gt; --match-set chnroute dst -j RETURN
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;iptables -t nat -A SHADOWSOCKS -p udp -m &lt;span style=&#34;color:#658b00&#34;&gt;set&lt;/span&gt; --match-set chnroute dst -j RETURN
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;# 如果你想对 icmp 协议也实现智能分流，可以加上下面这一条&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;# iptables -t nat -A SHADOWSOCKS -p icmp -m set --match-set chnroute dst -j RETURN&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;#&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;# 如果 ss-redir 配置的本地代理端口不是 1080，则必须将下述命令中的 1080 改为正确的值&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;#&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;iptables -t nat -A SHADOWSOCKS -p tcp -j REDIRECT --to-port &lt;span style=&#34;color:#b452cd&#34;&gt;1080&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;iptables -t nat -A SHADOWSOCKS -p udp -j REDIRECT --to-port &lt;span style=&#34;color:#b452cd&#34;&gt;1080&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;# 如果你想对 icmp 协议也实现智能分流，可以加上下面这一条&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;# iptables -t nat -A SHADOWSOCKS -p icmp -j REDIRECT --to-port 1080&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;# 将SHADOWSOCKS链中所有的规则追加到OUTPUT链中&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;iptables -t nat -A OUTPUT -p tcp -j SHADOWSOCKS
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;iptables -t nat -A OUTPUT -p udp -j SHADOWSOCKS
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;# 如果你想对 icmp 协议也实现智能分流，可以加上下面这一条&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;# iptables -t nat -A OUTPUT -p icmp -j SHADOWSOCKS&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;上述操作执行完成后，通过修改配置文件 &lt;code&gt;/etc/shadowsocks-libev/config.json&lt;/code&gt; 填写好连接信息，然后通过该配置文件运行 ss-redir 即可。&lt;/p&gt;
+&lt;p&gt;为了方便我创建了一个 systemd 服务文件&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo cat &amp;gt; /etc/systemd/system/deepin-xwall.service &lt;span style=&#34;color:#cd5555&#34;&gt;&amp;lt;&amp;lt;EOF
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;[Unit]
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;Description=Deepin Xwall Service
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;After=network.target
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;[Service]
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;ExecStart=/usr/bin/ss-redir -u -n 65535 -c &amp;#34;/etc/shadowsocks-libev/config.json&amp;#34;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;[Install]
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;WantedBy=multi-user.target
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;EOF&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;然后将其设为开机启动即可&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo systemctl start deepin-xwall
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo systemctl &lt;span style=&#34;color:#658b00&#34;&gt;enable&lt;/span&gt; deepin-xwall
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;至此，整个系统所有程序都进入了翻墙模式，不需要再设置什么环境变量啥的，也不需要程序自身做兼容。我的 Go 语言项目的依赖包也能正常下载了，真是美滋滋。&lt;/p&gt;
+- http://localhost:1313/linux/%E6%B7%B1%E5%BA%A6linux%E4%B8%8Bss%E6%99%BA%E8%83%BD%E5%88%86%E6%B5%81/ - </description>
+        </item>
+    
+    
+    
+        <item>
+        <title>GIT修改提交者信息</title>
+        <link>http://localhost:1313/misc/git%E4%BF%AE%E6%94%B9%E6%8F%90%E4%BA%A4%E8%80%85%E4%BF%A1%E6%81%AF/</link>
+        <pubDate>Tue, 03 Apr 2018 00:00:00 +0000</pubDate>
+        
+        <guid>http://localhost:1313/misc/git%E4%BF%AE%E6%94%B9%E6%8F%90%E4%BA%A4%E8%80%85%E4%BF%A1%E6%81%AF/</guid>
+        <description>LAEO http://localhost:1313/misc/git%E4%BF%AE%E6%94%B9%E6%8F%90%E4%BA%A4%E8%80%85%E4%BF%A1%E6%81%AF/ -&lt;p&gt;终端切换到项目目录，切换到需要更改的分支，执行以下 &lt;code&gt;shell&lt;/code&gt; 命令。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;手动修改命令中的 &lt;code&gt;author&lt;/code&gt; 和 &lt;code&gt;author@example.org&lt;/code&gt; 为目标值。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;git filter-branch --commit-filter &amp;#39;
+    export GIT_AUTHOR_NAME=author;
+    export GIT_AUTHOR_EMAIL=author@example.org;
+    export GIT_COMMITTER_NAME=author;
+    export GIT_COMMITTER_EMAIL=author@example.org;
+    git commit-tree &amp;#34;$@&amp;#34;
+&amp;#39;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;执行完成后，使用以下命令将改动提交到远程仓库。&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;git push --force --tags origin &amp;#39;refs/heads/*&amp;#39;
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;多人合作中改动过往记录会对提交历史产生破坏，谨慎操作！&lt;/p&gt;
+&lt;/blockquote&gt;
+- http://localhost:1313/misc/git%E4%BF%AE%E6%94%B9%E6%8F%90%E4%BA%A4%E8%80%85%E4%BF%A1%E6%81%AF/ - </description>
+        </item>
+    
+    
+    
+        <item>
+        <title>一道面试时遇到的MySQL索引题</title>
+        <link>http://localhost:1313/mysql/%E4%B8%80%E9%81%93%E9%9D%A2%E8%AF%95%E6%97%B6%E9%81%87%E5%88%B0%E7%9A%84mysql%E7%B4%A2%E5%BC%95%E9%A2%98/</link>
+        <pubDate>Thu, 27 Oct 2016 00:00:00 +0000</pubDate>
+        
+        <guid>http://localhost:1313/mysql/%E4%B8%80%E9%81%93%E9%9D%A2%E8%AF%95%E6%97%B6%E9%81%87%E5%88%B0%E7%9A%84mysql%E7%B4%A2%E5%BC%95%E9%A2%98/</guid>
+        <description>LAEO http://localhost:1313/mysql/%E4%B8%80%E9%81%93%E9%9D%A2%E8%AF%95%E6%97%B6%E9%81%87%E5%88%B0%E7%9A%84mysql%E7%B4%A2%E5%BC%95%E9%A2%98/ -&lt;h2 id=&#34;题目内容&#34;&gt;题目内容&lt;/h2&gt;
+&lt;p&gt;假设有一个整数类型的字段 &lt;code&gt;status&lt;/code&gt; ，其用来存储一条记录的状态，状态的数量是有限个，这里我们就当做一共有10种不同的状态。现在因为查询速度的原因，需要对MySQL进行优化。请问，该字段是否需要加上索引？已知该字段频繁被读取和修改。&lt;/p&gt;
+&lt;h2 id=&#34;我的回答&#34;&gt;我的回答&lt;/h2&gt;
+&lt;p&gt;在我的记忆中，热点数据一般需要做缓存和索引，一遍提高查询速度。我当时一听，需要频繁读写，那肯定也是热点数据啊，那肯定要加啊，于是就回答需要加。&lt;/p&gt;
+&lt;h2 id=&#34;面试官的回答&#34;&gt;面试官的回答&lt;/h2&gt;
+&lt;p&gt;实际上是不需要的。面试官很耐心的给我解释了为什么不需要，大概意思如下：&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;索引相当于书籍的目录，同样的书籍复制多少遍，目录都是一样，条目指向的文章页码都是相同的。在题目设定中，字段 &lt;code&gt;status&lt;/code&gt; 的数据内容是有限个，也就是不管有多少条表记录，该字段存储的值总是只有那么寥寥十个可选。如果表中有一千万条记录，那么没有加索引之前，数据库需要从一千万条记录中找到那一条。而加了索引之后，数据库可以通过索引先排除其余九种状态的记录，只留下那一种状态的记录集，然后再从里面查询。这其中节省的时间是非常小的，所以无需加上索引。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;思考&#34;&gt;思考&lt;/h2&gt;
+&lt;p&gt;在回来的路上，我是没有心情去琢磨这问题的，但是我一直牢记其结论，方便回家后做记录。因为我对数据库研究得不够深，不清楚其索引具体是怎么实现的。&lt;/p&gt;
+&lt;p&gt;面试官在解释的时候实际是说“可以通过索引把查询的范围缩小到一百万条记录，实际上这种情况下一千万和一百万的查询速度差距是非常小的”，但是现在仔细想想，如果是缩小到十万呢？一千万和十万，差距还是挺大的。&lt;/p&gt;
+&lt;h2 id=&#34;总结&#34;&gt;总结&lt;/h2&gt;
+&lt;p&gt;这或许就是我之前看到的一些文章里面介绍的，enum之类的类型不需要加索引的原因，因为它的数据相似度是非常高的，加了索引起到的作用微乎其微，反而会占用不少空间，所以不需要加上索引。&lt;/p&gt;
+&lt;p&gt;只要同字段中存储的数据的相似度足够的小，索引起到的缩小检索范围的作用就会足够大。&lt;/p&gt;
+- http://localhost:1313/mysql/%E4%B8%80%E9%81%93%E9%9D%A2%E8%AF%95%E6%97%B6%E9%81%87%E5%88%B0%E7%9A%84mysql%E7%B4%A2%E5%BC%95%E9%A2%98/ - </description>
+        </item>
+    
+    
+    
+        <item>
+        <title>使用Docker快速构建Laravel开发环境</title>
+        <link>http://localhost:1313/php/%E4%BD%BF%E7%94%A8docker%E5%BF%AB%E9%80%9F%E6%9E%84%E5%BB%BAlaravel%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/</link>
+        <pubDate>Fri, 21 Oct 2016 00:00:00 +0000</pubDate>
+        
+        <guid>http://localhost:1313/php/%E4%BD%BF%E7%94%A8docker%E5%BF%AB%E9%80%9F%E6%9E%84%E5%BB%BAlaravel%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/</guid>
+        <description>LAEO http://localhost:1313/php/%E4%BD%BF%E7%94%A8docker%E5%BF%AB%E9%80%9F%E6%9E%84%E5%BB%BAlaravel%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/ -&lt;h2 id=&#34;docker简介&#34;&gt;Docker简介&lt;/h2&gt;
+&lt;p&gt;Docker是一个虚拟化容器引擎，跟虚拟机类似，不过更加轻量级。对于开发者来说，Docker的出现无疑是种福音。借助Docker，我们可以快速批量构建相同的环境，可以更加方便的对应用进行伸缩，以便更加灵活的控制应用的负载能力。我们还可以将其应用在开发中，使用Dockerfile快速构建统一的开发环境，避免因环境问题导致的BUG。许多云服务企业提供商业化的Docker容器资源，通过可定制的Dockerfile脚本来描述你需要的环境，以便快速构建生产环境和对生产环境进行伸缩控制。&lt;/p&gt;
+&lt;h2 id=&#34;dockerfile简介&#34;&gt;Dockerfile简介&lt;/h2&gt;
+&lt;p&gt;Dockerfile是Docker容器的“说明书”，用来描述Docker容器的构建过程。在同一份Dockerfile下，只能生成同一种环境，这种 &lt;code&gt;唯一性&lt;/code&gt; 一定程度上保证了应用运行在容器中的可靠性。&lt;/p&gt;
+&lt;p&gt;Dockerfile的关键字只有寥寥几个，所以学习成本非常低。你可以很快速的学会Dockerfile的编写，但是要写出好的Dockerfile，还得多多琢磨。&lt;/p&gt;
+&lt;p&gt;Dockerfile中常用的关键词大概就 &lt;code&gt;FROM&lt;/code&gt;  &lt;code&gt;RUN&lt;/code&gt;  &lt;code&gt;WORKDIR&lt;/code&gt;  &lt;code&gt;CMD&lt;/code&gt;  &lt;code&gt;ENTRY&lt;/code&gt; ，搞清楚它们的用法就基本学会了Dockerfile的编写方法，所以说它非常简单。&lt;/p&gt;
+&lt;h2 id=&#34;docker-compose简介&#34;&gt;docker-compose简介&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;docker-compose&lt;/code&gt; 是一种快速整合Docker容器的辅助工具，它通过读取 &lt;code&gt;docker-compose.yml&lt;/code&gt; 文件来分析其中所定义的各项 &lt;code&gt;service&lt;/code&gt; 之间关系，然后自动关联好。这大大简化了应用运行环境的构建，使我们可以更加方便的构建出完整的应用运行环境。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;大多数情况下，一个应用所需要依赖的服务都不止一个。以一个最基础的PHP应用来说，一般情况下至少会依赖 NginX MySQL PHP 三种软件，为了充分体现出容器化应用的优势，我们一般会将这三种软件独立构建成三种服务（service），然后相互关联起来（NginX关联PHP，PHP关联MySQL），这样一旦某一服务的负载过高，我们就可以通过使用相同的Dockerfile快速生成相同的服务，提高整个系统的吞吐能力。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;构建laravel开发环境&#34;&gt;构建Laravel开发环境&lt;/h2&gt;
+&lt;h3 id=&#34;需求分析&#34;&gt;需求分析&lt;/h3&gt;
+&lt;p&gt;Laravel作为一个PHP应用框架，最基础的运行环境就是 &lt;code&gt;LNMP&lt;/code&gt; 。现代WEB应用的运行环境大多需要使用到NoSQL服务，所以一个 &lt;code&gt;Redis&lt;/code&gt; 服务就显得很有存在的必要了。&lt;/p&gt;
+&lt;p&gt;所以需要构建的服务大致如下列：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Linux&lt;/li&gt;
+&lt;li&gt;NginX&lt;/li&gt;
+&lt;li&gt;MySQL&lt;/li&gt;
+&lt;li&gt;PHP&lt;/li&gt;
+&lt;li&gt;Redis&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;软件挑选&#34;&gt;软件挑选&lt;/h3&gt;
+&lt;p&gt;确定了要构建的服务，我们需要为服务所用软件挑选一个合适的版本，既不能太过”时髦“，也不能太过”守旧“。&lt;/p&gt;
+&lt;p&gt;为了压缩生成好的容器的大小，我选择了 &lt;code&gt;Alpine&lt;/code&gt; 作为容器的系统，版本则选用其最新稳定版本3.4。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Alpine是一个非常非常小的Linux系统，非常适合作为Docker容器的操作系统，其内置的包管理器存放了大部分常用软件，强烈推荐。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;由于系统软件仓库的限制，以及对开发环境下的具体要求的考虑，其余软件都是直接使用官方仓库最新版本。&lt;/p&gt;
+&lt;h3 id=&#34;编写dockerfile&#34;&gt;编写Dockerfile&lt;/h3&gt;
+&lt;p&gt;因为是开发环境，不要求负载和伸缩能力，所以我将PHP和NginX放在一个容器中，这样可以方便配置NginX和PHP-FPM。&lt;/p&gt;
+&lt;p&gt;取一个Redis容器的Dockerfile贴这方便看，当个例子吧。&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;FROM alpine:3.4
+
+RUN apk -f update
+RUN apk -f add redis
+
+COPY redis.conf /etc/redis.conf
+
+EXPOSE 6379
+
+CMD [&amp;#34;/usr/bin/redis-server&amp;#34;, &amp;#34;/etc/redis.conf&amp;#34;]
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&#34;编写docker-composeyml&#34;&gt;编写docker-compose.yml&lt;/h3&gt;
+&lt;p&gt;容器的构建脚本编写好后，我们需要将各个容器关联起来，这样才能形成一个完整的应用运行环境。&lt;/p&gt;
+&lt;p&gt;使用docker-compose来快速关联容器，示例如下：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;version&lt;/span&gt;:&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#34;2&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;services&lt;/span&gt;:&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;web&lt;/span&gt;:&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;build&lt;/span&gt;:&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#34;web&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;volumes&lt;/span&gt;:&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;      &lt;/span&gt;- &lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#34;..:/www&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;      &lt;/span&gt;- &lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#34;./web/logs:/var/log/web&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;ports&lt;/span&gt;:&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;      &lt;/span&gt;- &lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#34;8080:80&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;links&lt;/span&gt;:&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;      &lt;/span&gt;- db&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;      &lt;/span&gt;- redis&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;db&lt;/span&gt;:&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;build&lt;/span&gt;:&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#34;mysql&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;volumes&lt;/span&gt;:&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;      &lt;/span&gt;- &lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#34;./mysql/data:/var/lib/mysql&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;environment&lt;/span&gt;:&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;      &lt;/span&gt;&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;MYSQL_ROOT_PASSWORD&lt;/span&gt;:&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#34;root&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;      &lt;/span&gt;&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;MYSQL_DATABASE&lt;/span&gt;:&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#34;app&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;redis&lt;/span&gt;:&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;build&lt;/span&gt;:&lt;span style=&#34;color:#bbb&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#34;redis&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#bbb&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;services&lt;/code&gt; 节点下就是各个服务了，服务下的 &lt;code&gt;links&lt;/code&gt; 节点定义了依赖服务，通过它可以快速声明服务之间的依赖关系。&lt;/p&gt;
+&lt;h3 id=&#34;生成容器并运行&#34;&gt;生成容器并运行&lt;/h3&gt;
+&lt;p&gt;在docker-compose.yml所在目录下执行 &lt;code&gt;docker-compose build&lt;/code&gt; 命令，它会自动分析yml文件并自动构建容器。等待容器全部构建完成后，执行 &lt;code&gt;docker-compose up&lt;/code&gt; 就可以直接启动所有服务了。该启动方式是交互式的，方便DEBUG，如果确定没有任何问题了，可以使用 &lt;code&gt;docker-compose up -d&lt;/code&gt; 让其后台运行。&lt;/p&gt;
+&lt;p&gt;常用命令：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;docker-compose build 用于构建yml文件中定义的各项服务所需的容器&lt;/li&gt;
+&lt;li&gt;docker-compose up    交互式运行服务，方便DEBUG&lt;/li&gt;
+&lt;li&gt;docker-compose up -d 非交互式运行服务&lt;/li&gt;
+&lt;li&gt;docker-compose stop  停止yml文件中定义的服务&lt;/li&gt;
+&lt;li&gt;docker-compose exec [service_name] [&amp;hellip;command] 在对应服务所在容器中执行指定命令&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;总结&#34;&gt;总结&lt;/h2&gt;
+&lt;p&gt;Docker容器技术大大方便了开发者统一开发环境，也增强了应用的抗压能力。它的出现，无论是对于开发者，还是对于运维，都是一件大好事。我对Docker的认知还很浅薄，并没有系统的去查看其官方文档，也没有阅读任何有关书籍，文中内容难免有不当之处，看官请海涵。&lt;/p&gt;
+&lt;p&gt;我将自己写好的构建脚本开源在了Github上，如果您有兴趣，可以访问 &lt;a href=&#34;https://github.com/laeo/booster&#34;&gt;laeo/booster&lt;/a&gt; 进行查看。&lt;/p&gt;
+- http://localhost:1313/php/%E4%BD%BF%E7%94%A8docker%E5%BF%AB%E9%80%9F%E6%9E%84%E5%BB%BAlaravel%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/ - </description>
+        </item>
+    
+    
+    
+        <item>
+        <title>SublimeText3配置记录</title>
+        <link>http://localhost:1313/misc/sublimetext3%E9%85%8D%E7%BD%AE%E8%AE%B0%E5%BD%95/</link>
+        <pubDate>Fri, 14 Oct 2016 00:00:00 +0000</pubDate>
+        
+        <guid>http://localhost:1313/misc/sublimetext3%E9%85%8D%E7%BD%AE%E8%AE%B0%E5%BD%95/</guid>
+        <description>LAEO http://localhost:1313/misc/sublimetext3%E9%85%8D%E7%BD%AE%E8%AE%B0%E5%BD%95/ -&lt;p&gt;一直以来，Sublime Text 3都是我搬砖的主力工具，我实在太喜欢轻量级的软件了。使用方便、启动迅速、插件丰富、扩展性强，是我选择它的主要理由。&lt;/p&gt;
+&lt;p&gt;搜索一款插件的资料时，突然想到我应该将环境的配置步骤都一一记录下来，以免以后的工作中出现配置缺漏的情况，导致开发效率降低。&lt;/p&gt;
+&lt;h2 id=&#34;设置&#34;&gt;设置&lt;/h2&gt;
+&lt;p&gt;对于新安装的 &lt;code&gt;Sublime Text 3&lt;/code&gt; 首要安装的就是 &lt;code&gt;Package Control&lt;/code&gt; ，然后是选择一款自己喜爱的主题，我选择的是 &lt;code&gt;Material Theme&lt;/code&gt; ，它有一款扩展的 &lt;code&gt;Appbar&lt;/code&gt; 组件，建议同时安装，增强体（zhuang）验（13）。&lt;/p&gt;
+&lt;p&gt;安装完主题之后，仿照系统自身的配置文件，修改出属于自己的个性化配置文件。我的配置文件如下：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;{
+    &amp;#34;always_show_minimap_viewport&amp;#34;: true,
+    &amp;#34;auto_find_in_selection&amp;#34;: true,
+    &amp;#34;color_scheme&amp;#34;: &amp;#34;Packages/Material Theme/schemes/Material-Theme.tmTheme&amp;#34;,
+    &amp;#34;default_line_ending&amp;#34;: &amp;#34;unix&amp;#34;,
+    &amp;#34;font_face&amp;#34;: &amp;#34;DejaVu Sans Mono&amp;#34;,
+    &amp;#34;font_size&amp;#34;: 10,
+    &amp;#34;ignored_packages&amp;#34;:
+    [
+        &amp;#34;Vintage&amp;#34;
+    ],
+    &amp;#34;indent_guide_options&amp;#34;:
+    [
+        &amp;#34;draw_normal&amp;#34;,
+        &amp;#34;draw_active&amp;#34;
+    ],
+    &amp;#34;indent_to_bracket&amp;#34;: true,
+    &amp;#34;line_padding_bottom&amp;#34;: 3,
+    &amp;#34;line_padding_top&amp;#34;: 3,
+    &amp;#34;match_brackets_angle&amp;#34;: true,
+    &amp;#34;material_theme_tree_headings&amp;#34;: true,
+    &amp;#34;overlay_scroll_bars&amp;#34;: &amp;#34;enabled&amp;#34;,
+    &amp;#34;shift_tab_unindent&amp;#34;: true,
+    &amp;#34;show_encoding&amp;#34;: true,
+    &amp;#34;show_line_endings&amp;#34;: true,
+    &amp;#34;theme&amp;#34;: &amp;#34;Material-Theme.sublime-theme&amp;#34;,
+    &amp;#34;translate_tabs_to_spaces&amp;#34;: true,
+    &amp;#34;trim_trailing_white_space_on_save&amp;#34;: true
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;可以看出字体方面我选择的是 &lt;code&gt;YaHei-Consolas-Hybrid&lt;/code&gt; ，大体上还不错。之前一直使用的 &lt;code&gt;Source-Code-Pro Yahei Hybrid&lt;/code&gt; ，不是对称字体，效果不怎么好。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;2018/2/19 更新后字体选择了 DejaVu Sans Mono，本来用的是 Droid Sans Mono 的，但是发现中英文不等高，所以选择了它。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;插件&#34;&gt;插件&lt;/h2&gt;
+&lt;p&gt;因为个人职业和爱好的原因，我选择了以下插件：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;A File Icon&lt;/li&gt;
+&lt;li&gt;Babel&lt;/li&gt;
+&lt;li&gt;CodeFormatter&lt;/li&gt;
+&lt;li&gt;DocBlockr&lt;/li&gt;
+&lt;li&gt;Dockerfile Syntax Highlighting&lt;/li&gt;
+&lt;li&gt;GitGutter&lt;/li&gt;
+&lt;li&gt;Gitignore&lt;/li&gt;
+&lt;li&gt;Laravel Blade Highlighter&lt;/li&gt;
+&lt;li&gt;Material Theme&lt;/li&gt;
+&lt;li&gt;Material Theme - Appbar&lt;/li&gt;
+&lt;li&gt;Package Control&lt;/li&gt;
+&lt;li&gt;PHP Completions Kit&lt;/li&gt;
+&lt;li&gt;SublimeCodeIntel&lt;/li&gt;
+&lt;li&gt;SublimeLinter&lt;/li&gt;
+&lt;li&gt;SublimeLinter-json&lt;/li&gt;
+&lt;li&gt;SublimeLinter-php&lt;/li&gt;
+&lt;li&gt;VAlign&lt;/li&gt;
+&lt;li&gt;Vue Syntax Highlight&lt;/li&gt;
+&lt;li&gt;Vuejs Snippets&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;2018/2/19 删减部分插件&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;上述插件是我在之前不小心 &lt;code&gt;rm -rf&lt;/code&gt; 了自己的个人目录之后重新摸索安装的，有的插件功能是有重复的，但是我没有去细心折腾。&lt;/p&gt;
+&lt;p&gt;之前那次配置是最完美的，可惜那时候没想到要把这些东西记录下来，于是就废了。&lt;/p&gt;
+&lt;h3 id=&#34;docblockr&#34;&gt;DocBlockr&lt;/h3&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;{
+  &amp;#34;jsdocs_spacer_between_sections&amp;#34;: true,
+  &amp;#34;jsdocs_lower_case_primitives&amp;#34;: true,
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;未完待更&#34;&gt;未完待更&lt;/h2&gt;
+&lt;p&gt;等以后有改动了，会不停修改本文，也算是增强记忆吧。&lt;/p&gt;
+- http://localhost:1313/misc/sublimetext3%E9%85%8D%E7%BD%AE%E8%AE%B0%E5%BD%95/ - </description>
+        </item>
+    
+    
+    
+        <item>
+        <title>使用GO语言实现基础路由功能</title>
+        <link>http://localhost:1313/golang/%E4%BD%BF%E7%94%A8go%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E5%9F%BA%E7%A1%80%E8%B7%AF%E7%94%B1%E5%8A%9F%E8%83%BD/</link>
+        <pubDate>Sun, 04 Sep 2016 00:00:00 +0000</pubDate>
+        
+        <guid>http://localhost:1313/golang/%E4%BD%BF%E7%94%A8go%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E5%9F%BA%E7%A1%80%E8%B7%AF%E7%94%B1%E5%8A%9F%E8%83%BD/</guid>
+        <description>LAEO http://localhost:1313/golang/%E4%BD%BF%E7%94%A8go%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E5%9F%BA%E7%A1%80%E8%B7%AF%E7%94%B1%E5%8A%9F%E8%83%BD/ -&lt;h2 id=&#34;什么是-路由器-&#34;&gt;什么是 “路由器” ？&lt;/h2&gt;
+&lt;p&gt;“路由器” 是一个抽象的描述，是对WEB框架中负责解析、管理URL的组件的统一称呼。使用 “路由器” 来方便URL的管理（生成、解析），由于现代WEB应用的复杂程度日渐加深，“路由器” 的使用变得愈加普遍。&lt;/p&gt;
+&lt;h2 id=&#34;路由器-的基本原理&#34;&gt;“路由器” 的基本原理&lt;/h2&gt;
+&lt;p&gt;“路由器” 本质上是通过对客户端请求的 &lt;code&gt;URI&lt;/code&gt; 进行解析，从而对系统的运行加以引导的工具。在PHP中可以使用 &lt;code&gt;$_SERVER&lt;/code&gt; 全局变量获取到用户请求的URI，然后通过解析该URI，执行 &lt;code&gt;路由器&lt;/code&gt; 中注册的对应的 &lt;code&gt;控制器方法&lt;/code&gt; ，到此路由器的工作就已完成。&lt;/p&gt;
+&lt;h2 id=&#34;go语言下的-路由器-实现&#34;&gt;GO语言下的 “路由器” 实现&lt;/h2&gt;
+&lt;p&gt;在实现该功能之前，我们需要先搞清楚自己到底需要做些什么，这样才不会漫无目的的 “瞎整”。&lt;/p&gt;
+&lt;p&gt;看看以下摘自GO语言官方文档的代码&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-golang&#34; data-lang=&#34;golang&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;http.&lt;span style=&#34;color:#008b45&#34;&gt;HandleFunc&lt;/span&gt;(&lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#34;/bar&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;func&lt;/span&gt;(w http.ResponseWriter, r *http.Request) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    fmt.&lt;span style=&#34;color:#008b45&#34;&gt;Fprintf&lt;/span&gt;(w, &lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#34;Hello, %q&amp;#34;&lt;/span&gt;, html.&lt;span style=&#34;color:#008b45&#34;&gt;EscapeString&lt;/span&gt;(r.URL.Path))
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;})
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;log.&lt;span style=&#34;color:#008b45&#34;&gt;Fatal&lt;/span&gt;(http.&lt;span style=&#34;color:#008b45&#34;&gt;ListenAndServe&lt;/span&gt;(&lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#34;:8080&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;nil&lt;/span&gt;))
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;它实现了一个基本的WEB服务器功能，通过引入 &lt;code&gt;net/http&lt;/code&gt; 包来快速构建WEB服务器，使用 &lt;code&gt;http.HandleFunc&lt;/code&gt; 来注册控制器函数，使用 &lt;code&gt;http.ListenAndServe&lt;/code&gt; 来启动WEB服务器。&lt;/p&gt;
+&lt;p&gt;查看文档之后发现该方法不足以称之为 “路由器”，因为其只能简单的实现 &lt;code&gt;URI到控制器函数&lt;/code&gt; 的导航，并不能满足大部分WEB应用的实现需要。我们需要对它进行扩展，增强它的功能。&lt;/p&gt;
+&lt;p&gt;在 &lt;code&gt;net/http&lt;/code&gt; 包的文档中可以查找到， &lt;code&gt;http.ListenAndServe&lt;/code&gt; 方法支持两个参数，第一个参数接收HTTP服务监听的地址，而第二个参数接收的是一个 &lt;code&gt;接口实例&lt;/code&gt; 。我们要实现自己的 &lt;code&gt;路由器&lt;/code&gt; ，该接口是重点。&lt;/p&gt;
+&lt;p&gt;根据官方文档描述，开发者可以自由定义属于自己的WEB服务器，通过实现 &lt;code&gt;ServeHTTP&lt;/code&gt; 方法来手动分发客户端请求。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-golang&#34; data-lang=&#34;golang&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;type&lt;/span&gt; router &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;struct&lt;/span&gt;{}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;func&lt;/span&gt; (r *router) &lt;span style=&#34;color:#008b45&#34;&gt;ServeHTTP&lt;/span&gt;(rw http.ResponseWriter, rq *http.Request) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#228b22&#34;&gt;// 在此处分发客户端请求
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;如上述方式构建一个属于你的 &lt;code&gt;路由器&lt;/code&gt; 组件，通过实现 &lt;code&gt;ServeHTTP&lt;/code&gt; 接收者来增强其功能，比如增加URI参数提取、模糊匹配等等。&lt;/p&gt;
+&lt;p&gt;路由器的重点是 &lt;code&gt;匹配URL&lt;/code&gt; ，那么肯定需要用到 &lt;code&gt;正则表达式&lt;/code&gt; 。Go语言提供了处理正则表达式的支持库，所以我们只需要知道如何使用即可。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-golang&#34; data-lang=&#34;golang&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;//下述代码是不完整的代码，完整代码请查看我的github仓库，谢谢
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;//只是为了说明而截取的部分代码
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;func&lt;/span&gt; (r *router) &lt;span style=&#34;color:#008b45&#34;&gt;ServeHTTP&lt;/span&gt;(rw http.ResponseWriter, rq *http.Request) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#228b22&#34;&gt;//生成正则匹配实例，用于之后的匹配
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#228b22&#34;&gt;//实际使用中，由于golang的编译型语言的特性，我们可以将该过程放置在路由规则的设置阶段
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#228b22&#34;&gt;//也就相当于预先编译生成好匹配规则，方便服用，避免新请求到达后重复编译的性能损失
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;        re := regexp.&lt;span style=&#34;color:#008b45&#34;&gt;MustCompile&lt;/span&gt;(&lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#34;/(?P&amp;lt;handler&amp;gt;[a-zA-z0-9]+)&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#228b22&#34;&gt;//匹配URL，不能匹配则跳过
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;if&lt;/span&gt; re.&lt;span style=&#34;color:#008b45&#34;&gt;MatchString&lt;/span&gt;(rq.URL.Path) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            ns := re.&lt;span style=&#34;color:#008b45&#34;&gt;SubexpNames&lt;/span&gt;()[&lt;span style=&#34;color:#b452cd&#34;&gt;1&lt;/span&gt;:] &lt;span style=&#34;color:#228b22&#34;&gt;//取得正则表达式中命名切片，忽略第一个
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;            vs := re.&lt;span style=&#34;color:#008b45&#34;&gt;FindStringSubmatch&lt;/span&gt;(rq.URL.Path)[&lt;span style=&#34;color:#b452cd&#34;&gt;1&lt;/span&gt;:] &lt;span style=&#34;color:#228b22&#34;&gt;//取得匹配到的值得切片，忽略第一个
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#228b22&#34;&gt;//检查命名子式数量是否匹配
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;            &lt;span style=&#34;color:#228b22&#34;&gt;//正常情况下一定是一个子匹配项对应一个匹配结果，否则不应该标记为匹配成功
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;            &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#658b00&#34;&gt;len&lt;/span&gt;(ns) != &lt;span style=&#34;color:#658b00&#34;&gt;len&lt;/span&gt;(vs) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#658b00&#34;&gt;panic&lt;/span&gt;(&lt;span style=&#34;color:#658b00&#34;&gt;string&lt;/span&gt;(&lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#34;URL parameter mismatch&amp;#34;&lt;/span&gt;))
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#228b22&#34;&gt;//循环生成键值对并存储到context变量中
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;            &lt;span style=&#34;color:#228b22&#34;&gt;//也就是将URL中得“变量”提取出来方便取用
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;            &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;for&lt;/span&gt; i, k := &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;range&lt;/span&gt; ns {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                c.Params[k] = vs[i]
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#228b22&#34;&gt;//执行对应的回调函数
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;            &lt;span style=&#34;color:#228b22&#34;&gt;//这个函数应该与上述编译的正则表达式相对应，也就是一个路由规则（正则表达式）至少对应一个回调函数
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;            &lt;span style=&#34;color:#228b22&#34;&gt;//不然你的业务逻辑该在什么地方调用呢？
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;            &lt;span style=&#34;color:#008b45&#34;&gt;fn&lt;/span&gt;(rw, rq, c)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#228b22&#34;&gt;//终止匹配
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;            &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;return&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;看起来很简单是不是？ 确实很简单。大部分“路由器”组件都是通过正则来匹配预设的规则与客户端请求的链接的，虽然会损失一些性能，但是更加灵活、方便。&lt;/p&gt;
+&lt;p&gt;如果需要查看详细的例子，请查看我的github仓库：&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;a href=&#34;https://github.com/laeo/gorest&#34;&gt;laeo/gorest&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;最后&#34;&gt;最后&lt;/h2&gt;
+&lt;p&gt;写得或许有些浅薄，不过我学习golang也并不久，还有很多坑等着我踩，这算是预热吧。&lt;/p&gt;
+- http://localhost:1313/golang/%E4%BD%BF%E7%94%A8go%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E5%9F%BA%E7%A1%80%E8%B7%AF%E7%94%B1%E5%8A%9F%E8%83%BD/ - </description>
+        </item>
+    
+    
+    
+        <item>
+        <title>Base32编码算法介绍及PHP实现</title>
+        <link>http://localhost:1313/php/base32%E7%BC%96%E7%A0%81%E7%AE%97%E6%B3%95%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0/</link>
+        <pubDate>Wed, 27 Jul 2016 00:00:00 +0000</pubDate>
+        
+        <guid>http://localhost:1313/php/base32%E7%BC%96%E7%A0%81%E7%AE%97%E6%B3%95%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0/</guid>
+        <description>LAEO http://localhost:1313/php/base32%E7%BC%96%E7%A0%81%E7%AE%97%E6%B3%95%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0/ -&lt;h2 id=&#34;什么是base32编码算法&#34;&gt;什么是Base32编码算法&lt;/h2&gt;
+&lt;p&gt;Base32不知道，那么Base64你肯定知道吧？它们都是用于对字符串数据进行编码的一种算法。Base64比Base32更加常见，PHP只内置了Base64编码算法的实现函数。如果不是研究 &lt;code&gt;TOTP&lt;/code&gt; 的时候发现谷歌的两步验证软件使用到了这种算法，我都不会知道有它。&lt;/p&gt;
+&lt;h2 id=&#34;有什么作用&#34;&gt;有什么作用&lt;/h2&gt;
+&lt;p&gt;限于我个人的认知范围，目前只知道谷歌两步验证功能中使用到了它。它与Base64是差不多的，差异只在于字符集的大小。&lt;/p&gt;
+&lt;h2 id=&#34;字符集哈希表&#34;&gt;字符集哈希表&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;该字符集哈希表来源于算法文章 &lt;a href=&#34;https://tools.ietf.org/html/rfc4648&#34;&gt;RFC4648&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;index&lt;/th&gt;
+          &lt;th&gt;value&lt;/th&gt;
+          &lt;th&gt;index&lt;/th&gt;
+          &lt;th&gt;value&lt;/th&gt;
+          &lt;th&gt;index&lt;/th&gt;
+          &lt;th&gt;value&lt;/th&gt;
+          &lt;th&gt;index&lt;/th&gt;
+          &lt;th&gt;value&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;0&lt;/td&gt;
+          &lt;td&gt;A&lt;/td&gt;
+          &lt;td&gt;8&lt;/td&gt;
+          &lt;td&gt;I&lt;/td&gt;
+          &lt;td&gt;16&lt;/td&gt;
+          &lt;td&gt;Q&lt;/td&gt;
+          &lt;td&gt;24&lt;/td&gt;
+          &lt;td&gt;Y&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;1&lt;/td&gt;
+          &lt;td&gt;B&lt;/td&gt;
+          &lt;td&gt;9&lt;/td&gt;
+          &lt;td&gt;J&lt;/td&gt;
+          &lt;td&gt;17&lt;/td&gt;
+          &lt;td&gt;R&lt;/td&gt;
+          &lt;td&gt;25&lt;/td&gt;
+          &lt;td&gt;Z&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;2&lt;/td&gt;
+          &lt;td&gt;C&lt;/td&gt;
+          &lt;td&gt;10&lt;/td&gt;
+          &lt;td&gt;K&lt;/td&gt;
+          &lt;td&gt;18&lt;/td&gt;
+          &lt;td&gt;S&lt;/td&gt;
+          &lt;td&gt;26&lt;/td&gt;
+          &lt;td&gt;2&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;3&lt;/td&gt;
+          &lt;td&gt;D&lt;/td&gt;
+          &lt;td&gt;11&lt;/td&gt;
+          &lt;td&gt;L&lt;/td&gt;
+          &lt;td&gt;19&lt;/td&gt;
+          &lt;td&gt;T&lt;/td&gt;
+          &lt;td&gt;27&lt;/td&gt;
+          &lt;td&gt;3&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;4&lt;/td&gt;
+          &lt;td&gt;E&lt;/td&gt;
+          &lt;td&gt;12&lt;/td&gt;
+          &lt;td&gt;M&lt;/td&gt;
+          &lt;td&gt;20&lt;/td&gt;
+          &lt;td&gt;U&lt;/td&gt;
+          &lt;td&gt;28&lt;/td&gt;
+          &lt;td&gt;4&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;5&lt;/td&gt;
+          &lt;td&gt;F&lt;/td&gt;
+          &lt;td&gt;13&lt;/td&gt;
+          &lt;td&gt;N&lt;/td&gt;
+          &lt;td&gt;21&lt;/td&gt;
+          &lt;td&gt;V&lt;/td&gt;
+          &lt;td&gt;29&lt;/td&gt;
+          &lt;td&gt;5&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;6&lt;/td&gt;
+          &lt;td&gt;G&lt;/td&gt;
+          &lt;td&gt;14&lt;/td&gt;
+          &lt;td&gt;O&lt;/td&gt;
+          &lt;td&gt;22&lt;/td&gt;
+          &lt;td&gt;W&lt;/td&gt;
+          &lt;td&gt;30&lt;/td&gt;
+          &lt;td&gt;6&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;7&lt;/td&gt;
+          &lt;td&gt;H&lt;/td&gt;
+          &lt;td&gt;15&lt;/td&gt;
+          &lt;td&gt;P&lt;/td&gt;
+          &lt;td&gt;23&lt;/td&gt;
+          &lt;td&gt;X&lt;/td&gt;
+          &lt;td&gt;31&lt;/td&gt;
+          &lt;td&gt;7&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;blockquote&gt;
+&lt;p&gt;ABCDEFGHIJKLMNOPQRSTUVWXYZ234567&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;算法&#34;&gt;算法&lt;/h2&gt;
+&lt;p&gt;首先给定一串字符串，作为待编码的字符串。之后按字符分割该字符串，将其分割为单个字符串为一个元素的数组。接下来就是循环该数组，将其中的每个字符串转换为ASCII值。将得到的所有ASCII值分别转换为二进制值，同时要对每一次转换后的结果进行判断，保证转换后的二进制值为 &lt;code&gt;八位&lt;/code&gt; 二进制。&lt;/p&gt;
+&lt;p&gt;然后把所有的二进制值依照原字符的顺序依次拼接成字符串，现在我们得到了一个由 &lt;code&gt;0&lt;/code&gt; 和 &lt;code&gt;1&lt;/code&gt; 组成的字符串，接下来要对其进行操作。&lt;/p&gt;
+&lt;p&gt;将该字符串分割成五位字符一组的数组，因为二进制的 &lt;code&gt;011111&lt;/code&gt; 转为十进制后的值是 &lt;code&gt;31&lt;/code&gt; ，所以我们取五位字符为一组，这样子每组二进制的最大十进制数值就是 &lt;code&gt;31&lt;/code&gt; 。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;在分割二进制字符串的时候，我们可能会遇到 &lt;code&gt;不足五位&lt;/code&gt; 的情况，解决的办法是 &lt;code&gt;右补零&lt;/code&gt; 。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;这下一切都清晰了吧？将分割好的二进制字符分别转换为十进制，然后到上述哈希表中查找对应字符，将所有对应的字符拼接起来，就成了Base32编码算法的计算结果。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;根据资料来看，我们需要保证最终的结果字符串需要保证 &lt;code&gt;40 Bits Aligned&lt;/code&gt; ，所以我们需要判断结果字符串是否已经对齐，如果没有对齐，就在末尾填补上 &lt;code&gt;=&lt;/code&gt; 。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;php实现&#34;&gt;PHP实现&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-php&#34; data-lang=&#34;php&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#008b45;font-weight:bold&#34;&gt;Base32&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#cd5555&#34;&gt;/**
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     * @type string
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     */&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#00688b&#34;&gt;ALPHABET&lt;/span&gt; = &lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#39;ABCDEFGHIJKLMNOPQRSTUVWXYZ234567&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#cd5555&#34;&gt;/**
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     * Base32 Encoder
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     *
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     * @param  string $str
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     * @return string
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     */&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#008b45&#34;&gt;encode&lt;/span&gt;(&lt;span style=&#34;color:#00688b&#34;&gt;$str&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#00688b&#34;&gt;$map&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#228b22&#34;&gt;// Generates the chars map
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;if&lt;/span&gt; (is_null(&lt;span style=&#34;color:#00688b&#34;&gt;$map&lt;/span&gt;)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#00688b&#34;&gt;$map&lt;/span&gt; = str_split(self::&lt;span style=&#34;color:#658b00&#34;&gt;ALPHABET&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#228b22&#34;&gt;// Returns null if no data given
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;if&lt;/span&gt; (!&lt;span style=&#34;color:#00688b&#34;&gt;$str&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;null&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#228b22&#34;&gt;// Process the given str
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#00688b&#34;&gt;$str&lt;/span&gt; = str_split(strval(&lt;span style=&#34;color:#00688b&#34;&gt;$str&lt;/span&gt;));
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#00688b&#34;&gt;$str&lt;/span&gt; = array_map(&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;function&lt;/span&gt; (&lt;span style=&#34;color:#00688b&#34;&gt;$char&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;return&lt;/span&gt; str_pad(base_convert(strval(ord(&lt;span style=&#34;color:#00688b&#34;&gt;$char&lt;/span&gt;)), &lt;span style=&#34;color:#b452cd&#34;&gt;10&lt;/span&gt;, &lt;span style=&#34;color:#b452cd&#34;&gt;2&lt;/span&gt;), &lt;span style=&#34;color:#b452cd&#34;&gt;8&lt;/span&gt;, &lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#39;0&amp;#39;&lt;/span&gt;, STR_PAD_LEFT);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }, &lt;span style=&#34;color:#00688b&#34;&gt;$str&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#00688b&#34;&gt;$binary&lt;/span&gt;   = join(&lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#00688b&#34;&gt;$str&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#00688b&#34;&gt;$fiveBits&lt;/span&gt; = str_split(&lt;span style=&#34;color:#00688b&#34;&gt;$binary&lt;/span&gt;, &lt;span style=&#34;color:#b452cd&#34;&gt;5&lt;/span&gt;); &lt;span style=&#34;color:#228b22&#34;&gt;// 000000 =&amp;gt; 0 &amp;amp;&amp;amp; 011111 =&amp;gt; 31
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#00688b&#34;&gt;$maped&lt;/span&gt;    = array_map(&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;function&lt;/span&gt; (&lt;span style=&#34;color:#00688b&#34;&gt;$bit&lt;/span&gt;) &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;use&lt;/span&gt; (&lt;span style=&#34;color:#00688b&#34;&gt;$map&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#00688b&#34;&gt;$bit&lt;/span&gt;   = strval(&lt;span style=&#34;color:#00688b&#34;&gt;$bit&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#00688b&#34;&gt;$bit&lt;/span&gt;   = str_pad(&lt;span style=&#34;color:#00688b&#34;&gt;$bit&lt;/span&gt;, &lt;span style=&#34;color:#b452cd&#34;&gt;5&lt;/span&gt;, &lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#39;0&amp;#39;&lt;/span&gt;, STR_PAD_RIGHT);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#00688b&#34;&gt;$index&lt;/span&gt; = base_convert(&lt;span style=&#34;color:#00688b&#34;&gt;$bit&lt;/span&gt;, &lt;span style=&#34;color:#b452cd&#34;&gt;2&lt;/span&gt;, &lt;span style=&#34;color:#b452cd&#34;&gt;10&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#00688b&#34;&gt;$map&lt;/span&gt;[&lt;span style=&#34;color:#00688b&#34;&gt;$index&lt;/span&gt;];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }, &lt;span style=&#34;color:#00688b&#34;&gt;$fiveBits&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#00688b&#34;&gt;$encoded&lt;/span&gt; = join(&lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#00688b&#34;&gt;$maped&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#00688b&#34;&gt;$pad&lt;/span&gt;     = strlen(&lt;span style=&#34;color:#00688b&#34;&gt;$encoded&lt;/span&gt;) % &lt;span style=&#34;color:#b452cd&#34;&gt;8&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#00688b&#34;&gt;$encoded&lt;/span&gt; . str_repeat(&lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#39;=&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#00688b&#34;&gt;$pad&lt;/span&gt; ? &lt;span style=&#34;color:#b452cd&#34;&gt;8&lt;/span&gt; - &lt;span style=&#34;color:#00688b&#34;&gt;$pad&lt;/span&gt; : &lt;span style=&#34;color:#b452cd&#34;&gt;0&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#cd5555&#34;&gt;/**
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     * Base32 Decoder
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     *
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     * @param  string $str
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     * @return string
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     */&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#008b45&#34;&gt;decode&lt;/span&gt;(&lt;span style=&#34;color:#00688b&#34;&gt;$str&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#00688b&#34;&gt;$map&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#228b22&#34;&gt;// Generates the chars map
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;if&lt;/span&gt; (is_null(&lt;span style=&#34;color:#00688b&#34;&gt;$map&lt;/span&gt;)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#00688b&#34;&gt;$map&lt;/span&gt; = str_split(self::&lt;span style=&#34;color:#658b00&#34;&gt;ALPHABET&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#00688b&#34;&gt;$map&lt;/span&gt; = array_flip(&lt;span style=&#34;color:#00688b&#34;&gt;$map&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#228b22&#34;&gt;// Returns null if no data given
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;if&lt;/span&gt; (!&lt;span style=&#34;color:#00688b&#34;&gt;$str&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;null&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#00688b&#34;&gt;$str&lt;/span&gt;      = rtrim(&lt;span style=&#34;color:#00688b&#34;&gt;$str&lt;/span&gt;, &lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#39;=&amp;#39;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#00688b&#34;&gt;$maped&lt;/span&gt;    = str_split(&lt;span style=&#34;color:#00688b&#34;&gt;$str&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#00688b&#34;&gt;$fiveBits&lt;/span&gt; = array_map(&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;function&lt;/span&gt; (&lt;span style=&#34;color:#00688b&#34;&gt;$char&lt;/span&gt;) &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;use&lt;/span&gt; (&lt;span style=&#34;color:#00688b&#34;&gt;$map&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#00688b&#34;&gt;$index&lt;/span&gt; = &lt;span style=&#34;color:#00688b&#34;&gt;$map&lt;/span&gt;[&lt;span style=&#34;color:#00688b&#34;&gt;$char&lt;/span&gt;]; &lt;span style=&#34;color:#228b22&#34;&gt;// Exp: ($char = A) =&amp;gt; ($index = 0)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;            &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;return&lt;/span&gt; str_pad(decbin(&lt;span style=&#34;color:#00688b&#34;&gt;$index&lt;/span&gt;), &lt;span style=&#34;color:#b452cd&#34;&gt;5&lt;/span&gt;, &lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#39;0&amp;#39;&lt;/span&gt;, STR_PAD_LEFT);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }, &lt;span style=&#34;color:#00688b&#34;&gt;$maped&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#00688b&#34;&gt;$binary&lt;/span&gt; = join(&lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#00688b&#34;&gt;$fiveBits&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#00688b&#34;&gt;$binary&lt;/span&gt; = str_split(&lt;span style=&#34;color:#00688b&#34;&gt;$binary&lt;/span&gt;, &lt;span style=&#34;color:#b452cd&#34;&gt;8&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#00688b&#34;&gt;$chars&lt;/span&gt;  = array_map(&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;function&lt;/span&gt; (&lt;span style=&#34;color:#00688b&#34;&gt;$bin&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#00688b&#34;&gt;$ascii&lt;/span&gt; = bindec(&lt;span style=&#34;color:#00688b&#34;&gt;$bin&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;return&lt;/span&gt; chr(&lt;span style=&#34;color:#00688b&#34;&gt;$ascii&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }, &lt;span style=&#34;color:#00688b&#34;&gt;$binary&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;return&lt;/span&gt; join(&lt;span style=&#34;color:#cd5555&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#00688b&#34;&gt;$chars&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;a href=&#34;https://github.com/laeo/base32&#34;&gt;laeo/base32&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;最后&#34;&gt;最后&lt;/h2&gt;
+&lt;p&gt;代码写得比较乱，主要是方便一步步弄懂。其中各种函数的使用、闭包的使用，都是为了方便查看，顺便熟悉它们。上述代码已经经过我自己的测试，编码、解码的结果跟某在线编、解码的网站计算的结果完全相同。&lt;/p&gt;
+&lt;p&gt;才疏学浅，万望见谅。&lt;/p&gt;
+- http://localhost:1313/php/base32%E7%BC%96%E7%A0%81%E7%AE%97%E6%B3%95%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0/ - </description>
+        </item>
+    
+    
+    
+        <item>
+        <title>TOTP原理介绍及PHP实现展示</title>
+        <link>http://localhost:1313/php/totp%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0%E5%B1%95%E7%A4%BA/</link>
+        <pubDate>Tue, 26 Jul 2016 00:00:00 +0000</pubDate>
+        
+        <guid>http://localhost:1313/php/totp%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0%E5%B1%95%E7%A4%BA/</guid>
+        <description>LAEO http://localhost:1313/php/totp%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0%E5%B1%95%E7%A4%BA/ -&lt;h2 id=&#34;什么是-totp&#34;&gt;什么是 “TOTP”&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;TOTP&lt;/code&gt; 是 &lt;code&gt;Time-based One-time Password&lt;/code&gt; 的英文缩写，翻译为中文即“基于时间的一次性密码”。&lt;/p&gt;
+&lt;h2 id=&#34;有什么作用&#34;&gt;有什么作用&lt;/h2&gt;
+&lt;p&gt;快节奏的社会，一切讲究快捷、方便，但是安全相关，实在方便不起来， &lt;code&gt;TOTP&lt;/code&gt; 应运而生。使用该技术可以在降低身份认证复杂度的同时，将安全系数大幅度提高。君不见现在多少网站使用的动态口令功能，基本都是以该技术的为基础。Google Authenticator、Authy 等等软件都使用的该技术，我个人的域名注册商、服务器商也都接入了该技术。&lt;/p&gt;
+&lt;p&gt;使用该技术来进行身份认证，可以加快认证速度，提高安全性。每个用户的认证口令是随着时间而变化的，无疑给 “黑手党” 们加大了许多难度。&lt;/p&gt;
+&lt;h2 id=&#34;totp-的原理&#34;&gt;“TOTP” 的原理&lt;/h2&gt;
+&lt;p&gt;该技术的着重点就在于基于时间，时间是不断变化的，所以基于时间而计算出来的 “密码” 也会是不断变化的。如果我们要使用该技术来进行身份认证，那么就一定要控制好时间变化的速度，否则时间无时无刻都在变化，我们如何进行认证？连输入密码也做不到吧。&lt;/p&gt;
+&lt;p&gt;所以，控制时间是务必要做到的。那么，这就有点扯淡了。区区凡人还想控制时间？╭(╯^╰)╮&lt;/p&gt;
+&lt;p&gt;看看下面的PHP代码：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-php&#34; data-lang=&#34;php&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#00688b&#34;&gt;$time&lt;/span&gt;       = time(); &lt;span style=&#34;color:#228b22&#34;&gt;//取得实际时间，单位秒（unix时间戳）
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#00688b&#34;&gt;$validity&lt;/span&gt;   = &lt;span style=&#34;color:#b452cd&#34;&gt;30&lt;/span&gt;; &lt;span style=&#34;color:#228b22&#34;&gt;//设置动态密码有效期，给用户输入密码的时间
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#228b22&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#00688b&#34;&gt;$realtime&lt;/span&gt;   = &lt;span style=&#34;color:#00688b&#34;&gt;$time&lt;/span&gt; / &lt;span style=&#34;color:#00688b&#34;&gt;$validity&lt;/span&gt;; &lt;span style=&#34;color:#228b22&#34;&gt;//相除得到 “真实时间”
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;发明该算法的大师们很厉害，既然无法控制时间，那么我们就换个方式，变相控制时间。什么方式呢？除法！如果把时间看做被除数，把我们设置的密码有效期看做除数，把计算的结果看做我们取到的 &lt;code&gt;真实时间&lt;/code&gt; 。如此一来，每当 &lt;code&gt;实际时间&lt;/code&gt; 走过 &lt;code&gt;密码有效期&lt;/code&gt; 那么久后，我们取到的 &lt;code&gt;真实时间&lt;/code&gt; 的数值才会 &lt;code&gt;+1&lt;/code&gt; 。&lt;/p&gt;
+&lt;p&gt;说到这里，如果我的表述没有问题的话，看官一定已经大致明白 &lt;code&gt;TOTP&lt;/code&gt; 到底如何实现了。使用这种方式取到的“时间”，就不必担心时间不停的流逝，毕竟只要没有超过密码有效期，该数值是不会变化的。&lt;/p&gt;
+&lt;p&gt;细心的朋友一定注意到了，除法可能还有小数呢，到时候小数不停变化，不也一样影响最终结果么？&lt;/p&gt;
+&lt;p&gt;这是肯定的，所以我推荐使用PHP内置的 &lt;code&gt;floor()&lt;/code&gt; 函数，该函数可以直接抹去浮点数的小数点后的部分。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;其实我自己使用的是 &lt;code&gt;Math&lt;/code&gt; 函数库提供的 &lt;code&gt;intdiv()&lt;/code&gt; 函数，效果都是一样的，甚至你可以直接 &lt;code&gt;intval()&lt;/code&gt; 。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;代码实例&#34;&gt;代码实例&lt;/h2&gt;
+&lt;p&gt;最主要的问题解决后，其它问题基本就不是问题了。下面附上实现代码：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-php&#34; data-lang=&#34;php&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#008b45;font-weight:bold&#34;&gt;TwoFactor&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#cd5555&#34;&gt;/**
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     * @var integer
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     */&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#00688b&#34;&gt;$delay&lt;/span&gt; = &lt;span style=&#34;color:#b452cd&#34;&gt;30&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#cd5555&#34;&gt;/**
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     * @var string
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     */&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#00688b&#34;&gt;$secret&lt;/span&gt; = &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;null&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#cd5555&#34;&gt;/**
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     * Create TwoFactor instance
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     *
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     * @param string $secret
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     */&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;function&lt;/span&gt; __construct(&lt;span style=&#34;color:#00688b&#34;&gt;$secret&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#00688b&#34;&gt;$this&lt;/span&gt;-&amp;gt;&lt;span style=&#34;color:#658b00&#34;&gt;secret&lt;/span&gt; = &lt;span style=&#34;color:#00688b&#34;&gt;$secret&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#cd5555&#34;&gt;/**
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     * Returns the authenticate code
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     *
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     * @return string
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     */&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#008b45&#34;&gt;getCode&lt;/span&gt;()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#00688b&#34;&gt;$atom&lt;/span&gt; = floor(time() / &lt;span style=&#34;color:#00688b&#34;&gt;$this&lt;/span&gt;-&amp;gt;&lt;span style=&#34;color:#658b00&#34;&gt;delay&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#00688b&#34;&gt;$hash&lt;/span&gt; = sha1(&lt;span style=&#34;color:#00688b&#34;&gt;$this&lt;/span&gt;-&amp;gt;&lt;span style=&#34;color:#658b00&#34;&gt;secret&lt;/span&gt; . dechex(&lt;span style=&#34;color:#00688b&#34;&gt;$atom&lt;/span&gt;));
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#00688b&#34;&gt;$last&lt;/span&gt; = substr(&lt;span style=&#34;color:#00688b&#34;&gt;$hash&lt;/span&gt;, -&lt;span style=&#34;color:#b452cd&#34;&gt;1&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#00688b&#34;&gt;$pos&lt;/span&gt;  = hexdec(&lt;span style=&#34;color:#00688b&#34;&gt;$last&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#00688b&#34;&gt;$hex&lt;/span&gt;  = substr(&lt;span style=&#34;color:#00688b&#34;&gt;$hash&lt;/span&gt;, &lt;span style=&#34;color:#00688b&#34;&gt;$pos&lt;/span&gt;, &lt;span style=&#34;color:#b452cd&#34;&gt;8&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#00688b&#34;&gt;$code&lt;/span&gt; = (string) hexdec(&lt;span style=&#34;color:#00688b&#34;&gt;$hex&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;return&lt;/span&gt; substr(&lt;span style=&#34;color:#00688b&#34;&gt;$code&lt;/span&gt;, -&lt;span style=&#34;color:#b452cd&#34;&gt;6&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#cd5555&#34;&gt;/**
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     * Try to authenticate
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     *
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     * @param  string $code
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     * @return boolean
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#cd5555&#34;&gt;     */&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#008b45&#34;&gt;auth&lt;/span&gt;(&lt;span style=&#34;color:#00688b&#34;&gt;$code&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#8b008b;font-weight:bold&#34;&gt;return&lt;/span&gt; (boolean) (strval(&lt;span style=&#34;color:#00688b&#34;&gt;$code&lt;/span&gt;) === &lt;span style=&#34;color:#00688b&#34;&gt;$this&lt;/span&gt;-&amp;gt;&lt;span style=&#34;color:#658b00&#34;&gt;getCode&lt;/span&gt;());
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;a href=&#34;https://github.com/laeo/totp&#34;&gt;laeo/totp&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;最后&#34;&gt;最后&lt;/h2&gt;
+&lt;p&gt;仅个人粗浅见识，如有遗漏、误缺，还请见谅。&lt;/p&gt;
+- http://localhost:1313/php/totp%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0%E5%B1%95%E7%A4%BA/ - </description>
+        </item>
+    
+    
+  </channel>
+</rss> 

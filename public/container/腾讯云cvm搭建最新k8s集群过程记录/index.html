@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh"><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+<title>腾讯云CVM搭建最新K8S集群过程记录</title>
+
+
+
+
+<meta charset="utf-8">
+<meta name="X-UA-Compatible" content="IE=edge">
+<meta name="google-site-verification" content="">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=5, user-scalable=5" name="viewport">
+<meta content="telephone=no" name="format-detection">
+<meta name="description" content="">
+<meta name="renderer" content="webkit">
+<meta name="theme-color" content="#ffffff">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+
+
+
+      <script src="/js/toc.js"></script>
+    
+    <link type="text/css" rel="stylesheet" href="/vendor/css/bootstrap.min.css">
+
+<link rel="stylesheet" href="/scss/dark-mode.min.cb53f1bee2b8900cb4f082afbf00175d6618f281cf9a2fe8619e3b52d20b5721.css" integrity="sha256-y1PxvuK4kAy08IKvvwAXXWYY8oHPmi/oYZ47UtILVyE=" media="screen">
+
+
+<link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Material+Icons">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script src="/vendor/js/md5.min.js"></script><script>
+  var gitalk = new Gitalk({
+  clientID: 'bcb3ff802edb45ae15c3',
+  clientSecret: '541b0675cacbdad87ef5e31dcff14d28f843b34a',
+  repo: 'laeo.github.io',
+  owner: 'laeo',
+  admin: ['laeo'],
+  id: md5(location.pathname),
+  distractionFreeMode: 'false'
+  });
+  window.onload = function () {
+        gitalk.render('gitalk-container')
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+    	<div id="app"><div class="single-column-drawer-container" id="drawer"
+     v-bind:class="{ 'single-column-drawer-container-active': isDrawerOpen }">
+    <div class="drawer-content">
+        <div class="drawer-menu">
+            
+            
+            
+            
+            <div class="toc">
+
+
+	<div class="toc-content">
+	
+		
+		
+		
+		<center>- 目录 -</center>
+		
+		
+		<ul>
+			
+				
+				
+					
+						
+						
+						
+						
+							
+								
+									<ul>
+								
+							
+						
+						
+							<li>
+								<a href="#%e8%af%b4%e6%98%8e" class="nav-说明">
+									说明
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+						
+							<li>
+								<a href="#%e5%8e%9f%e6%96%99" class="nav-原料">
+									原料
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+						
+							<li>
+								<a href="#%e7%83%b9%e9%a5%aa" class="nav-烹饪">
+									烹饪
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+							
+								</ul>
+							
+						
+						
+						
+							<li>
+								<a href="#%e4%b8%8a%e9%9d%a2%e7%9a%84%e9%aa%9a%e6%93%8d%e4%bd%9c%e5%85%a8%e4%b8%8d%e9%9c%80%e8%a6%81%e4%ba%86%e5%9b%a0%e4%b8%ba%e6%88%91%e4%ba%ba%e5%82%bb%e4%ba%86%e8%85%be%e8%ae%af%e4%ba%91%e6%8f%90%e4%be%9b%e4%ba%86%e4%b8%80%e4%b8%aa%e5%8a%9f%e8%83%bd%e5%8f%ab%e5%af%b9%e7%ad%89%e8%81%94%e7%bd%91%e8%bf%98%e6%9c%89%e6%96%b0%e6%8f%90%e4%be%9b%e7%9a%84-%e4%ba%91%e8%81%94%e7%bd%91-%e9%83%bd%e5%8f%af%e4%bb%a5%e5%b0%86%e4%b8%8d%e5%90%8c%e8%b4%a6%e5%8f%b7%e7%9a%84cvm%e9%99%8d%e7%bb%b4%e6%89%93%e5%87%bb%e6%88%90%e5%86%85%e7%bd%91%e4%ba%92%e9%80%9a%e8%99%bd%e7%84%b6%e6%b2%a1%e6%9c%89%e5%ae%9e%e9%aa%8c%e8%bf%87%e4%bd%86%e6%83%b3%e6%9d%a5%e4%b8%8d%e4%bc%9a%e6%af%94%e6%88%91%e4%b8%8a%e9%9d%a2%e4%b8%80%e5%a0%86%e5%8f%88%e9%ba%bb%e7%83%a6%e5%8f%88%e6%b2%a1%e7%94%a8%e7%9a%84%e6%93%8d%e4%bd%9c%e6%9b%b4%e6%97%a0%e7%94%a8%e4%ba%86%e5%b0%b1%e8%bf%99%e6%a0%b7%e5%90%a7%e5%90%90%e4%ba%86" class="nav-上面的骚操作全不需要了因为我人傻了腾讯云提供了一个功能叫对等联网还有新提供的-云联网-都可以将不同账号的cvm降维打击成内网互通虽然没有实验过但想来不会比我上面一堆又麻烦又没用的操作更无用了就这样吧吐了">
+									上面的骚操作全不需要了，因为我人傻了！腾讯云提供了一个功能叫对等联网，还有新提供的 云联网 都可以将不同账号的CVM降维打击成内网互通。虽然没有实验过，但想来不会比我上面一堆又麻烦又没用的操作更无用了。就这样吧……吐了
+								</a>
+							</li>
+						
+						
+					
+				
+			
+		</ul>
+	</div>
+
+</div>
+            
+        </div>
+    </div>
+</div>
+<transition name="fade">
+    <div id="drawer-mask" v-bind:class="{ 'single-column-drawer-mask': mounted }" v-if="isDrawerOpen" v-on:click="toggleDrawer"></div>
+</transition>
+<nav id="navBar" class="navbar sticky-top navbar-light single-column-nav-container">
+    <div id="navBackground" class="nav-background"></div>
+    <div class="container container-narrow nav-content">
+        <button id="nav_dropdown_btn" class="nav-dropdown-toggle" type="button" v-on:click="toggleDrawer">
+            <i class="material-icons">
+                menu
+            </i>
+        </button>
+        <a id="navTitle" class="navbar-brand" href="http://localhost:1313/">
+            LAEO
+        </a>
+        
+        <button type="button" class="nav-darkmode-toggle" id="darkModeToggleButton2">
+            <i class="material-icons" id="darkModeToggleIcon2">
+                dark_mode
+            </i>
+        </button>
+        
+    </div>
+</nav>
+<div class="single-column-header-container" id="pageHead"
+     v-bind:style="{ transform: 'translateZ(0px) translateY('+.3*scrollY+'px)', opacity: 1-navOpacity }">
+    <a href="http://localhost:1313/">
+        <div class="single-column-header-title">LAEO</div>
+        
+        <div class="single-column-header-subtitle">桀桀桀</div>
+        
+
+    </a>
+</div>
+
+            <div id="content">
+                <div id="streamContainer" class="stream-container">
+
+    <div class="post-list-container post-list-container-shadow">
+        <div class="post">
+            
+            
+            
+
+            <div class="post-head-wrapper-text-only"
+                
+            >
+                <div class="post-title">
+                    腾讯云CVM搭建最新K8S集群过程记录
+                    
+                    <div class="post-meta">
+                        
+                        <time itemprop="datePublished">
+                            2020-02-05 00:00
+                        </time>
+                        
+
+                        
+
+                        
+                        
+                            <i class="material-icons" style="">schedule</i>
+                            
+
+                            
+                            
+
+                            
+                            5 min
+                            
+                            24 s.
+                        
+                    </div>
+                </div>
+            </div>
+            
+            <div class="post-body-wrapper">
+                
+                <div class="post-body" v-pre>
+                
+                    <h2 id="说明">说明</h2>
+<p><em>穷人专用的</em>在腾讯云不同账号下的CVM上搭建K8S集群。</p>
+<h2 id="原料">原料</h2>
+<ol>
+<li><a href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/">官方指南一份</a></li>
+<li>腾讯云CVM一份（配置2C4G5M）（运行CentOS 7.4）</li>
+<li><a href="https://mirror.azure.cn/help/gcr-proxy-cache.html">微软CN提供的gcr.io镜像一份</a></li>
+<li><a href="https://developer.aliyun.com/mirror/kubernetes">阿里云提供的k8s镜像一份</a></li>
+</ol>
+<h2 id="烹饪">烹饪</h2>
+<ol>
+<li>根据 <a href="https://kubernetes.io/zh/docs/setup/production-environment/">容器运行时</a> 文档介绍选择中意的容器运行时程序，跟以往不同，我没有选择 <em>docker</em>，而是选择了 <em>containerd</em>，差别请前往 <a href="https://cloud.tencent.com/document/product/457/35747">如何选择 Containerd 和 Docker</a> 这篇文档。</li>
+</ol>
+<blockquote>
+<p>腾讯云连 Docker 的源太慢了，还是用阿里提供的镜像吧。</p>
+</blockquote>
+<blockquote>
+<p>需要注意的是，当我们根据文档中的说明生成了默认的 <em>containerd</em> 配置文件后，我们需要手动将其中的 <code>plugins.cri.sandbox_image</code> 的地址改为微软CN提供的 <em>镜像</em> 的地址，否则下载不到沙盒镜像，集群将无法正常启动。</p>
+</blockquote>
+<blockquote>
+<p>还需要注意的是，containerd 的 CLI 工具是 <code>crictl</code> ，常用命令与 docker 一致，具体需要查询官网。安装好 containerd 后是无法直接使用 crictl 查看容器信息的，会报错连接超时。原因是 crictl 默认的后端地址是 <code>unix:///var/run/dockershim.sock</code> ，而 containerd 使用的地址是 <code>unix:///run/containerd/containerd.sock</code> ，可以设置环境变量 <code>CONTAINER_RUNTIME_ENDPOINT</code> 来便于使用。</p>
+</blockquote>
+<blockquote>
+<p>编辑 containerd 的配置文件，使用 docker registry 的镜像地址 <code>https://dockerhub.azk8s.cn</code> 来加速镜像拉取。</p>
+</blockquote>
+<ol start="2">
+<li>根据 <a href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/">官方文档</a> 安装 kubeadm，安装过程中使用阿里云k8s镜像来加速安装 kubeadm、kubelet、kubectl 等软件。</li>
+</ol>
+<blockquote>
+<p>安装前需要根据文档做系统初始化，打开流量转发等功能。记得一定要执行 <code>modprobe br_netfilter</code> ，否则预检会报错 /proc/sys/net/bridge/bridge-nf-call-iptables contents are not set to 1。</p>
+</blockquote>
+<blockquote>
+<p>需要注意最后安装完成要记得指定 kubelet 的 &ndash;cgroup-driver 为 systemd，保持跟 containerd 一致。</p>
+</blockquote>
+<blockquote>
+<p>腾讯云CVM需要修改 <code>/etc/sysctl.conf</code> 文件来强制打开 <code>ip_forward</code> 。</p>
+</blockquote>
+<ol start="3">
+<li>根据 <a href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/">官方文档</a> 使用 kubeadm 创建集群。</li>
+</ol>
+<blockquote>
+<p>需要注意的是，腾讯云CVM网卡绑定的 IP 并非公网 IP，所以我们需要指定 <code>--control-plane-endpoint</code> 参数，便于其它节点通过公网加入到集群。</p>
+</blockquote>
+<blockquote>
+<p>根据不同的网络插件，我们可能需要指定 <code>--pod-network-cidr</code> 参数，具体需要查看网络插件列表中的描述。</p>
+</blockquote>
+<blockquote>
+<p>kubeadm 初始化集群所需的容器全部存储于 gcr.io 中，由于奇怪的原因我们不能直接访问该网站，所以这就用到原料中的 <em>微软CN</em> 提供的 gcr.io 镜像网站。通过附加 <code>--image-repository gcr.azk8s.cn/google_containers</code> 来指明从镜像站下载镜像。</p>
+</blockquote>
+<blockquote>
+<p>穷人专用笔记，将公网IP作为虚拟IP绑定到CVM上，然后修改 <code>/etc/sysconfig/kubelet</code> 指定 <code>--node-ip</code> 参数。</p>
+</blockquote>
+<pre tabindex="0"><code>cp /etc/sysconfig/network-scripts/ifcfg-eth0 /etc/sysconfig/network-scripts/ifcfg-eth0:0
+
+cat &gt; /etc/sysconfig/network-scripts/ifcfg-eth0:0 &lt;&lt;EOF
+DEVICE=eth0:0      #此处添加:0，保持和文件名一致，添加多个IP依次递增
+ONBOOT=yes                      #是否开机激活
+BOOTPROTO=static              #静态IP，如果需要DHCP获取请输入dhcp
+IPADDR=&lt;公网IP&gt;            #此处修改为要添加的IP
+NETMASK=255.255.255.0
+EOF
+
+systemctl restart network
+</code></pre><blockquote>
+<p>穷人专用笔记，绑定好虚拟IP后，我们还需要在 <code>kubeadm init</code> 时指定 <code>--apiserver-advertise-address</code> 参数为该虚拟IP，这样在创建 <code>ipvs</code> 规则的时候，才能正确将流量重定向到公网，否则 worker 节点将无法正常与 master节点通信，因为工作节点上创建的 ipvs 规则，会将 10.96.0.1 这个 VIP 的流量导向 master 服务器的内网IP。</p>
+</blockquote>
+<ol start="4">
+<li>安装网络插件，等待初始化完成。</li>
+</ol>
+<blockquote>
+<p>安装 Flannel 时，从 quay.io 拉取镜像也非常缓慢，使用镜像 <code>quay.azk8s.cn</code> 加速它！</p>
+</blockquote>
+<ol start="5">
+<li>使用 <a href="https://rook.io/docs/rook/v1.2/ceph-quickstart.html">rook</a> 安装存储供应商，</li>
+</ol>
+<h1 id="上面的骚操作全不需要了因为我人傻了腾讯云提供了一个功能叫对等联网还有新提供的-云联网-都可以将不同账号的cvm降维打击成内网互通虽然没有实验过但想来不会比我上面一堆又麻烦又没用的操作更无用了就这样吧吐了">上面的骚操作全不需要了，因为我人傻了！腾讯云提供了一个功能叫<em>对等联网</em>，还有新提供的 <em>云联网</em> 都可以将不同账号的CVM降维打击成内网互通。虽然没有实验过，但想来不会比我上面一堆又麻烦又没用的操作更无用了。就这样吧……吐了</h1>
+
+                    
+                    <HR width="100%" id="EOF">
+		    <p style="color:#777;">最后修改于 2020-02-05</p>
+                    
+                </div>
+            </div>
+            
+            
+            <nav class="post-pagination">
+
+                
+                <a class="newer-posts" href="/container/k8s%E4%B8%ADdrone-kube-runner%E5%AE%B9%E5%99%A8%E6%97%A0%E7%BD%91%E7%BB%9C%E9%97%AE%E9%A2%98/">
+			下回<br>k8s中drone-kube-runner容器无网络问题
+                </a>
+                
+                
+                
+                <a class="older-posts" href="/linux/nginx-proxy%E5%B0%86%E8%AF%81%E4%B9%A6%E5%BA%94%E7%94%A8%E5%88%B0%E9%9D%9Ehttps%E5%AE%B9%E5%99%A8%E9%97%AE%E9%A2%98%E5%A4%84%E7%90%86%E8%AE%B0%E5%BD%95/">
+			上回<br>nginx-proxy将证书应用到非HTTPS容器问题处理记录
+                </a>
+                
+            </nav>
+            <div class="post-comment-wrapper">
+                
+
+
+<div id="gitalk-container"></div>
+
+
+
+
+
+
+
+
+
+
+
+            </div>
+        </div>
+    </div>
+
+
+                    </div>
+            </div><div id="sideContainer" class="side-container">
+    
+    <a class="a-block nav-head false" href="http://localhost:1313/">
+    
+        <div class="nav-title">
+            LAEO
+        </div>
+        
+        <div class="nav-subtitle">
+            桀桀桀
+        </div>
+        
+    </a>
+
+    <div class="nav-link-list">
+        
+        
+    </div>
+
+    
+
+    <div class="nav-footer">
+        
+Hugo Theme <a href="https://github.com/amazingrise/hugo-theme-diary">Diary</a> by <a href="https://risehere.net/">Rise</a>
+<br>
+移植自 <a href="https://mak1t0.cc/" target="_blank" rel="noreferrer noopener">Makito</a>'s <a href="https://github.com/SumiMakito/hexo-theme-journal/" target="_blank" rel="noreferrer noopener">Journal.</a> <br>
+<br>
+
+&copy;
+	
+	2020 LAEO
+	
+
+    </div>
+    
+</div><div id="extraContainer" class="extra-container">
+    <div class="toc-wrapper">
+        
+
+        
+        <div class="toc">
+
+
+	<div class="toc-content">
+	
+		
+		
+		
+		<center>- 目录 -</center>
+		
+		
+		<ul>
+			
+				
+				
+					
+						
+						
+						
+						
+							
+								
+									<ul>
+								
+							
+						
+						
+							<li>
+								<a href="#%e8%af%b4%e6%98%8e" class="nav-说明">
+									说明
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+						
+							<li>
+								<a href="#%e5%8e%9f%e6%96%99" class="nav-原料">
+									原料
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+						
+							<li>
+								<a href="#%e7%83%b9%e9%a5%aa" class="nav-烹饪">
+									烹饪
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+							
+								</ul>
+							
+						
+						
+						
+							<li>
+								<a href="#%e4%b8%8a%e9%9d%a2%e7%9a%84%e9%aa%9a%e6%93%8d%e4%bd%9c%e5%85%a8%e4%b8%8d%e9%9c%80%e8%a6%81%e4%ba%86%e5%9b%a0%e4%b8%ba%e6%88%91%e4%ba%ba%e5%82%bb%e4%ba%86%e8%85%be%e8%ae%af%e4%ba%91%e6%8f%90%e4%be%9b%e4%ba%86%e4%b8%80%e4%b8%aa%e5%8a%9f%e8%83%bd%e5%8f%ab%e5%af%b9%e7%ad%89%e8%81%94%e7%bd%91%e8%bf%98%e6%9c%89%e6%96%b0%e6%8f%90%e4%be%9b%e7%9a%84-%e4%ba%91%e8%81%94%e7%bd%91-%e9%83%bd%e5%8f%af%e4%bb%a5%e5%b0%86%e4%b8%8d%e5%90%8c%e8%b4%a6%e5%8f%b7%e7%9a%84cvm%e9%99%8d%e7%bb%b4%e6%89%93%e5%87%bb%e6%88%90%e5%86%85%e7%bd%91%e4%ba%92%e9%80%9a%e8%99%bd%e7%84%b6%e6%b2%a1%e6%9c%89%e5%ae%9e%e9%aa%8c%e8%bf%87%e4%bd%86%e6%83%b3%e6%9d%a5%e4%b8%8d%e4%bc%9a%e6%af%94%e6%88%91%e4%b8%8a%e9%9d%a2%e4%b8%80%e5%a0%86%e5%8f%88%e9%ba%bb%e7%83%a6%e5%8f%88%e6%b2%a1%e7%94%a8%e7%9a%84%e6%93%8d%e4%bd%9c%e6%9b%b4%e6%97%a0%e7%94%a8%e4%ba%86%e5%b0%b1%e8%bf%99%e6%a0%b7%e5%90%a7%e5%90%90%e4%ba%86" class="nav-上面的骚操作全不需要了因为我人傻了腾讯云提供了一个功能叫对等联网还有新提供的-云联网-都可以将不同账号的cvm降维打击成内网互通虽然没有实验过但想来不会比我上面一堆又麻烦又没用的操作更无用了就这样吧吐了">
+									上面的骚操作全不需要了，因为我人傻了！腾讯云提供了一个功能叫对等联网，还有新提供的 云联网 都可以将不同账号的CVM降维打击成内网互通。虽然没有实验过，但想来不会比我上面一堆又麻烦又没用的操作更无用了。就这样吧……吐了
+								</a>
+							</li>
+						
+						
+					
+				
+			
+		</ul>
+	</div>
+
+</div>
+        
+    </div>
+    <div class="pagination">
+        <a id="globalBackToTop" class="pagination-action animated-visibility" href="#top"
+            :class="{ invisible: scrollY == 0 }">
+            <i class="material-icons pagination-action-icon">
+                keyboard_arrow_up
+            </i>
+        </a>
+        
+        <a type="button" class="pagination-action" id="darkModeToggleButton">
+            <span class="material-icons pagination-action-icon" id="darkModeToggleIcon">
+                dark_mode
+            </span>
+        </a>
+        
+        
+    </div>
+</div>
+
+<div id="single-column-footer">
+Hugo Theme <a href="https://github.com/amazingrise/hugo-theme-diary">Diary</a> by <a href="https://risehere.net/">Rise</a>
+<br>
+移植自 <a href="https://mak1t0.cc/" target="_blank" rel="noreferrer noopener">Makito</a>'s <a href="https://github.com/SumiMakito/hexo-theme-journal/" target="_blank" rel="noreferrer noopener">Journal.</a> <br>
+<br>
+
+&copy;
+	
+	2020 LAEO
+	
+</div>
+            </div>
+    
+    <script src="/js/journal.js"></script></body>
+</html>

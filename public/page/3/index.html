@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="zh"><head>
+	<meta name="generator" content="Hugo 0.140.0"><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+<title>LAEO</title>
+
+
+
+  
+
+
+<meta charset="utf-8">
+<meta name="X-UA-Compatible" content="IE=edge">
+<meta name="google-site-verification" content="">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=5, user-scalable=5" name="viewport">
+<meta content="telephone=no" name="format-detection">
+<meta name="description" content="LAEO&#39;s blog">
+<meta name="renderer" content="webkit">
+<meta name="theme-color" content="#ffffff">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+
+
+
+    <link type="text/css" rel="stylesheet" href="/vendor/css/bootstrap.min.css">
+
+<link rel="stylesheet" href="/scss/dark-mode.min.cb53f1bee2b8900cb4f082afbf00175d6618f281cf9a2fe8619e3b52d20b5721.css" integrity="sha256-y1PxvuK4kAy08IKvvwAXXWYY8oHPmi/oYZ47UtILVyE=" media="screen">
+
+
+<link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Material+Icons">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+    	<div id="app"><div class="single-column-drawer-container" id="drawer"
+     v-bind:class="{ 'single-column-drawer-container-active': isDrawerOpen }">
+    <div class="drawer-content">
+        <div class="drawer-menu">
+            
+            
+            
+            
+        </div>
+    </div>
+</div>
+<transition name="fade">
+    <div id="drawer-mask" v-bind:class="{ 'single-column-drawer-mask': mounted }" v-if="isDrawerOpen" v-on:click="toggleDrawer"></div>
+</transition>
+<nav id="navBar" class="navbar sticky-top navbar-light single-column-nav-container">
+    <div id="navBackground" class="nav-background"></div>
+    <div class="container container-narrow nav-content">
+        <button id="nav_dropdown_btn" class="nav-dropdown-toggle" type="button" v-on:click="toggleDrawer">
+            <i class="material-icons">
+                menu
+            </i>
+        </button>
+        <a id="navTitle" class="navbar-brand" href="http://localhost:1313/">
+            LAEO
+        </a>
+        
+        <button type="button" class="nav-darkmode-toggle" id="darkModeToggleButton2">
+            <i class="material-icons" id="darkModeToggleIcon2">
+                dark_mode
+            </i>
+        </button>
+        
+    </div>
+</nav>
+<div class="single-column-header-container" id="pageHead"
+     v-bind:style="{ transform: 'translateZ(0px) translateY('+.3*scrollY+'px)', opacity: 1-navOpacity }">
+    <a href="http://localhost:1313/">
+        <div class="single-column-header-title">LAEO</div>
+        
+        <div class="single-column-header-subtitle">桀桀桀</div>
+        
+
+    </a>
+</div>
+
+            <div id="content">
+                <div id="streamContainer" class="stream-container">
+
+    <div class="post-list-container post-list-container-no-background">
+        
+        
+            <a href="/linux/%E6%B7%B1%E5%BA%A6linux%E4%B8%8Bss%E6%99%BA%E8%83%BD%E5%88%86%E6%B5%81/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                深度Linux下SS智能分流
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <h2 id="起因">起因</h2>
+<p>今天在使用 <code>dep</code> 包管理器接管以前写的一个 Go 语言项目时，突然报错无法下载某个包。仔细检查后，无奈的宣布系统设置的全局代理没起作用。</p>
+<h2 id="处理">处理</h2>
+<p>查了资料，发现可以用 <code>ss-redir</code> + <code>iptables</code> + <code>chnroute</code> 来做智能分流。</p>
+<p>首先，我需要从 <code>shadowsocks-libev</code> 中取得 <code>ss-redir</code> 程序，在终端中执行</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo apt install shadowsocks-libev
+</span></span></code></pre></div><p>即可取得我想要的程序，其所在目录为 <code>/usr/bin/ss-redir</code> 。</p>
+<p>然后，我需要获取所有属于中国的 IP 地址，这个可以从 apnic 网站获得，经搜索后找到如下命令</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>wget -qO- http://ftp.apnic.net/stats/apnic/delegated-apnic-latest | awk -F <span style="color:#cd5555">&#39;|&#39;</span> <span style="color:#cd5555">&#39;/CN/&amp;&amp;/ipv4/ {print $4 &#34;/&#34; 32-log($5)/log(2)}&#39;</span> | cat &gt; chnroutes.txt
+</span></span></code></pre></div><p>经过过滤处理后的路由列表存放于当前目录，名为 <code>chnroutes.txt</code> 的文本文件。</p>
+<p>最后，我只需想办法将该路由表导入到 iptables 中，然后将符合规则的数据包转发到 ss-redir 提供的透明代理地址即可。</p>
+<p>经过搜索，我发现可以使用 <code>ipset</code> 程序来完成这一操作，使用下述命令创建路由集</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ipset -N chnroute hash:net maxelem <span style="color:#b452cd">65536</span>
+</span></span></code></pre></div><p>然后循环将之前路由表中取得的路由添加进去</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#8b008b;font-weight:bold">for</span> ip in <span style="color:#8b008b;font-weight:bold">$(</span>cat chnroutes.txt<span style="color:#8b008b;font-weight:bold">)</span>; <span style="color:#8b008b;font-weight:bold">do</span>
+</span></span><span style="display:flex;"><span>  ipset add chnroute <span style="color:#00688b">$ip</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#658b00">echo</span> <span style="color:#cd5555">&#34;added </span><span style="color:#00688b">$ip</span><span style="color:#cd5555">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#8b008b;font-weight:bold">done</span>
+</span></span></code></pre></div><p>然后创建 iptables 规则</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2018-04-05
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    4 min
+    
+    17 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/misc/git%E4%BF%AE%E6%94%B9%E6%8F%90%E4%BA%A4%E8%80%85%E4%BF%A1%E6%81%AF/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                GIT修改提交者信息
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <p>终端切换到项目目录，切换到需要更改的分支，执行以下 <code>shell</code> 命令。</p>
+<blockquote>
+<p>手动修改命令中的 <code>author</code> 和 <code>author@example.org</code> 为目标值。</p>
+</blockquote>
+<pre tabindex="0"><code>git filter-branch --commit-filter &#39;
+    export GIT_AUTHOR_NAME=author;
+    export GIT_AUTHOR_EMAIL=author@example.org;
+    export GIT_COMMITTER_NAME=author;
+    export GIT_COMMITTER_EMAIL=author@example.org;
+    git commit-tree &#34;$@&#34;
+&#39;
+</code></pre><p>执行完成后，使用以下命令将改动提交到远程仓库。</p>
+<pre tabindex="0"><code>git push --force --tags origin &#39;refs/heads/*&#39;
+</code></pre><blockquote>
+<p>多人合作中改动过往记录会对提交历史产生破坏，谨慎操作！</p>
+</blockquote>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2018-04-03
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    31 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/mysql/%E4%B8%80%E9%81%93%E9%9D%A2%E8%AF%95%E6%97%B6%E9%81%87%E5%88%B0%E7%9A%84mysql%E7%B4%A2%E5%BC%95%E9%A2%98/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                一道面试时遇到的MySQL索引题
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <h2 id="题目内容">题目内容</h2>
+<p>假设有一个整数类型的字段 <code>status</code> ，其用来存储一条记录的状态，状态的数量是有限个，这里我们就当做一共有10种不同的状态。现在因为查询速度的原因，需要对MySQL进行优化。请问，该字段是否需要加上索引？已知该字段频繁被读取和修改。</p>
+<h2 id="我的回答">我的回答</h2>
+<p>在我的记忆中，热点数据一般需要做缓存和索引，一遍提高查询速度。我当时一听，需要频繁读写，那肯定也是热点数据啊，那肯定要加啊，于是就回答需要加。</p>
+<h2 id="面试官的回答">面试官的回答</h2>
+<p>实际上是不需要的。面试官很耐心的给我解释了为什么不需要，大概意思如下：</p>
+<blockquote>
+<p>索引相当于书籍的目录，同样的书籍复制多少遍，目录都是一样，条目指向的文章页码都是相同的。在题目设定中，字段 <code>status</code> 的数据内容是有限个，也就是不管有多少条表记录，该字段存储的值总是只有那么寥寥十个可选。如果表中有一千万条记录，那么没有加索引之前，数据库需要从一千万条记录中找到那一条。而加了索引之后，数据库可以通过索引先排除其余九种状态的记录，只留下那一种状态的记录集，然后再从里面查询。这其中节省的时间是非常小的，所以无需加上索引。</p>
+</blockquote>
+<h2 id="思考">思考</h2>
+<p>在回来的路上，我是没有心情去琢磨这问题的，但是我一直牢记其结论，方便回家后做记录。因为我对数据库研究得不够深，不清楚其索引具体是怎么实现的。</p>
+<p>面试官在解释的时候实际是说“可以通过索引把查询的范围缩小到一百万条记录，实际上这种情况下一千万和一百万的查询速度差距是非常小的”，但是现在仔细想想，如果是缩小到十万呢？一千万和十万，差距还是挺大的。</p>
+<h2 id="总结">总结</h2>
+<p>这或许就是我之前看到的一些文章里面介绍的，enum之类的类型不需要加索引的原因，因为它的数据相似度是非常高的，加了索引起到的作用微乎其微，反而会占用不少空间，所以不需要加上索引。</p>
+<p>只要同字段中存储的数据的相似度足够的小，索引起到的缩小检索范围的作用就会足够大。</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2016-10-27
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    3 min
+    
+    23 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/php/%E4%BD%BF%E7%94%A8docker%E5%BF%AB%E9%80%9F%E6%9E%84%E5%BB%BAlaravel%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                使用Docker快速构建Laravel开发环境
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <h2 id="docker简介">Docker简介</h2>
+<p>Docker是一个虚拟化容器引擎，跟虚拟机类似，不过更加轻量级。对于开发者来说，Docker的出现无疑是种福音。借助Docker，我们可以快速批量构建相同的环境，可以更加方便的对应用进行伸缩，以便更加灵活的控制应用的负载能力。我们还可以将其应用在开发中，使用Dockerfile快速构建统一的开发环境，避免因环境问题导致的BUG。许多云服务企业提供商业化的Docker容器资源，通过可定制的Dockerfile脚本来描述你需要的环境，以便快速构建生产环境和对生产环境进行伸缩控制。</p>
+<h2 id="dockerfile简介">Dockerfile简介</h2>
+<p>Dockerfile是Docker容器的“说明书”，用来描述Docker容器的构建过程。在同一份Dockerfile下，只能生成同一种环境，这种 <code>唯一性</code> 一定程度上保证了应用运行在容器中的可靠性。</p>
+<p>Dockerfile的关键字只有寥寥几个，所以学习成本非常低。你可以很快速的学会Dockerfile的编写，但是要写出好的Dockerfile，还得多多琢磨。</p>
+<p>Dockerfile中常用的关键词大概就 <code>FROM</code>  <code>RUN</code>  <code>WORKDIR</code>  <code>CMD</code>  <code>ENTRY</code> ，搞清楚它们的用法就基本学会了Dockerfile的编写方法，所以说它非常简单。</p>
+<h2 id="docker-compose简介">docker-compose简介</h2>
+<p><code>docker-compose</code> 是一种快速整合Docker容器的辅助工具，它通过读取 <code>docker-compose.yml</code> 文件来分析其中所定义的各项 <code>service</code> 之间关系，然后自动关联好。这大大简化了应用运行环境的构建，使我们可以更加方便的构建出完整的应用运行环境。</p>
+<blockquote>
+<p>大多数情况下，一个应用所需要依赖的服务都不止一个。以一个最基础的PHP应用来说，一般情况下至少会依赖 NginX MySQL PHP 三种软件，为了充分体现出容器化应用的优势，我们一般会将这三种软件独立构建成三种服务（service），然后相互关联起来（NginX关联PHP，PHP关联MySQL），这样一旦某一服务的负载过高，我们就可以通过使用相同的Dockerfile快速生成相同的服务，提高整个系统的吞吐能力。</p>
+</blockquote>
+<h2 id="构建laravel开发环境">构建Laravel开发环境</h2>
+<h3 id="需求分析">需求分析</h3>
+<p>Laravel作为一个PHP应用框架，最基础的运行环境就是 <code>LNMP</code> 。现代WEB应用的运行环境大多需要使用到NoSQL服务，所以一个 <code>Redis</code> 服务就显得很有存在的必要了。</p>
+<p>所以需要构建的服务大致如下列：</p>
+<ul>
+<li>Linux</li>
+<li>NginX</li>
+<li>MySQL</li>
+<li>PHP</li>
+<li>Redis</li>
+</ul>
+<h3 id="软件挑选">软件挑选</h3>
+<p>确定了要构建的服务，我们需要为服务所用软件挑选一个合适的版本，既不能太过”时髦“，也不能太过”守旧“。</p>
+<p>为了压缩生成好的容器的大小，我选择了 <code>Alpine</code> 作为容器的系统，版本则选用其最新稳定版本3.4。</p>
+<blockquote>
+<p>Alpine是一个非常非常小的Linux系统，非常适合作为Docker容器的操作系统，其内置的包管理器存放了大部分常用软件，强烈推荐。</p>
+</blockquote>
+<p>由于系统软件仓库的限制，以及对开发环境下的具体要求的考虑，其余软件都是直接使用官方仓库最新版本。</p>
+<h3 id="编写dockerfile">编写Dockerfile</h3>
+<p>因为是开发环境，不要求负载和伸缩能力，所以我将PHP和NginX放在一个容器中，这样可以方便配置NginX和PHP-FPM。</p>
+<p>取一个Redis容器的Dockerfile贴这方便看，当个例子吧。</p>
+<pre tabindex="0"><code>FROM alpine:3.4
+
+RUN apk -f update
+RUN apk -f add redis
+
+COPY redis.conf /etc/redis.conf
+
+EXPOSE 6379
+
+CMD [&#34;/usr/bin/redis-server&#34;, &#34;/etc/redis.conf&#34;]
+</code></pre><h3 id="编写docker-composeyml">编写docker-compose.yml</h3>
+<p>容器的构建脚本编写好后，我们需要将各个容器关联起来，这样才能形成一个完整的应用运行环境。</p>
+<p>使用docker-compose来快速关联容器，示例如下：</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2016-10-21
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    8 min
+    
+    16 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/misc/sublimetext3%E9%85%8D%E7%BD%AE%E8%AE%B0%E5%BD%95/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                SublimeText3配置记录
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <p>一直以来，Sublime Text 3都是我搬砖的主力工具，我实在太喜欢轻量级的软件了。使用方便、启动迅速、插件丰富、扩展性强，是我选择它的主要理由。</p>
+<p>搜索一款插件的资料时，突然想到我应该将环境的配置步骤都一一记录下来，以免以后的工作中出现配置缺漏的情况，导致开发效率降低。</p>
+<h2 id="设置">设置</h2>
+<p>对于新安装的 <code>Sublime Text 3</code> 首要安装的就是 <code>Package Control</code> ，然后是选择一款自己喜爱的主题，我选择的是 <code>Material Theme</code> ，它有一款扩展的 <code>Appbar</code> 组件，建议同时安装，增强体（zhuang）验（13）。</p>
+<p>安装完主题之后，仿照系统自身的配置文件，修改出属于自己的个性化配置文件。我的配置文件如下：</p>
+<pre tabindex="0"><code>{
+    &#34;always_show_minimap_viewport&#34;: true,
+    &#34;auto_find_in_selection&#34;: true,
+    &#34;color_scheme&#34;: &#34;Packages/Material Theme/schemes/Material-Theme.tmTheme&#34;,
+    &#34;default_line_ending&#34;: &#34;unix&#34;,
+    &#34;font_face&#34;: &#34;DejaVu Sans Mono&#34;,
+    &#34;font_size&#34;: 10,
+    &#34;ignored_packages&#34;:
+    [
+        &#34;Vintage&#34;
+    ],
+    &#34;indent_guide_options&#34;:
+    [
+        &#34;draw_normal&#34;,
+        &#34;draw_active&#34;
+    ],
+    &#34;indent_to_bracket&#34;: true,
+    &#34;line_padding_bottom&#34;: 3,
+    &#34;line_padding_top&#34;: 3,
+    &#34;match_brackets_angle&#34;: true,
+    &#34;material_theme_tree_headings&#34;: true,
+    &#34;overlay_scroll_bars&#34;: &#34;enabled&#34;,
+    &#34;shift_tab_unindent&#34;: true,
+    &#34;show_encoding&#34;: true,
+    &#34;show_line_endings&#34;: true,
+    &#34;theme&#34;: &#34;Material-Theme.sublime-theme&#34;,
+    &#34;translate_tabs_to_spaces&#34;: true,
+    &#34;trim_trailing_white_space_on_save&#34;: true
+}
+</code></pre><p>可以看出字体方面我选择的是 <code>YaHei-Consolas-Hybrid</code> ，大体上还不错。之前一直使用的 <code>Source-Code-Pro Yahei Hybrid</code> ，不是对称字体，效果不怎么好。</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2016-10-14
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    2 min
+    
+    40 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/golang/%E4%BD%BF%E7%94%A8go%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E5%9F%BA%E7%A1%80%E8%B7%AF%E7%94%B1%E5%8A%9F%E8%83%BD/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                使用GO语言实现基础路由功能
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <h2 id="什么是-路由器-">什么是 “路由器” ？</h2>
+<p>“路由器” 是一个抽象的描述，是对WEB框架中负责解析、管理URL的组件的统一称呼。使用 “路由器” 来方便URL的管理（生成、解析），由于现代WEB应用的复杂程度日渐加深，“路由器” 的使用变得愈加普遍。</p>
+<h2 id="路由器-的基本原理">“路由器” 的基本原理</h2>
+<p>“路由器” 本质上是通过对客户端请求的 <code>URI</code> 进行解析，从而对系统的运行加以引导的工具。在PHP中可以使用 <code>$_SERVER</code> 全局变量获取到用户请求的URI，然后通过解析该URI，执行 <code>路由器</code> 中注册的对应的 <code>控制器方法</code> ，到此路由器的工作就已完成。</p>
+<h2 id="go语言下的-路由器-实现">GO语言下的 “路由器” 实现</h2>
+<p>在实现该功能之前，我们需要先搞清楚自己到底需要做些什么，这样才不会漫无目的的 “瞎整”。</p>
+<p>看看以下摘自GO语言官方文档的代码</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span>http.<span style="color:#008b45">HandleFunc</span>(<span style="color:#cd5555">&#34;/bar&#34;</span>, <span style="color:#8b008b;font-weight:bold">func</span>(w http.ResponseWriter, r *http.Request) {
+</span></span><span style="display:flex;"><span>    fmt.<span style="color:#008b45">Fprintf</span>(w, <span style="color:#cd5555">&#34;Hello, %q&#34;</span>, html.<span style="color:#008b45">EscapeString</span>(r.URL.Path))
+</span></span><span style="display:flex;"><span>})
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>log.<span style="color:#008b45">Fatal</span>(http.<span style="color:#008b45">ListenAndServe</span>(<span style="color:#cd5555">&#34;:8080&#34;</span>, <span style="color:#8b008b;font-weight:bold">nil</span>))
+</span></span></code></pre></div><p>它实现了一个基本的WEB服务器功能，通过引入 <code>net/http</code> 包来快速构建WEB服务器，使用 <code>http.HandleFunc</code> 来注册控制器函数，使用 <code>http.ListenAndServe</code> 来启动WEB服务器。</p>
+<p>查看文档之后发现该方法不足以称之为 “路由器”，因为其只能简单的实现 <code>URI到控制器函数</code> 的导航，并不能满足大部分WEB应用的实现需要。我们需要对它进行扩展，增强它的功能。</p>
+<p>在 <code>net/http</code> 包的文档中可以查找到， <code>http.ListenAndServe</code> 方法支持两个参数，第一个参数接收HTTP服务监听的地址，而第二个参数接收的是一个 <code>接口实例</code> 。我们要实现自己的 <code>路由器</code> ，该接口是重点。</p>
+<p>根据官方文档描述，开发者可以自由定义属于自己的WEB服务器，通过实现 <code>ServeHTTP</code> 方法来手动分发客户端请求。</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#8b008b;font-weight:bold">type</span> router <span style="color:#8b008b;font-weight:bold">struct</span>{}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8b008b;font-weight:bold">func</span> (r *router) <span style="color:#008b45">ServeHTTP</span>(rw http.ResponseWriter, rq *http.Request) {
+</span></span><span style="display:flex;"><span>    <span style="color:#228b22">// 在此处分发客户端请求
+</span></span></span><span style="display:flex;"><span><span style="color:#228b22"></span>}
+</span></span></code></pre></div><p>如上述方式构建一个属于你的 <code>路由器</code> 组件，通过实现 <code>ServeHTTP</code> 接收者来增强其功能，比如增加URI参数提取、模糊匹配等等。</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2016-09-04
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    5 min
+    
+    54 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/php/base32%E7%BC%96%E7%A0%81%E7%AE%97%E6%B3%95%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                Base32编码算法介绍及PHP实现
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <h2 id="什么是base32编码算法">什么是Base32编码算法</h2>
+<p>Base32不知道，那么Base64你肯定知道吧？它们都是用于对字符串数据进行编码的一种算法。Base64比Base32更加常见，PHP只内置了Base64编码算法的实现函数。如果不是研究 <code>TOTP</code> 的时候发现谷歌的两步验证软件使用到了这种算法，我都不会知道有它。</p>
+<h2 id="有什么作用">有什么作用</h2>
+<p>限于我个人的认知范围，目前只知道谷歌两步验证功能中使用到了它。它与Base64是差不多的，差异只在于字符集的大小。</p>
+<h2 id="字符集哈希表">字符集哈希表</h2>
+<blockquote>
+<p>该字符集哈希表来源于算法文章 <a href="https://tools.ietf.org/html/rfc4648">RFC4648</a></p>
+</blockquote>
+<table>
+  <thead>
+      <tr>
+          <th>index</th>
+          <th>value</th>
+          <th>index</th>
+          <th>value</th>
+          <th>index</th>
+          <th>value</th>
+          <th>index</th>
+          <th>value</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>0</td>
+          <td>A</td>
+          <td>8</td>
+          <td>I</td>
+          <td>16</td>
+          <td>Q</td>
+          <td>24</td>
+          <td>Y</td>
+      </tr>
+      <tr>
+          <td>1</td>
+          <td>B</td>
+          <td>9</td>
+          <td>J</td>
+          <td>17</td>
+          <td>R</td>
+          <td>25</td>
+          <td>Z</td>
+      </tr>
+      <tr>
+          <td>2</td>
+          <td>C</td>
+          <td>10</td>
+          <td>K</td>
+          <td>18</td>
+          <td>S</td>
+          <td>26</td>
+          <td>2</td>
+      </tr>
+      <tr>
+          <td>3</td>
+          <td>D</td>
+          <td>11</td>
+          <td>L</td>
+          <td>19</td>
+          <td>T</td>
+          <td>27</td>
+          <td>3</td>
+      </tr>
+      <tr>
+          <td>4</td>
+          <td>E</td>
+          <td>12</td>
+          <td>M</td>
+          <td>20</td>
+          <td>U</td>
+          <td>28</td>
+          <td>4</td>
+      </tr>
+      <tr>
+          <td>5</td>
+          <td>F</td>
+          <td>13</td>
+          <td>N</td>
+          <td>21</td>
+          <td>V</td>
+          <td>29</td>
+          <td>5</td>
+      </tr>
+      <tr>
+          <td>6</td>
+          <td>G</td>
+          <td>14</td>
+          <td>O</td>
+          <td>22</td>
+          <td>W</td>
+          <td>30</td>
+          <td>6</td>
+      </tr>
+      <tr>
+          <td>7</td>
+          <td>H</td>
+          <td>15</td>
+          <td>P</td>
+          <td>23</td>
+          <td>X</td>
+          <td>31</td>
+          <td>7</td>
+      </tr>
+  </tbody>
+</table>
+<blockquote>
+<p>ABCDEFGHIJKLMNOPQRSTUVWXYZ234567</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2016-07-27
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    5 min
+    
+    0 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/php/totp%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D%E5%8F%8Aphp%E5%AE%9E%E7%8E%B0%E5%B1%95%E7%A4%BA/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                TOTP原理介绍及PHP实现展示
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <h2 id="什么是-totp">什么是 “TOTP”</h2>
+<p><code>TOTP</code> 是 <code>Time-based One-time Password</code> 的英文缩写，翻译为中文即“基于时间的一次性密码”。</p>
+<h2 id="有什么作用">有什么作用</h2>
+<p>快节奏的社会，一切讲究快捷、方便，但是安全相关，实在方便不起来， <code>TOTP</code> 应运而生。使用该技术可以在降低身份认证复杂度的同时，将安全系数大幅度提高。君不见现在多少网站使用的动态口令功能，基本都是以该技术的为基础。Google Authenticator、Authy 等等软件都使用的该技术，我个人的域名注册商、服务器商也都接入了该技术。</p>
+<p>使用该技术来进行身份认证，可以加快认证速度，提高安全性。每个用户的认证口令是随着时间而变化的，无疑给 “黑手党” 们加大了许多难度。</p>
+<h2 id="totp-的原理">“TOTP” 的原理</h2>
+<p>该技术的着重点就在于基于时间，时间是不断变化的，所以基于时间而计算出来的 “密码” 也会是不断变化的。如果我们要使用该技术来进行身份认证，那么就一定要控制好时间变化的速度，否则时间无时无刻都在变化，我们如何进行认证？连输入密码也做不到吧。</p>
+<p>所以，控制时间是务必要做到的。那么，这就有点扯淡了。区区凡人还想控制时间？╭(╯^╰)╮</p>
+<p>看看下面的PHP代码：</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-php" data-lang="php"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#00688b">$time</span>       = time(); <span style="color:#228b22">//取得实际时间，单位秒（unix时间戳）
+</span></span></span><span style="display:flex;"><span><span style="color:#228b22"></span>
+</span></span><span style="display:flex;"><span><span style="color:#00688b">$validity</span>   = <span style="color:#b452cd">30</span>; <span style="color:#228b22">//设置动态密码有效期，给用户输入密码的时间
+</span></span></span><span style="display:flex;"><span><span style="color:#228b22"></span>
+</span></span><span style="display:flex;"><span><span style="color:#00688b">$realtime</span>   = <span style="color:#00688b">$time</span> / <span style="color:#00688b">$validity</span>; <span style="color:#228b22">//相除得到 “真实时间”
+</span></span></span></code></pre></div><p>发明该算法的大师们很厉害，既然无法控制时间，那么我们就换个方式，变相控制时间。什么方式呢？除法！如果把时间看做被除数，把我们设置的密码有效期看做除数，把计算的结果看做我们取到的 <code>真实时间</code> 。如此一来，每当 <code>实际时间</code> 走过 <code>密码有效期</code> 那么久后，我们取到的 <code>真实时间</code> 的数值才会 <code>+1</code> 。</p>
+<p>说到这里，如果我的表述没有问题的话，看官一定已经大致明白 <code>TOTP</code> 到底如何实现了。使用这种方式取到的“时间”，就不必担心时间不停的流逝，毕竟只要没有超过密码有效期，该数值是不会变化的。</p>
+<p>细心的朋友一定注意到了，除法可能还有小数呢，到时候小数不停变化，不也一样影响最终结果么？</p>
+<p>这是肯定的，所以我推荐使用PHP内置的 <code>floor()</code> 函数，该函数可以直接抹去浮点数的小数点后的部分。</p>
+<blockquote>
+<p>其实我自己使用的是 <code>Math</code> 函数库提供的 <code>intdiv()</code> 函数，效果都是一样的，甚至你可以直接 <code>intval()</code> 。</p>
+</blockquote>
+<h2 id="代码实例">代码实例</h2>
+<p>最主要的问题解决后，其它问题基本就不是问题了。下面附上实现代码：</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-php" data-lang="php"><span style="display:flex;"><span><span style="color:#8b008b;font-weight:bold">class</span> <span style="color:#008b45;font-weight:bold">TwoFactor</span>
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#cd5555">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">     * @var integer
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8b008b;font-weight:bold">private</span> <span style="color:#00688b">$delay</span> = <span style="color:#b452cd">30</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#cd5555">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">     * @var string
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8b008b;font-weight:bold">private</span> <span style="color:#00688b">$secret</span> = <span style="color:#8b008b;font-weight:bold">null</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#cd5555">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">     * Create TwoFactor instance
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">     *
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">     * @param string $secret
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8b008b;font-weight:bold">public</span> <span style="color:#8b008b;font-weight:bold">function</span> __construct(<span style="color:#00688b">$secret</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#00688b">$this</span>-&gt;<span style="color:#658b00">secret</span> = <span style="color:#00688b">$secret</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#cd5555">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">     * Returns the authenticate code
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">     *
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">     * @return string
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8b008b;font-weight:bold">public</span> <span style="color:#8b008b;font-weight:bold">function</span> <span style="color:#008b45">getCode</span>()
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#00688b">$atom</span> = floor(time() / <span style="color:#00688b">$this</span>-&gt;<span style="color:#658b00">delay</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#00688b">$hash</span> = sha1(<span style="color:#00688b">$this</span>-&gt;<span style="color:#658b00">secret</span> . dechex(<span style="color:#00688b">$atom</span>));
+</span></span><span style="display:flex;"><span>        <span style="color:#00688b">$last</span> = substr(<span style="color:#00688b">$hash</span>, -<span style="color:#b452cd">1</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#00688b">$pos</span>  = hexdec(<span style="color:#00688b">$last</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#00688b">$hex</span>  = substr(<span style="color:#00688b">$hash</span>, <span style="color:#00688b">$pos</span>, <span style="color:#b452cd">8</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#00688b">$code</span> = (string) hexdec(<span style="color:#00688b">$hex</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#8b008b;font-weight:bold">return</span> substr(<span style="color:#00688b">$code</span>, -<span style="color:#b452cd">6</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#cd5555">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">     * Try to authenticate
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">     *
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">     * @param  string $code
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">     * @return boolean
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8b008b;font-weight:bold">public</span> <span style="color:#8b008b;font-weight:bold">function</span> <span style="color:#008b45">auth</span>(<span style="color:#00688b">$code</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#8b008b;font-weight:bold">return</span> (boolean) (strval(<span style="color:#00688b">$code</span>) === <span style="color:#00688b">$this</span>-&gt;<span style="color:#658b00">getCode</span>());
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><blockquote>
+<p><a href="https://github.com/laeo/totp">laeo/totp</a></p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2016-07-26
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    4 min
+    
+    41 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+        </a>
+    </div>
+
+
+                    </div>
+            </div><div id="sideContainer" class="side-container">
+    
+    <a class="a-block nav-head active" href="http://localhost:1313/">
+    
+        <div class="nav-title">
+            LAEO
+        </div>
+        
+        <div class="nav-subtitle">
+            桀桀桀
+        </div>
+        
+    </a>
+
+    <div class="nav-link-list">
+        
+        
+    </div>
+
+    
+
+    <div class="nav-footer">
+        
+Hugo Theme <a href="https://github.com/amazingrise/hugo-theme-diary">Diary</a> by <a href="https://risehere.net/">Rise</a>
+<br>
+移植自 <a href="https://mak1t0.cc/" target="_blank" rel="noreferrer noopener">Makito</a>'s <a href="https://github.com/SumiMakito/hexo-theme-journal/" target="_blank" rel="noreferrer noopener">Journal.</a> <br>
+<br>
+
+&copy;
+	
+	2020 LAEO
+	
+
+    </div>
+    
+</div><div id="extraContainer" class="extra-container">
+    <div class="toc-wrapper">
+        
+
+        
+    </div>
+    <div class="pagination">
+        <a id="globalBackToTop" class="pagination-action animated-visibility" href="#top"
+            :class="{ invisible: scrollY == 0 }">
+            <i class="material-icons pagination-action-icon">
+                keyboard_arrow_up
+            </i>
+        </a>
+        
+        <a type="button" class="pagination-action" id="darkModeToggleButton">
+            <span class="material-icons pagination-action-icon" id="darkModeToggleIcon">
+                dark_mode
+            </span>
+        </a>
+        
+        
+        
+
+        <a class="pagination-action"  href="/page/2/">
+            
+            <i class="material-icons pagination-action-icon">
+                chevron_left
+            </i>
+        </a>
+
+        <div class="pagination-indicator">
+            <span style="text-align: center">
+                3<br>
+                <div style="display: inline-block; transform: rotate(-28deg)">-</div><br>3
+            </span>
+        </div>
+
+
+        <a class="pagination-action" 
+            style="visibility:hidden">
+            
+            <i class="material-icons pagination-action-icon">
+                chevron_right
+            </i>
+        </a>
+        
+        
+    </div>
+</div>
+
+
+<div class="pagination">
+    
+    <a class="pagination-action" href="/page/2/" style="opacity:1">
+    
+        <i class="material-icons pagination-action-icon">
+            chevron_left
+        </i>
+    </a>
+
+        <div class="pagination-indicator">
+            <span>3/3</span>
+        </div>
+
+        
+            <a class="pagination-action" style="opacity:0">
+        
+                <i class="material-icons pagination-action-icon">
+                    chevron_right
+                </i>
+            </a>
+</div>
+
+
+
+<div id="single-column-footer">
+Hugo Theme <a href="https://github.com/amazingrise/hugo-theme-diary">Diary</a> by <a href="https://risehere.net/">Rise</a>
+<br>
+移植自 <a href="https://mak1t0.cc/" target="_blank" rel="noreferrer noopener">Makito</a>'s <a href="https://github.com/SumiMakito/hexo-theme-journal/" target="_blank" rel="noreferrer noopener">Journal.</a> <br>
+<br>
+
+&copy;
+	
+	2020 LAEO
+	
+</div>
+            </div>
+    
+    <script src="/js/journal.js"></script></body>
+</html>

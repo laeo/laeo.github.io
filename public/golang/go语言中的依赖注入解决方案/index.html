@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh"><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+<title>Go 语言中的依赖注入解决方案</title>
+
+
+
+
+<meta charset="utf-8">
+<meta name="X-UA-Compatible" content="IE=edge">
+<meta name="google-site-verification" content="">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=5, user-scalable=5" name="viewport">
+<meta content="telephone=no" name="format-detection">
+<meta name="description" content="">
+<meta name="renderer" content="webkit">
+<meta name="theme-color" content="#ffffff">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+
+
+
+      <script src="/js/toc.js"></script>
+    
+    <link type="text/css" rel="stylesheet" href="/vendor/css/bootstrap.min.css">
+
+<link rel="stylesheet" href="/scss/dark-mode.min.cb53f1bee2b8900cb4f082afbf00175d6618f281cf9a2fe8619e3b52d20b5721.css" integrity="sha256-y1PxvuK4kAy08IKvvwAXXWYY8oHPmi/oYZ47UtILVyE=" media="screen">
+
+
+<link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Material+Icons">
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script src="/vendor/js/md5.min.js"></script><script>
+  var gitalk = new Gitalk({
+  clientID: 'bcb3ff802edb45ae15c3',
+  clientSecret: '541b0675cacbdad87ef5e31dcff14d28f843b34a',
+  repo: 'laeo.github.io',
+  owner: 'laeo',
+  admin: ['laeo'],
+  id: md5(location.pathname),
+  distractionFreeMode: 'false'
+  });
+  window.onload = function () {
+        gitalk.render('gitalk-container')
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+    	<div id="app"><div class="single-column-drawer-container" id="drawer"
+     v-bind:class="{ 'single-column-drawer-container-active': isDrawerOpen }">
+    <div class="drawer-content">
+        <div class="drawer-menu">
+            
+            
+            
+            
+            <div class="toc">
+
+
+	<div class="toc-content">
+	
+		
+		
+		
+		<center>- 目录 -</center>
+		
+		
+		<ul>
+			
+				
+				
+					
+						
+						
+						
+						
+							
+								
+									<ul>
+								
+							
+						
+						
+							<li>
+								<a href="#%e4%be%9d%e8%b5%96%e6%b3%a8%e5%85%a5di" class="nav-依赖注入di">
+									依赖注入（DI）
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+						
+							<li>
+								<a href="#go-%e8%af%ad%e8%a8%80%e7%9a%84-di" class="nav-go-语言的-di">
+									Go 语言的 DI
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+						
+							<li>
+								<a href="#wire" class="nav-wire">
+									wire
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+						
+							<li>
+								<a href="#%e5%8d%95%e4%be%8b%e6%a8%a1%e5%bc%8f" class="nav-单例模式">
+									单例模式
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+						
+							<li>
+								<a href="#%e6%80%bb%e7%bb%93" class="nav-总结">
+									总结
+								</a>
+							</li>
+						
+						
+					
+				
+			
+		</ul>
+	</div>
+
+</div>
+            
+        </div>
+    </div>
+</div>
+<transition name="fade">
+    <div id="drawer-mask" v-bind:class="{ 'single-column-drawer-mask': mounted }" v-if="isDrawerOpen" v-on:click="toggleDrawer"></div>
+</transition>
+<nav id="navBar" class="navbar sticky-top navbar-light single-column-nav-container">
+    <div id="navBackground" class="nav-background"></div>
+    <div class="container container-narrow nav-content">
+        <button id="nav_dropdown_btn" class="nav-dropdown-toggle" type="button" v-on:click="toggleDrawer">
+            <i class="material-icons">
+                menu
+            </i>
+        </button>
+        <a id="navTitle" class="navbar-brand" href="http://localhost:1313/">
+            LAEO
+        </a>
+        
+        <button type="button" class="nav-darkmode-toggle" id="darkModeToggleButton2">
+            <i class="material-icons" id="darkModeToggleIcon2">
+                dark_mode
+            </i>
+        </button>
+        
+    </div>
+</nav>
+<div class="single-column-header-container" id="pageHead"
+     v-bind:style="{ transform: 'translateZ(0px) translateY('+.3*scrollY+'px)', opacity: 1-navOpacity }">
+    <a href="http://localhost:1313/">
+        <div class="single-column-header-title">LAEO</div>
+        
+        <div class="single-column-header-subtitle">桀桀桀</div>
+        
+
+    </a>
+</div>
+
+            <div id="content">
+                <div id="streamContainer" class="stream-container">
+
+    <div class="post-list-container post-list-container-shadow">
+        <div class="post">
+            
+            
+            
+
+            <div class="post-head-wrapper-text-only"
+                
+            >
+                <div class="post-title">
+                    Go 语言中的依赖注入解决方案
+                    
+                    <div class="post-meta">
+                        
+                        <time itemprop="datePublished">
+                            2020-08-16 00:00
+                        </time>
+                        
+
+                        
+
+                        
+                        
+                            <i class="material-icons" style="">schedule</i>
+                            
+
+                            
+                            
+
+                            
+                            8 min
+                            
+                            9 s.
+                        
+                    </div>
+                </div>
+            </div>
+            
+            <div class="post-body-wrapper">
+                
+                <div class="post-body" v-pre>
+                
+                    <p>Go 语言在我的认知中，是一种面向过程的函数式编程语言。所以通常我开发时，基本都是一把梭，并没有太过注重代码的结构。但是最近在开发“奋斗社”社区系统时，一直有感于代码结构太冗杂、混乱，所以有寻找相应的工具来处理。</p>
+<p>根据我在实际开发过程中的感受，我认为我首先就需要一个能够对结构体注入给定数据的工具，比如数据库连接实例，如果没有自动注入的工具，那么在我调用各种函数时</p>
+<ol>
+<li>要么手动在初始化结构体时注入连接实例。</li>
+<li>要么将实例存储在独立包中的导出变量中。</li>
+</ol>
+<p>之前一直是使用的第二种方式，但不管那种方式，都没有写 PHP 这类动态脚本语言的方便顺手，因此我在社区搜索了相关的依赖注入的实现。</p>
+<h2 id="依赖注入di">依赖注入（DI）</h2>
+<p>依赖注入是面向对象编程常用的代码解耦方法，通常是通过 <code>反射</code> 来获取调用者所需的参数信息，并根据相应的类型，从对象容器中查找相应的实例，最后将确定出的依赖以参数的形式传递给调用者。</p>
+<p>从实现的逻辑来看，依赖注入就是很简单直接的，将“我要”转变为“给我”，从主动的强依赖，变为被动的弱依赖。并且使用注入的形式提供调用依赖，可以方便的进行测试。</p>
+<h2 id="go-语言的-di">Go 语言的 DI</h2>
+<p>我所搜到的热门的依赖注入工具有三个，分别是由谷歌推出的 <a href="https://github.com/google/wire">wire</a> 和由 Uber 推出的 <a href="https://github.com/uber-go/dig">dig</a>。当然还有其它的一些实现，但是时间精力有限，我就先看这两个✨数量比较高的。</p>
+<p>从各自文档以及示例中可以看出两个仓库虽然实现方式不同，但总的工作逻辑还是相同的，都是基于预设的基础依赖项，解析并填充关联的依赖项，直到最终的入口点。</p>
+<p><code>wire</code> 是通过代码生成完成的依赖分析与注入， <code>dig</code> 则是运行时通过“反射”进行依赖分析与注入，明显前者性能要比后者好，所以我选择用前者。</p>
+<h2 id="wire">wire</h2>
+<p>在接入 wire 之前，我先从现有代码结构上观察，哪些是需要（且能够）进行依赖分析注入的。我从 “奋斗社” 的代码中，找出了需要依赖注入的地方</p>
+<ul>
+<li>控制器 Controller</li>
+<li>数据服务 Service</li>
+</ul>
+<p>其它的比如模型、钩子函数、纯函数之类的，无法用代码生成的形式处理依赖问题，只能手写。</p>
+<p>为了达到为控制器注入依赖的目的，我为每个控制器结构添加了一个构造函数，比如用户控制器的构造函数如下</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#8b008b;font-weight:bold">func</span> <span style="color:#008b45">NewUserController</span>() runtime.Controller {
+</span></span><span style="display:flex;"><span>	wire.<span style="color:#008b45">Build</span>(
+</span></span><span style="display:flex;"><span>		pkg.ApplicationSet,
+</span></span><span style="display:flex;"><span>		wire.<span style="color:#008b45">Struct</span>(<span style="color:#658b00">new</span>(User), <span style="color:#cd5555">&#34;*&#34;</span>),
+</span></span><span style="display:flex;"><span>		wire.<span style="color:#008b45">Bind</span>(<span style="color:#658b00">new</span>(runtime.Controller), <span style="color:#658b00">new</span>(*User)),
+</span></span><span style="display:flex;"><span>	)
+</span></span><span style="display:flex;"><span>	<span style="color:#8b008b;font-weight:bold">return</span> <span style="color:#8b008b;font-weight:bold">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>通过在同级目录下执行 <code>wire</code> 命令，自动生成同名函数，外部可直接调用并获取注入完依赖的控制器实例。</p>
+<p>然后在将 <code>控制器</code> 注入到 <code>路由器</code> 时，遇到问题了。每个控制器都是一个 Provider，如果要为控制器注册相应路由规则，那么就需要另一个 Provider 依赖一个控制器，这样的话，有多少个控制器就要写多少个相应的 Provider。最大的问题是，wire 不支持同一个类型作为入参与出参，也不支持没有出参，所以无法直接使用它来处理路由规则的注册。</p>
+<p>为了处理路由规则注册的问题，我为项目添加了一个接口 <code>runtime.Controller</code> ，这个接口要求结构必须实现一个函数 <code>RegisterRoute</code> ，在这个函数中注册控制器下的各个方法到路由。然后我们就可以在提供者（Provider）中声明，需要注入控制器切片（[]runtime. Controller）类型的依赖项。</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#8b008b;font-weight:bold">func</span> <span style="color:#008b45">createServerMux</span>(wrapper muxie.Wrapper, cs []runtime.Controller) *muxie.Mux {
+</span></span><span style="display:flex;"><span>	m := muxie.<span style="color:#008b45">NewMux</span>()
+</span></span><span style="display:flex;"><span>	m.PathCorrection = <span style="color:#8b008b;font-weight:bold">true</span>
+</span></span><span style="display:flex;"><span>	m.<span style="color:#008b45">Use</span>(wrapper)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#8b008b;font-weight:bold">for</span> _, ctrl := <span style="color:#8b008b;font-weight:bold">range</span> cs {
+</span></span><span style="display:flex;"><span>		ctrl.<span style="color:#008b45">RegisterRoute</span>(m.<span style="color:#008b45">Of</span>(<span style="color:#cd5555">&#34;v1&#34;</span>))
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#8b008b;font-weight:bold">return</span> m
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>看 Issue 列表里有其他人也提到过类似问题，暂时只能手写 Provider 来初始化控制器切片，麻烦是麻烦点，至少还能用嘛。</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#8b008b;font-weight:bold">func</span> <span style="color:#008b45">resolveControllerSet</span>() []runtime.Controller {
+</span></span><span style="display:flex;"><span>	<span style="color:#8b008b;font-weight:bold">return</span> []runtime.Controller{
+</span></span><span style="display:flex;"><span>		app.<span style="color:#008b45">NewUserController</span>(),
+</span></span><span style="display:flex;"><span>		app.<span style="color:#008b45">NewTopicController</span>(),
+</span></span><span style="display:flex;"><span>		app.<span style="color:#008b45">NewNotificationController</span>(),
+</span></span><span style="display:flex;"><span>		app.<span style="color:#008b45">NewCommentController</span>(),
+</span></span><span style="display:flex;"><span>		app.<span style="color:#008b45">NewAnnounceController</span>(),
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="单例模式">单例模式</h2>
+<p>对于数据库这类通常自带连接池的库，我们通常只需要初始化一个实例就行，wire 要实现单例模式，可以使用 <code>wire.Value</code> 或者 <code>wire.InterfaceValue</code> 来实现，也可以在 Provider 函数中实现单例逻辑，如我在 “奋斗社” 程序中就使用如下方式实现了单例数据库实例</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#8b008b;font-weight:bold">var</span> db *pg.DB
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#228b22">// ProvideSingleton provides singleton DB instance.
+</span></span></span><span style="display:flex;"><span><span style="color:#228b22"></span><span style="color:#8b008b;font-weight:bold">func</span> <span style="color:#008b45">ProvideSingleton</span>() *pg.DB {
+</span></span><span style="display:flex;"><span>	<span style="color:#8b008b;font-weight:bold">if</span> db == <span style="color:#8b008b;font-weight:bold">nil</span> {
+</span></span><span style="display:flex;"><span>		c := config.<span style="color:#008b45">ProvideSingleton</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		db = pg.<span style="color:#008b45">Connect</span>(&amp;pg.Options{
+</span></span><span style="display:flex;"><span>			Addr:     c.DB.Addr,
+</span></span><span style="display:flex;"><span>			User:     c.DB.User,
+</span></span><span style="display:flex;"><span>			Password: c.DB.Secret,
+</span></span><span style="display:flex;"><span>			Database: c.DB.Name,
+</span></span><span style="display:flex;"><span>		})
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#8b008b;font-weight:bold">if</span> c.Debug {
+</span></span><span style="display:flex;"><span>			db.<span style="color:#008b45">AddQueryHook</span>(dbLogger{})
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#8b008b;font-weight:bold">if</span> _, err := db.<span style="color:#008b45">Exec</span>(<span style="color:#cd5555">&#34;select 1&#34;</span>); err != <span style="color:#8b008b;font-weight:bold">nil</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#658b00">panic</span>(err)
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#8b008b;font-weight:bold">return</span> db
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>逻辑一目了然，全局变量存储连接实例，供应函数内判断是否初始化过，没初始化就走初始化流程，唯一有点问题的或许就是报错后直接 panic 吧。</p>
+<h2 id="总结">总结</h2>
+<p>大概的用法就写这些就足够了，实际上对比两种依赖注入方式，都是将“面向过程编程”中的部分过程，单独抽离为一个函数体，以便复用。比如数据库的初始化，每个控制器函数都要用到，如果没有依赖注入，或者放到单独的包里维护，那么每个控制器函数里都要写一遍数据库连接的逻辑。而依赖注入正是将这一部分单独抽离，作为一个独立的代码块进行执行，并将结果用参数的形式提供给原函数。</p>
+<p>目前来看，Go 语言的依赖注入功能还非常僵硬，对于单纯的函数调用还无法做到自动注入依赖（或许某些使用反射实现的工具可以做到），还有就是比如数据库模型库的钩子函数也无法很好的兼容，只能在内部进行各种初始化工作。希望范型正式发布后，能够给 Go 的生态带来地震般变化吧。</p>
+
+                    
+                    <HR width="100%" id="EOF">
+		    <p style="color:#777;">最后修改于 2020-08-16</p>
+                    
+                </div>
+            </div>
+            
+            
+            <nav class="post-pagination">
+
+                
+                <a class="newer-posts" href="/mobile/flutter%E5%AD%A6%E4%B9%A0%E4%B8%8E%E5%AE%9E%E8%B7%B5%E6%80%BB%E7%BB%93/">
+			下回<br>Flutter学习与实践总结
+                </a>
+                
+                
+                
+                <a class="older-posts" href="/container/%E4%B8%89%E8%8A%82%E7%82%B9k3s%E9%9B%86%E7%BE%A4%E9%83%A8%E7%BD%B2gitea%E8%AE%B0%E5%BD%95/">
+			上回<br>三节点K3S集群部署Gitea记录
+                </a>
+                
+            </nav>
+            <div class="post-comment-wrapper">
+                
+
+
+<div id="gitalk-container"></div>
+
+
+
+
+
+
+
+
+
+
+
+            </div>
+        </div>
+    </div>
+
+
+                    </div>
+            </div><div id="sideContainer" class="side-container">
+    
+    <a class="a-block nav-head false" href="http://localhost:1313/">
+    
+        <div class="nav-title">
+            LAEO
+        </div>
+        
+        <div class="nav-subtitle">
+            桀桀桀
+        </div>
+        
+    </a>
+
+    <div class="nav-link-list">
+        
+        
+    </div>
+
+    
+
+    <div class="nav-footer">
+        
+Hugo Theme <a href="https://github.com/amazingrise/hugo-theme-diary">Diary</a> by <a href="https://risehere.net/">Rise</a>
+<br>
+移植自 <a href="https://mak1t0.cc/" target="_blank" rel="noreferrer noopener">Makito</a>'s <a href="https://github.com/SumiMakito/hexo-theme-journal/" target="_blank" rel="noreferrer noopener">Journal.</a> <br>
+<br>
+
+&copy;
+	
+	2020 LAEO
+	
+
+    </div>
+    
+</div><div id="extraContainer" class="extra-container">
+    <div class="toc-wrapper">
+        
+
+        
+        <div class="toc">
+
+
+	<div class="toc-content">
+	
+		
+		
+		
+		<center>- 目录 -</center>
+		
+		
+		<ul>
+			
+				
+				
+					
+						
+						
+						
+						
+							
+								
+									<ul>
+								
+							
+						
+						
+							<li>
+								<a href="#%e4%be%9d%e8%b5%96%e6%b3%a8%e5%85%a5di" class="nav-依赖注入di">
+									依赖注入（DI）
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+						
+							<li>
+								<a href="#go-%e8%af%ad%e8%a8%80%e7%9a%84-di" class="nav-go-语言的-di">
+									Go 语言的 DI
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+						
+							<li>
+								<a href="#wire" class="nav-wire">
+									wire
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+						
+							<li>
+								<a href="#%e5%8d%95%e4%be%8b%e6%a8%a1%e5%bc%8f" class="nav-单例模式">
+									单例模式
+								</a>
+							</li>
+						
+						
+					
+				
+			
+				
+				
+					
+						
+						
+						
+						
+						
+							<li>
+								<a href="#%e6%80%bb%e7%bb%93" class="nav-总结">
+									总结
+								</a>
+							</li>
+						
+						
+					
+				
+			
+		</ul>
+	</div>
+
+</div>
+        
+    </div>
+    <div class="pagination">
+        <a id="globalBackToTop" class="pagination-action animated-visibility" href="#top"
+            :class="{ invisible: scrollY == 0 }">
+            <i class="material-icons pagination-action-icon">
+                keyboard_arrow_up
+            </i>
+        </a>
+        
+        <a type="button" class="pagination-action" id="darkModeToggleButton">
+            <span class="material-icons pagination-action-icon" id="darkModeToggleIcon">
+                dark_mode
+            </span>
+        </a>
+        
+        
+    </div>
+</div>
+
+<div id="single-column-footer">
+Hugo Theme <a href="https://github.com/amazingrise/hugo-theme-diary">Diary</a> by <a href="https://risehere.net/">Rise</a>
+<br>
+移植自 <a href="https://mak1t0.cc/" target="_blank" rel="noreferrer noopener">Makito</a>'s <a href="https://github.com/SumiMakito/hexo-theme-journal/" target="_blank" rel="noreferrer noopener">Journal.</a> <br>
+<br>
+
+&copy;
+	
+	2020 LAEO
+	
+</div>
+            </div>
+    
+    <script src="/js/journal.js"></script></body>
+</html>

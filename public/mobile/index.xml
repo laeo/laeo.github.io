@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Mobiles on LAEO</title>
+    <link>http://localhost:1313/mobile/</link>
+    <description>Recent content in Mobiles on LAEO</description>
+    <generator>Hugo</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Fri, 11 Sep 2020 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/mobile/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Flutter学习与实践总结</title>
+      <link>http://localhost:1313/mobile/flutter%E5%AD%A6%E4%B9%A0%E4%B8%8E%E5%AE%9E%E8%B7%B5%E6%80%BB%E7%BB%93/</link>
+      <pubDate>Fri, 11 Sep 2020 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/mobile/flutter%E5%AD%A6%E4%B9%A0%E4%B8%8E%E5%AE%9E%E8%B7%B5%E6%80%BB%E7%BB%93/</guid>
+      <description>&lt;h2 id=&#34;闲言&#34;&gt;闲言&lt;/h2&gt;&#xA;&lt;p&gt;Flutter 可以说在开发者圈子还是很有名的了，毕竟是谷歌，关注度自不必说。我很早就有心涉足移动 APP 开发，但是学习了一段时间的安卓开发后，实在忍受不了 JAVA 那种类中套类的套娃写法（也可能是没学对吧），后面就没坚持下去。做过一段时间的小程序开发后，又让我燃起了对原生移动端的热情，于是我打开了 Flutter 的官网……&lt;/p&gt;&#xA;&lt;h2 id=&#34;学习记录&#34;&gt;学习记录&lt;/h2&gt;&#xA;&lt;p&gt;学习方法很重要，对于我这个大部分靠自学的人而言，最好的办法肯定就是先速览一遍文档，对要学习的内容有个大致的印象，然后跟着教程挨个阅读、实践，增强对细节的记忆与理解。&lt;/p&gt;&#xA;&lt;h4 id=&#34;安装-flutter&#34;&gt;安装 Flutter&lt;/h4&gt;&#xA;&lt;p&gt;我用的是 Mac，所以安装时走的包管理器，并没有依照文档中那样下载二进制文件。所以总的来说安装还是很简单的，首先 &lt;code&gt;brew install flutter&lt;/code&gt; ，安装好二进制，然后执行 &lt;code&gt;flutter docter&lt;/code&gt; 检查环境及依赖。&lt;/p&gt;&#xA;&lt;p&gt;无论使用什么编辑器编写代码，&lt;strong&gt;Android Studio&lt;/strong&gt; 以及 &lt;strong&gt;Xcode&lt;/strong&gt; 都是必须的，为了方便调试，还需要创建各平台的虚拟机。对于我来说，&lt;strong&gt;VSCode&lt;/strong&gt; 搭配 Flutter 相关的插件就已经满足开发调试的需要，而且还可以直接吊起双端的虚拟机进行调试，简直方便到不行。&lt;/p&gt;&#xA;&lt;h4 id=&#34;dart-与-widget&#34;&gt;Dart 与 Widget&lt;/h4&gt;&#xA;&lt;p&gt;了解 Flutter 的都知道，谷歌为它选择了一门冷门语言 —— Dart。这门语言对于熟悉 JS 和 TS 的人来说，上手难度不大。入口函数 &lt;code&gt;void main()&lt;/code&gt; 、类、接口、范型、异步，主要是看下异步那块的文档，其它的都大同小异。Widget 的话，类似 Vue 和 React 里的组件，Flutter 渲染界面就是通过我们传递给 &lt;code&gt;runApp()&lt;/code&gt; 函数的组件实例开始的，所以我们开发时会经常跟各种 Widget 打交道。&lt;/p&gt;&#xA;&lt;p&gt;Flutter 把 Widget 分为两种类型，即 &lt;strong&gt;StatefullWidget&lt;/strong&gt; 和 &lt;strong&gt;StatelessWidget&lt;/strong&gt;，我们要创建自定义的组件，也是通过继承这两个组件类来完成的。看到 &lt;code&gt;Statefull&lt;/code&gt; 和 &lt;code&gt;Stateless&lt;/code&gt; ，如果熟悉 Kubernetes 的话，一定会有所联想。确实，与 K8S 中的定义类似，它们也是用于区分组件自身是否需要维护一个状态的，具体两种组件在渲染时有何差异，我还并未去了解，想来应该是用于拆分代码结构、确定组件是否需要重建用的吧。&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

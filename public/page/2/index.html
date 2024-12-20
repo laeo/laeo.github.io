@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="zh"><head>
+	<meta name="generator" content="Hugo 0.140.0"><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+<title>LAEO</title>
+
+
+
+  
+
+
+<meta charset="utf-8">
+<meta name="X-UA-Compatible" content="IE=edge">
+<meta name="google-site-verification" content="">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=5, user-scalable=5" name="viewport">
+<meta content="telephone=no" name="format-detection">
+<meta name="description" content="LAEO&#39;s blog">
+<meta name="renderer" content="webkit">
+<meta name="theme-color" content="#ffffff">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+
+
+
+    <link type="text/css" rel="stylesheet" href="/vendor/css/bootstrap.min.css">
+
+<link rel="stylesheet" href="/scss/dark-mode.min.cb53f1bee2b8900cb4f082afbf00175d6618f281cf9a2fe8619e3b52d20b5721.css" integrity="sha256-y1PxvuK4kAy08IKvvwAXXWYY8oHPmi/oYZ47UtILVyE=" media="screen">
+
+
+<link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Material+Icons">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+    	<div id="app"><div class="single-column-drawer-container" id="drawer"
+     v-bind:class="{ 'single-column-drawer-container-active': isDrawerOpen }">
+    <div class="drawer-content">
+        <div class="drawer-menu">
+            
+            
+            
+            
+        </div>
+    </div>
+</div>
+<transition name="fade">
+    <div id="drawer-mask" v-bind:class="{ 'single-column-drawer-mask': mounted }" v-if="isDrawerOpen" v-on:click="toggleDrawer"></div>
+</transition>
+<nav id="navBar" class="navbar sticky-top navbar-light single-column-nav-container">
+    <div id="navBackground" class="nav-background"></div>
+    <div class="container container-narrow nav-content">
+        <button id="nav_dropdown_btn" class="nav-dropdown-toggle" type="button" v-on:click="toggleDrawer">
+            <i class="material-icons">
+                menu
+            </i>
+        </button>
+        <a id="navTitle" class="navbar-brand" href="http://localhost:1313/">
+            LAEO
+        </a>
+        
+        <button type="button" class="nav-darkmode-toggle" id="darkModeToggleButton2">
+            <i class="material-icons" id="darkModeToggleIcon2">
+                dark_mode
+            </i>
+        </button>
+        
+    </div>
+</nav>
+<div class="single-column-header-container" id="pageHead"
+     v-bind:style="{ transform: 'translateZ(0px) translateY('+.3*scrollY+'px)', opacity: 1-navOpacity }">
+    <a href="http://localhost:1313/">
+        <div class="single-column-header-title">LAEO</div>
+        
+        <div class="single-column-header-subtitle">桀桀桀</div>
+        
+
+    </a>
+</div>
+
+            <div id="content">
+                <div id="streamContainer" class="stream-container">
+
+    <div class="post-list-container post-list-container-no-background">
+        
+        
+            <a href="/container/kubernetes%E9%9B%86%E7%BE%A4%E5%AE%89%E8%A3%85%E5%88%86%E5%B8%83%E5%BC%8F%E5%AD%98%E5%82%A8%E7%BB%84%E4%BB%B6rook-ceph/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                kubernetes 集群安装分布式存储组件 rook-ceph
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <h2 id="技术选型">技术选型</h2>
+<p>根据<a href="https://kubernetes.io/docs/concepts/storage/volumes/">官方文档</a>说明，k8s 提供了不同存储系统，可以直接根据需求选择不同的存储系统进行部署。由于分布式系统的特点，优先选择同样支持分布式部署的存储系统。为了方便部署，我采用 rook 来部署和管理存储集群。</p>
+<h2 id="什么是-rook">什么是 rook？</h2>
+<blockquote>
+<p>Rook is an open source cloud-native storage orchestrator, providing the platform, framework, and support for a diverse set of storage solutions to natively integrate with cloud-native environments.</p>
+</blockquote>
+<p>来自官方文档的说明，云原生的存储适配器。根据实际使用体验，rook 是用来对开源云原生存储系统的部署、管理进行管理的工具。通过 rook 可以快捷的部署一套私有的存储集群系统，从<a href="https://rook.io/docs/rook/v0.9/">官网文档</a>也可以看出其适配了多个云存储集群系统。</p>
+<h2 id="部署-rook-ceph-集群">部署 rook-ceph 集群</h2>
+<p>参照 <a href="https://rook.io/docs/rook/v0.9/quickstart-toc.html">快速上手指导</a> 所列各个存储引擎的版本状态，选择采用已发布正式版本的 ceph 存储系统。</p>
+<blockquote>
+<p>Ceph is a highly scalable distributed storage solution for block storage, object storage, and shared file systems with years of production deployments.</p>
+</blockquote>
+<p>为了快速可控的部署 rook 服务，采用开源的 kubernetes 包管理器 helm 来安装，如果希望获得更多自定义能力，可以参照 <a href="https://rook.io/docs/rook/v0.9/ceph-quickstart.html">官方部署文档</a> 部署 rook-operator，有关 helm 的安装自行查询官方文档。</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2019-01-12
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    8 min
+    
+    22 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/container/%E4%B8%BAk8s%E9%9B%86%E7%BE%A4%E5%AE%89%E8%A3%85traefik%E4%BD%9C%E4%B8%BAingress%E6%8F%90%E4%BE%9B%E5%95%86/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                为 k8s 集群安装 traefik 作为 Ingress 提供商
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <p>在上一篇文章中，我提到了使用 Ingress 来暴露集群内部服务到公网，那如何为私有的 K8S 集群配置一个 Ingress 服务呢？</p>
+<h2 id="什么是-ingress">什么是 Ingress</h2>
+<blockquote>
+<p>Ingress, added in Kubernetes v1.1, exposes HTTP and HTTPS routes from outside the cluster to services within the cluster. Traffic routing is controlled by rules defined on the ingress resource.</p>
+</blockquote>
+<p>根据文档说明，Ingress 是一种通过规则来对外网到集群内的 HTTP/HTTPS 流量进行路由控制的资源。</p>
+<p>官方推荐了数个 Ingress 控制器，具体可以查看 <a href="https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-controllers">这里</a>。由于之前有过 <a href="https://github.com/containous/traefik">Traefik</a> 相关使用经验，所以  在挑选控制器的时候我依然选择了 Traefik。</p>
+<h2 id="安装-traefik">安装 Traefik</h2>
+<p>参照  文档的说明可以手动安装，获得更强的自定义能力。因为方便和可控，我依然选择使用 Helm 来安装，也是在<a href="https://docs.traefik.io/user-guide/kubernetes/#deploy-traefik-using-helm-chart">官方文档</a>中说明的流程。</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>helm install -n traefik --namespace kube-system --values values.yaml stable/traefik
+</span></span></code></pre></div><p>其中 <code>values.yaml</code> 文件存放了该包的配置项，可以通过 <code>helm inspect stable/traefik</code> 查看该包的简介，在其中可以查看到所有的配置选项。</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2019-01-12
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    6 min
+    
+    28 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/container/helm%E5%AE%89%E8%A3%85chart%E6%8A%A5no-route-to-host%E9%94%99%E8%AF%AF/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                helm 安装 chart 报 no route to host 错误
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <h2 id="错误信息">错误信息</h2>
+<pre tabindex="0"><code>$ k8s helm install stable/nginx-ingress --name nginx --set rbac.create=true --namespace kube-system
+
+Error: forwarding ports: error upgrading connection: error dialing backend: dial tcp *.*.*.*:10250: connect: no route to host
+</code></pre><h2 id="解决方案">解决方案</h2>
+<p>清理对应节点的 iptables 规则即可，</p>
+<pre tabindex="0"><code>systemctl stop kubelet
+systemctl stop docker
+iptables --flush
+iptables -tnat --flush
+systemctl start kubelet
+systemctl start docker
+</code></pre><p>重新一试果然正常了，但是直勾勾重启节点上的 kubelet 和 docker，又导致 rook 安装的 ceph 存储集群炸了，相关的 pod 处于 pending 状态。</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2019-01-11
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    33 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/linux/%E9%98%BF%E9%87%8C%E4%BA%91%E5%8D%B8%E8%BD%BD%E8%87%AA%E5%B8%A6%E7%9B%91%E6%8E%A7%E6%9C%8D%E5%8A%A1%E8%AE%B0%E5%BD%95/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                阿里云卸载自带监控服务记录
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <h2 id="东拼西凑的脚本">东拼西凑的脚本</h2>
+<pre tabindex="0"><code>wget -qO- http://update.aegis.aliyun.com/download/uninstall.sh | bash
+wget -qO- http://update.aegis.aliyun.com/download/quartz_uninstall.sh | bash
+pkill aliyun-service
+rm -fr /etc/init.d/agentwatch /usr/sbin/aliyun-service
+rm -rf /usr/local/aegis*
+iptables -I INPUT -s 140.205.201.0/28 -j DROP
+iptables -I INPUT -s 140.205.201.16/29 -j DROP
+iptables -I INPUT -s 140.205.201.32/28 -j DROP
+iptables -I INPUT -s 140.205.225.192/29 -j DROP
+iptables -I INPUT -s 140.205.225.200/30 -j DROP
+iptables -I INPUT -s 140.205.225.184/29 -j DROP
+iptables -I INPUT -s 140.205.225.183/32 -j DROP
+iptables -I INPUT -s 140.205.225.206/32 -j DROP
+iptables -I INPUT -s 140.205.225.205/32 -j DROP
+iptables -I INPUT -s 140.205.225.195/32 -j DROP
+iptables -I INPUT -s 140.205.225.204/32 -j DROP
+/usr/local/cloudmonitor/wrapper/bin/cloudmonitor.sh remove &amp;&amp; \
+rm -rf /usr/local/cloudmonitor
+</code></pre>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2019-01-06
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    30 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/container/kubeadm%E5%88%9B%E5%BB%BAkubernetes%E9%9B%86%E7%BE%A4%E5%A4%87%E5%BF%98%E5%BD%95/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                Kubeadm 创建 Kubernetes 集群备忘录
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <p>许久不曾写点东西，这次迫于安装 Kubeadm 过程有点麻烦，想了想还是写下来，以后使用的时候也省的再费脑细胞。</p>
+<h2 id="配置要求">配置要求</h2>
+<p>基础的服务器硬件要求参照 <a href="https://kubernetes.io/docs/setup/independent/install-kubeadm/#before-you-begin">官方文档</a>。</p>
+<h3 id="云服务器提供商">云服务器提供商？</h3>
+<p>慎重选择阿里云之类的有公共网关的云服务，因为这些提供商所提供的公网 IP 是没有绑定到虚拟服务器上的，而是通过路由设施映射过去。Kubeadm 在创建集群的时候，会让 etcd 监听在其获取的本地网卡 IP 上，如果采用阿里云这样的提供商，它获取的网卡 IP 只会是内网 IP。结果就是，其它外网的节点无法正常链接上主节点的 etcd 服务，所以集群无法正常使用。</p>
+<h3 id="swap-禁止使用">Swap 禁止使用？</h3>
+<p>根据官方文档的说明，Kubernetes 集群需要的是稳定性，而依托于硬盘空间而生的 swap 空间，在读写性能上无法比肩常规内存空间，稳定性无法得到保证，所以禁止使用它。</p>
+<p>有的服务器默认就启用了 swap 空间，我们只需编辑 <code>/etc/fstab</code> 文件，注释掉其中 swap 类型的挂载操作，并重启服务器即可。</p>
+<h3 id="内核参数调整">内核参数调整？</h3>
+<p>参照 Kubeadm 安装文档执行以下命令，</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cat <span style="color:#cd5555">&lt;&lt;EOF &gt;  /etc/sysctl.d/k8s.conf
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">net.bridge.bridge-nf-call-ip6tables = 1
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">net.bridge.bridge-nf-call-iptables = 1
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">net.ipv4.ip_forward = 1
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555">EOF</span>
+</span></span><span style="display:flex;"><span>sysctl --system
+</span></span></code></pre></div><h4 id="procsysnetbridgebridge-nf-call-iptables-not-found">/proc/sys/net/bridge/bridge-nf-call-iptables not found</h4>
+<p>参照 <a href="https://github.com/weaveworks/weave/issues/2789">issue</a>，执行以下指令</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>modprobe br_netfilter
+</span></span></code></pre></div><p>即可解决。</p>
+<h2 id="使用-docker-ce-作为运行时">使用 Docker-CE 作为运行时</h2>
+<p>Kubernetes 每个版本都有其兼容的 docker 版本，为了新特性一般都安装最新版 docker-ce，除了参照 <a href="https://docs.docker.com/install/linux/docker-ce/centos/">官方文档</a>，最简单的安装方式</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>wget -qO- get.docker.com | bash
+</span></span></code></pre></div><p>该命令会自动安装最新版 docker-ce，但是这常常会带来兼容性问题，Kubeadm 在创建集群时会提示当前兼容的最高版本号，我们可以根据该版本号来安装指定版本。在获取到最高兼容版本号后，可以使用如 CentOS 7 下的包管理工具查询 <code>yum list --showduplicates docker-ce</code> ，我们可以在输出中看到有不同的版本可以选择，如下输出</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2019-01-04
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    5 min
+    
+    11 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/mysql/%E4%BB%8Emysql%E7%9A%84%E4%BA%8B%E5%8A%A1%E5%BC%80%E5%A7%8B%E6%8E%A2%E5%AF%BB%E9%94%81%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                从MySQL的事务开始探寻锁的实现原理
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <h2 id="mysql-事务的四大特性">MySQL 事务的四大特性</h2>
+<p>MySQL 事务的四大特性分别为：原子性、一致性、隔离性、持久性，英文简写 <code>ACID</code> 。在深入该部分知识的过程中，突然想到 “锁” 在事务中的作用，进而又思考起 “锁” 的实现原理起来。</p>
+<h2 id="mysql-事务中的锁">MySQL 事务中的锁</h2>
+<p>在实现事务的过程中，为了独占某资源，一定离不开锁的使用。对资源加锁，在 MySQL 中存在两种类型的锁，即 “共享锁” 和 “独享锁”。在数据记录上调用共享锁后，其它事务仍然可以继续为其添加共享锁，但是不能添加独享锁。这意味着，不同事务可以同时锁定并读取相同的数据记录。而独享锁则是事务独占该条数据记录，独享锁是用于修改数据的。</p>
+<p>那么，锁是如何实现的呢？</p>
+<h2 id="锁的实现">“锁”的实现</h2>
+<p>从代码层面来讲，如果要纯手动实现一个锁，那么无非就是在内存中存储一个记录，用于标记锁的开关状态。但是仔细想想，用于操作该记录的操作，是否是原子的呢？操作系统层面来讲，它如何保证我在多线程环境下对该 “锁” 的操作的原子性？</p>
+<p>如果我们的 CPU 是单核心的，那么可以猜到，所有指令都是一条一条执行的，那么我们在内存中标记一个锁，就可以认为从操作系统层面来讲，该锁的状态切换是原子性的。然而事实并非如此，因为指令的执行是可以中断的。假设我们在读取到锁的状态后，即将对该状态进行判断的一瞬间，操作被中断了，操作系统自动调度了其它线程，刚好该线程也来进行加锁。结果就是两个线程都加锁成功，所以就算是单核心也无法使用这种姿势来实现原子锁。</p>
+<p>而在多核心环境下，甚至不需要等到操作被中断，只需要多个核心同时进行加锁操作，锁的原子性瞬间毁灭。</p>
+<p>那么到底如何实现真正的原子锁呢？最终还是需要硬件来提供特性支持。查询资料得知，硬件层面的 CPU 提供了锁内存总线的功能，只要在锁内存总线的状态下执行原子操作即可实现原子锁。果然最终还是得靠硬件层面的支持，上层的所有锁实现都基于此。</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2018-10-31
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    3 min
+    
+    19 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/container/docker%E5%AE%9E%E7%8E%B0%E6%96%B0%E5%BB%BA%E5%AE%B9%E5%99%A8%E5%90%8E%E8%87%AA%E5%8A%A8%E5%88%9B%E5%BB%BAnginx%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                docker 实现新建容器后自动创建 nginx 反向代理
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <h2 id="nginx-proxy-介绍">nginx-proxy 介绍</h2>
+<p><a href="https://github.com/jwilder/nginx-proxy">nginx-proxy</a> 是一款开源的、根据容器自动创建 nginx 反向代理的软件，基于 docker-gen 开发。使用该软件，我们可以实现在创建 web 项目时，快速构建线上测试环境，免去手动配置 nginx 的痛苦。另外，搭配另一款软件——<a href="https://github.com/JrCs/docker-letsencrypt-nginx-proxy-companion">letsencrypt-nginx-proxy-companion</a>，更能实现自动申请 let&rsquo;s encrypt 免费证书，轻松搭建 HTTPS 站点，可以方便的用于某些线上环境。</p>
+<h2 id="动手使用">动手使用</h2>
+<p>该软件使用非常简单，全程基于 docker 容器软件，只需两步即可。此处我放置的示例命令来自 letsencrypt-nginx-proxy-companion 的使用说明，推荐构建 HTTPS 站点。</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir /var/certs <span style="color:#228b22"># 创建证书存放目录</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>docker run -d -p 80:80 -p 443:443 <span style="color:#cd5555">\
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555"></span>    --name nginx-proxy <span style="color:#cd5555">\
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555"></span>    -v /var/certs:/etc/nginx/certs:ro <span style="color:#cd5555">\
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555"></span>    -v /etc/nginx/vhost.d <span style="color:#cd5555">\
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555"></span>    -v /usr/share/nginx/html <span style="color:#cd5555">\
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555"></span>    -v /var/run/docker.sock:/tmp/docker.sock:ro <span style="color:#cd5555">\
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555"></span>    --label com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy <span style="color:#cd5555">\
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555"></span>    --restart=always <span style="color:#cd5555">\
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555"></span>    jwilder/nginx-proxy
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>docker run -d <span style="color:#cd5555">\
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555"></span>    -v /var/certs:/etc/nginx/certs:rw <span style="color:#cd5555">\
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555"></span>    -v /var/run/docker.sock:/var/run/docker.sock:ro <span style="color:#cd5555">\
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555"></span>    --volumes-from nginx-proxy <span style="color:#cd5555">\
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555"></span>    --restart=always <span style="color:#cd5555">\
+</span></span></span><span style="display:flex;"><span><span style="color:#cd5555"></span>    jrcs/letsencrypt-nginx-proxy-companion
+</span></span></code></pre></div><p>上述命令执行完成后，我们就正式运行起了 docker-proxy 与 letsencrypt-nginx-proxy-companion 服务。</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2018-10-23
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    4 min
+    
+    43 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/php/eloquent%E6%A8%A1%E5%9E%8B%E5%AD%90%E7%B1%BBmorphtomany%E8%B0%83%E7%94%A8doesnthave%E5%A4%B1%E6%95%88%E9%97%AE%E9%A2%98/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                Eloquent模型子类MorphToMany调用doesntHave失效问题
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <h2 id="编写bug之路">编写BUG之路</h2>
+<p>在私人项目中使用了 <code>laravel-permission</code> 包做权限管理，用户表 <code>users</code> 需要扩展出不同的角色。考虑到项目规模，我将用户数据和后台客服数据统一存放在用户表中，然后根据角色信息来判断账户的归类。如此，我在 <code>App\User</code> 模型中进行登录认证等统一的用户操作，但是新建 <code>App\Client</code> 模型来专门管理普通用户的数据，该类继承自用户模型类，可以方便的共享一些通用属性。</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-php" data-lang="php"><span style="display:flex;"><span><span style="color:#8b008b;font-weight:bold">namespace</span> App;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8b008b;font-weight:bold">class</span> <span style="color:#008b45;font-weight:bold">Client</span> <span style="color:#8b008b;font-weight:bold">extends</span> User
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#8b008b;font-weight:bold">protected</span> <span style="color:#00688b">$table</span> = <span style="color:#cd5555">&#39;users&#39;</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>为了方便使用用户模型查找数据，我在 <code>App\Client</code> 中增加了 <code>全局作用域</code> 来自动过滤有权限的用户：</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-php" data-lang="php"><span style="display:flex;"><span><span style="color:#228b22">// 在 app/Client.php 中
+</span></span></span><span style="display:flex;"><span><span style="color:#228b22"></span><span style="color:#8b008b;font-weight:bold">static</span>::<span style="color:#658b00">addGlobalScope</span>(<span style="color:#cd5555">&#39;client&#39;</span>, <span style="color:#8b008b;font-weight:bold">function</span> (Builder <span style="color:#00688b">$builder</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#00688b">$builder</span>-&gt;<span style="color:#658b00">doesntHave</span>(<span style="color:#cd5555">&#39;roles&#39;</span>);
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div><p>原本我以为加上上述代码后，就可以正常取出没有权限的普通账户了，可惜事实并非如此，该作用域完全没有起到作用，所有用户数据都被取出来了。我写了一个BUG！</p>
+<h2 id="解决bug之路">解决BUG之路</h2>
+<p>出现这样的问题，首先想到的就是去该包的 issue 页面搜索，看看有没有相关的资料，可能是我关键词有问题，并没有搜索到相关资料。搜索引擎也是相同的结果，没查到 <code>doesntHave</code> 失效的原因。</p>
+<p>那就只能自己动手咯。</p>
+<p>首先想到打印执行的 SQL 出来看看：</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-php" data-lang="php"><span style="display:flex;"><span><span style="color:#228b22">// app/Providers/EventServiceProvider.php 中
+</span></span></span><span style="display:flex;"><span><span style="color:#228b22"></span>
+</span></span><span style="display:flex;"><span>DB::<span style="color:#658b00">listen</span>(<span style="color:#8b008b;font-weight:bold">function</span> (<span style="color:#00688b">$query</span>) {
+</span></span><span style="display:flex;"><span>    Log::<span style="color:#658b00">debug</span>(<span style="color:#00688b">$query</span>-&gt;<span style="color:#658b00">time</span> . <span style="color:#cd5555">&#39;@&#39;</span> . <span style="color:#00688b">$query</span>-&gt;<span style="color:#658b00">sql</span>, <span style="color:#00688b">$query</span>-&gt;<span style="color:#658b00">bindings</span>);
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div><p>通过注册上述监听器后，在日志文件中找到了相关的 SQL 记录。看了下提交的参数，其中有个 <code>App\\Client</code> 引起我的注意，在我从数据库中查询到的数据里，都是存储的原始的 <code>App\User</code> ，那么只需要将这个参数改正确就行了。我猜测是因为普通用户的模型是继承的，多对多关联的代码在执行的时候自动获取了当前实例的类名，所以才导致查询不到记录。</p>
+<p>找到问题所在就好办了，编辑器里跟着源码挨个跳转，最终找到了它</p>
+<p><img src="/static/images/2018-08-11-eloquent-morphToMany.png" alt="screenshot"></p>
+<p>在 <code>Illuminate\Database\Eloquent\Relations\MorphToMany</code> 中我找到了一个关键函数 <code>getMorphClass</code> ，这货就是给多对多关联提供模型类名的，所以我果断在 <code>App\Client</code> 中重写了该方法，以使之返回固定的 <code>App\User</code> 。</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2018-08-11
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    3 min
+    
+    4 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/linux/arch%E5%AE%89%E8%A3%85plasma%E6%A1%8C%E9%9D%A2%E7%8E%AF%E5%A2%83%E5%8F%8A%E7%BE%8E%E5%8C%96%E8%AE%B0%E5%BD%95/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                ARCH安装Plasma桌面环境及美化记录
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <p><img src="/static/images/2018-07-25-screenshot.png" alt="screenshot"></p>
+<h2 id="安装-kde-环境">安装 KDE 环境</h2>
+<p>终端下执行 <code>sudo pacman -S plasma-meta</code> 命令以最小化安装 KDE 环境，然后还有官方推荐的 SDDM 显示管理器，执行 <code>sudo pacman -S sddm</code> ，然后加入开机启动项中 <code>sudo systemctl enable sddm</code> ，接着重启电脑即可看到登录窗口了。</p>
+<h2 id="系统设置">系统设置</h2>
+<h3 id="工作空间主题">工作空间主题</h3>
+<p>通过 <code>系统设置</code> 中 <code>工作空间主题</code> 子项对桌面环境进行美化。</p>
+<p>首先， <code>观感</code> 中我选择使用 <code>微风</code> ；然后， <code>桌面主题</code> 里通过内置的 <code>获得新主题</code> 按钮在线下载安装桌面主题 <code>Breeze Transparent Dark</code> 并启用它；在 <code>光标主题</code> 中使用工作空间主题相同的 <code>微风</code> 系列光标主题；最后，在 <code>欢迎屏幕</code> 中同样使用获得新主题按钮在线安装 <code>Arc Dark</code> 主题并启用。</p>
+<p>到这里就可以获得一个稍微好看的桌面环境了，不过还不够。</p>
+<h3 id="颜色">颜色</h3>
+<p>这个设置项所设置的颜色，就是系统 UI 框架的各个组件所使用的颜色。我多次调整后，最终选择了 <code>Zion</code> ，同样可以通过界面中的 <code>获取新方案</code> 按钮在线安装。</p>
+<h3 id="图标">图标</h3>
+<p>图标的选择，翻来翻去我最后选择了 MacOS 的图标，哈哈哈，不得不说 KDE 真好用，还是可以在线安装，直接搜 macos 然后选择一个匹配的即可。</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2018-07-24
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    4 min
+    
+    43 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/linux/arch%E5%AE%89%E8%A3%85%E6%8C%87%E5%8C%97/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                ARCH安装指北
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <h2 id="制作安装盘">制作安装盘</h2>
+<p>首先去 ARCH 官网 <a href="https://www.archlinux.org/download/">下载</a> 最新版本的 ISO 镜像文件。</p>
+<p>下载好后，使用启动盘制作工具制作U盘启动盘，制作工具推荐 <a href="https://rufus.ie">rufus</a>。</p>
+<h2 id="设置安装环境">设置安装环境</h2>
+<p>开机选择 U盘 进行引导，大部分情况下即可正常进入到命令行模式的安装环境了。</p>
+<blockquote>
+<p>ARCH 安装环境并没有图形界面，因为安装非常简单。</p>
+</blockquote>
+<p>安装需要联网下载系统依赖包，我这里使用 WIFI 进行联网。</p>
+<p>在终端执行 <code>wifi-menu</code> 进入简单的图形界面，选择要连接的 WIFI 名称，点击回车后输入密码，稍等片刻即可连接成功。</p>
+<blockquote>
+<p>可以使用 <code>ping -c4 www.baidu.com</code> 确定联网是否成功。</p>
+</blockquote>
+<p>联网成功后，执行 <code>pacman -Syy</code> 同步包管理数据，然后执行 <code>pacman -S reflector</code> 安装用于筛选软件源的工具。</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>reflector -c CN -l <span style="color:#b452cd">3</span> --sort=rate -p https --save /etc/pacman.d/mirrorlist
+</span></span></code></pre></div><p>上述命令用于测试并挑选出下载速率最快的、所属中国区并使用 HTTPS 协议的三个源，并将其写入配置文件中。
+如此一来，就不会因为下载速度而影响安装速度了。</p>
+<blockquote>
+<p>注意，由于 ARCH 的软件更新非常频繁，各大镜像节点速度的限制，安装时有可能出现找不到软件包的 404 报错，稍候再试即可。</p>
+</blockquote>
+<h2 id="硬盘分区">硬盘分区</h2>
+<p>首先需要查看系统分区信息</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lsblk
+</span></span></code></pre></div><p>输出的内容类似于</p>
+<pre tabindex="0"><code>NAME        MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
+sda           8:0    0 931.5G  0 disk
+└─sda1        8:1    0 931.5G  0 part
+nvme0n1     259:0    0 953.9G  0 disk
+├─nvme0n1p1 259:1    0   565M  0 part
+├─nvme0n1p2 259:2    0 100.6G  0 part
+├─nvme0n1p3 259:3    0   101G  0 part
+├─nvme0n1p4 259:4    0 750.9G  0 part
+└─nvme0n1p5 259:5    0  1003M  0 part
+</code></pre><p>我系统的分区如上， <code>nvme0n1p1</code> 是 <code>UEFI</code> 分区， <code>nvme0n1p2</code> 是 WIN10 所在分区， <code>nvme0n1p3</code> 将用于安装 ARCH， <code>nvme0n1p4</code> 用于存储数据。</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2018-06-13
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    7 min
+    
+    22 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+        </a>
+    </div>
+
+
+                    </div>
+            </div><div id="sideContainer" class="side-container">
+    
+    <a class="a-block nav-head active" href="http://localhost:1313/">
+    
+        <div class="nav-title">
+            LAEO
+        </div>
+        
+        <div class="nav-subtitle">
+            桀桀桀
+        </div>
+        
+    </a>
+
+    <div class="nav-link-list">
+        
+        
+    </div>
+
+    
+
+    <div class="nav-footer">
+        
+Hugo Theme <a href="https://github.com/amazingrise/hugo-theme-diary">Diary</a> by <a href="https://risehere.net/">Rise</a>
+<br>
+移植自 <a href="https://mak1t0.cc/" target="_blank" rel="noreferrer noopener">Makito</a>'s <a href="https://github.com/SumiMakito/hexo-theme-journal/" target="_blank" rel="noreferrer noopener">Journal.</a> <br>
+<br>
+
+&copy;
+	
+	2020 LAEO
+	
+
+    </div>
+    
+</div><div id="extraContainer" class="extra-container">
+    <div class="toc-wrapper">
+        
+
+        
+    </div>
+    <div class="pagination">
+        <a id="globalBackToTop" class="pagination-action animated-visibility" href="#top"
+            :class="{ invisible: scrollY == 0 }">
+            <i class="material-icons pagination-action-icon">
+                keyboard_arrow_up
+            </i>
+        </a>
+        
+        <a type="button" class="pagination-action" id="darkModeToggleButton">
+            <span class="material-icons pagination-action-icon" id="darkModeToggleIcon">
+                dark_mode
+            </span>
+        </a>
+        
+        
+        
+
+        <a class="pagination-action"  href="/">
+            
+            <i class="material-icons pagination-action-icon">
+                chevron_left
+            </i>
+        </a>
+
+        <div class="pagination-indicator">
+            <span style="text-align: center">
+                2<br>
+                <div style="display: inline-block; transform: rotate(-28deg)">-</div><br>3
+            </span>
+        </div>
+
+
+        <a class="pagination-action"  href="/page/3/">
+            
+            <i class="material-icons pagination-action-icon">
+                chevron_right
+            </i>
+        </a>
+        
+        
+    </div>
+</div>
+
+
+<div class="pagination">
+    
+    <a class="pagination-action" href="/" style="opacity:1">
+    
+        <i class="material-icons pagination-action-icon">
+            chevron_left
+        </i>
+    </a>
+
+        <div class="pagination-indicator">
+            <span>2/3</span>
+        </div>
+
+        
+        <a class="pagination-action" href="/page/3/"
+           style="opacity:1">
+        
+                <i class="material-icons pagination-action-icon">
+                    chevron_right
+                </i>
+            </a>
+</div>
+
+
+
+<div id="single-column-footer">
+Hugo Theme <a href="https://github.com/amazingrise/hugo-theme-diary">Diary</a> by <a href="https://risehere.net/">Rise</a>
+<br>
+移植自 <a href="https://mak1t0.cc/" target="_blank" rel="noreferrer noopener">Makito</a>'s <a href="https://github.com/SumiMakito/hexo-theme-journal/" target="_blank" rel="noreferrer noopener">Journal.</a> <br>
+<br>
+
+&copy;
+	
+	2020 LAEO
+	
+</div>
+            </div>
+    
+    <script src="/js/journal.js"></script></body>
+</html>

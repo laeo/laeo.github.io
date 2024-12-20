@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="zh"><head>
+	<meta name="generator" content="Hugo 0.140.0"><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+<title>LAEO</title>
+
+
+
+  
+
+
+<meta charset="utf-8">
+<meta name="X-UA-Compatible" content="IE=edge">
+<meta name="google-site-verification" content="">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=5, user-scalable=5" name="viewport">
+<meta content="telephone=no" name="format-detection">
+<meta name="description" content="LAEO&#39;s blog">
+<meta name="renderer" content="webkit">
+<meta name="theme-color" content="#ffffff">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+
+
+
+    <link type="text/css" rel="stylesheet" href="/vendor/css/bootstrap.min.css">
+
+<link rel="stylesheet" href="/scss/dark-mode.min.cb53f1bee2b8900cb4f082afbf00175d6618f281cf9a2fe8619e3b52d20b5721.css" integrity="sha256-y1PxvuK4kAy08IKvvwAXXWYY8oHPmi/oYZ47UtILVyE=" media="screen">
+
+
+<link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Material+Icons">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+    	<div id="app"><div class="single-column-drawer-container" id="drawer"
+     v-bind:class="{ 'single-column-drawer-container-active': isDrawerOpen }">
+    <div class="drawer-content">
+        <div class="drawer-menu">
+            
+            
+            
+            
+        </div>
+    </div>
+</div>
+<transition name="fade">
+    <div id="drawer-mask" v-bind:class="{ 'single-column-drawer-mask': mounted }" v-if="isDrawerOpen" v-on:click="toggleDrawer"></div>
+</transition>
+<nav id="navBar" class="navbar sticky-top navbar-light single-column-nav-container">
+    <div id="navBackground" class="nav-background"></div>
+    <div class="container container-narrow nav-content">
+        <button id="nav_dropdown_btn" class="nav-dropdown-toggle" type="button" v-on:click="toggleDrawer">
+            <i class="material-icons">
+                menu
+            </i>
+        </button>
+        <a id="navTitle" class="navbar-brand" href="http://localhost:1313/">
+            LAEO
+        </a>
+        
+        <button type="button" class="nav-darkmode-toggle" id="darkModeToggleButton2">
+            <i class="material-icons" id="darkModeToggleIcon2">
+                dark_mode
+            </i>
+        </button>
+        
+    </div>
+</nav>
+<div class="single-column-header-container" id="pageHead"
+     v-bind:style="{ transform: 'translateZ(0px) translateY('+.3*scrollY+'px)', opacity: 1-navOpacity }">
+    <a href="http://localhost:1313/">
+        <div class="single-column-header-title">LAEO</div>
+        
+        <div class="single-column-header-subtitle">桀桀桀</div>
+        
+
+    </a>
+</div>
+
+            <div id="content">
+                <div id="streamContainer" class="stream-container">
+
+    <div class="post-list-container post-list-container-no-background">
+        
+        
+            <a href="/golang/%E8%AE%B0%E4%B8%80%E6%AC%A1%E5%A4%B1%E8%B4%A5%E5%88%B0%E8%BF%9E%E9%9D%A2%E8%AF%95%E9%A2%98%E9%83%BD%E6%B2%A1%E8%BF%87%E5%8E%BB%E7%9A%84go%E8%AF%AD%E8%A8%80%E9%9D%A2%E8%AF%95/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                记一次失败到连面试题都没过去的Go语言面试
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <p>断断续续学习、关注 Go 语言相关技术也有段时间了（大概一两年吧），今年是靠着疫情后的大段休息时间，狠下心决定要找找 Go 语言方面的岗位，简历投出去却是如石沉大海，不是已查阅，就是不合适。考虑到自身学历和工作经历，也觉得有这般结果是正常的，但仍是不甘心如此结束，也就偶尔看到合适的岗位就尝试投一投。功夫不负有心人，总算是有一家公司的人事联系让我去面试，这篇文章就是记录我在面试前、面试中、面试后的各种准备、思考。</p>
+<h2 id="准备时">准备时</h2>
+<p>第一次参加 Go 语言岗位的面试，也不知道会问些什么问题，根据自身情况，我投的都是偏业务逻辑开发的岗位，所以猜测最多也就是常规的语言知识，后端技术栈相关的东西吧。于是我就主要搜索了下 Go 语言相关的面试题，优先看语言方面的题目，对于数据库、缓存之类的题就没去看。坐一路的公交，就低头看了一路的面试题，着重看了其中与语言特性有关的各种题目，比如结构的值接收者方法与指针接收者方法的差异、chan 与协程的搭配使用、defer 关键词等等，都是平时在 IDE 的帮助下，处理过，但未曾关注过的信息。</p>
+<h2 id="面试题">面试题</h2>
+<p>拿到面试题的一瞬间，我就开始懵逼了，有一部分“大庭广众之下”的紧张感（或许是担心作弊，该公司并没有让我在会议室做题，而是应该在两个部门办公桌之间过道的桌子上做题），也有一部分第一次参加此语言岗位的紧张感，整个人都不好了，于是大脑一片空白。</p>
+<p>看题目，</p>
+<ol>
+<li>
+<p>协程，线程，进程的区别。</p>
+<ul>
+<li>
+<p>我的答案：
+协程是用户态的，由软件实现。线程分内核态和用户态，存在于进程中。线程是 CPU 执行的最小单元。</p>
+</li>
+<li>
+<p>相关资料：</p>
+<ul>
+<li><a href="https://zhuanlan.zhihu.com/p/70256971">【面试高频问题】线程、进程、协程</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/27245377">进程、线程、协程与goruntine</a></li>
+<li><a href="https://stackoverflow.com/questions/200469/what-is-the-difference-between-a-process-and-a-thread">What is the difference between a process and a thread?</a></li>
+<li><a href="https://stackoverflow.com/questions/1934715/difference-between-a-coroutine-and-a-thread">Difference between a “coroutine” and a “thread”?</a></li>
+</ul>
+</li>
+<li>
+<p>点评：
+进程是分配资源的最小单位，线程是CPU调度的最小单位，协程是工程师或语言自建的调度单位。一步步看过来，就是在层层拆分调度时的“块”，提升调度的精度。</p>
+<p>最开始以进程来调度，发现成本太高，然后将进程的计算逻辑拆分成多个小块，根据情况进行调度，结果发现在大规模系统下资源耗费还是很高，于是继续拆为更小的计算块，在线程内部再次进行调度。而最高层级的进程，反而成为了只存储数据的<em>模型层</em>，线程倒是变成了<em>控制器层</em>，协程成了控制器中完成逻辑所调用到的各种<em>方法</em>。不知道这样理解是否正确，但确实是我看了这几份资料后的感觉。</p>
+</li>
+</ul>
+</li>
+<li>
+<p>无缓冲 Chan 的发送和接收是否同步？</p>
+<ul>
+<li>
+<p>我的答案：
+是</p>
+</li>
+<li>
+<p>相关资料：</p>
+<ul>
+<li><a href="https://golang.org/ref/spec#Channel_types">Go Doc Spec</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>Golang 中是否需要重入锁？</p>
+<ul>
+<li>
+<p>我的答案：
+不清楚此概念。</p>
+</li>
+<li>
+<p>相关资料：</p>
+<ul>
+<li><a href="https://zhuanlan.zhihu.com/p/71018541">到底什么是重入锁，拜托，一次搞清楚！</a></li>
+<li><a href="https://studygolang.com/topics/6139">golang 如何解决重入锁的问题？有没有代替方案？</a></li>
+<li><a href="https://stackoverflow.com/questions/14670979/recursive-locking-in-go#14671462">Recursive locking in Go</a></li>
+</ul>
+</li>
+<li>
+<p>点评：
+自是不必！</p>
+<p>最开始看到这个重入锁我就有点奇怪，从来没在任何所学语言的文档、注释、教程中看到过这个概念，回家的路上一搜，果不其然——JAVA……想来也对，只有这门语言毛病最多。地铁上把第一篇文章看完了，对这概念有了个了解，下意识就觉得这设计有点反人类，又想到 Go 中肯定不需要用到，如果有，那肯定是代码写的有问题。</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2020-09-25
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    15 min
+    
+    12 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/mobile/flutter%E5%AD%A6%E4%B9%A0%E4%B8%8E%E5%AE%9E%E8%B7%B5%E6%80%BB%E7%BB%93/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                Flutter学习与实践总结
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <h2 id="闲言">闲言</h2>
+<p>Flutter 可以说在开发者圈子还是很有名的了，毕竟是谷歌，关注度自不必说。我很早就有心涉足移动 APP 开发，但是学习了一段时间的安卓开发后，实在忍受不了 JAVA 那种类中套类的套娃写法（也可能是没学对吧），后面就没坚持下去。做过一段时间的小程序开发后，又让我燃起了对原生移动端的热情，于是我打开了 Flutter 的官网……</p>
+<h2 id="学习记录">学习记录</h2>
+<p>学习方法很重要，对于我这个大部分靠自学的人而言，最好的办法肯定就是先速览一遍文档，对要学习的内容有个大致的印象，然后跟着教程挨个阅读、实践，增强对细节的记忆与理解。</p>
+<h4 id="安装-flutter">安装 Flutter</h4>
+<p>我用的是 Mac，所以安装时走的包管理器，并没有依照文档中那样下载二进制文件。所以总的来说安装还是很简单的，首先 <code>brew install flutter</code> ，安装好二进制，然后执行 <code>flutter docter</code> 检查环境及依赖。</p>
+<p>无论使用什么编辑器编写代码，<strong>Android Studio</strong> 以及 <strong>Xcode</strong> 都是必须的，为了方便调试，还需要创建各平台的虚拟机。对于我来说，<strong>VSCode</strong> 搭配 Flutter 相关的插件就已经满足开发调试的需要，而且还可以直接吊起双端的虚拟机进行调试，简直方便到不行。</p>
+<h4 id="dart-与-widget">Dart 与 Widget</h4>
+<p>了解 Flutter 的都知道，谷歌为它选择了一门冷门语言 —— Dart。这门语言对于熟悉 JS 和 TS 的人来说，上手难度不大。入口函数 <code>void main()</code> 、类、接口、范型、异步，主要是看下异步那块的文档，其它的都大同小异。Widget 的话，类似 Vue 和 React 里的组件，Flutter 渲染界面就是通过我们传递给 <code>runApp()</code> 函数的组件实例开始的，所以我们开发时会经常跟各种 Widget 打交道。</p>
+<p>Flutter 把 Widget 分为两种类型，即 <strong>StatefullWidget</strong> 和 <strong>StatelessWidget</strong>，我们要创建自定义的组件，也是通过继承这两个组件类来完成的。看到 <code>Statefull</code> 和 <code>Stateless</code> ，如果熟悉 Kubernetes 的话，一定会有所联想。确实，与 K8S 中的定义类似，它们也是用于区分组件自身是否需要维护一个状态的，具体两种组件在渲染时有何差异，我还并未去了解，想来应该是用于拆分代码结构、确定组件是否需要重建用的吧。</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2020-09-11
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    9 min
+    
+    30 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/golang/go%E8%AF%AD%E8%A8%80%E4%B8%AD%E7%9A%84%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                Go 语言中的依赖注入解决方案
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <p>Go 语言在我的认知中，是一种面向过程的函数式编程语言。所以通常我开发时，基本都是一把梭，并没有太过注重代码的结构。但是最近在开发“奋斗社”社区系统时，一直有感于代码结构太冗杂、混乱，所以有寻找相应的工具来处理。</p>
+<p>根据我在实际开发过程中的感受，我认为我首先就需要一个能够对结构体注入给定数据的工具，比如数据库连接实例，如果没有自动注入的工具，那么在我调用各种函数时</p>
+<ol>
+<li>要么手动在初始化结构体时注入连接实例。</li>
+<li>要么将实例存储在独立包中的导出变量中。</li>
+</ol>
+<p>之前一直是使用的第二种方式，但不管那种方式，都没有写 PHP 这类动态脚本语言的方便顺手，因此我在社区搜索了相关的依赖注入的实现。</p>
+<h2 id="依赖注入di">依赖注入（DI）</h2>
+<p>依赖注入是面向对象编程常用的代码解耦方法，通常是通过 <code>反射</code> 来获取调用者所需的参数信息，并根据相应的类型，从对象容器中查找相应的实例，最后将确定出的依赖以参数的形式传递给调用者。</p>
+<p>从实现的逻辑来看，依赖注入就是很简单直接的，将“我要”转变为“给我”，从主动的强依赖，变为被动的弱依赖。并且使用注入的形式提供调用依赖，可以方便的进行测试。</p>
+<h2 id="go-语言的-di">Go 语言的 DI</h2>
+<p>我所搜到的热门的依赖注入工具有三个，分别是由谷歌推出的 <a href="https://github.com/google/wire">wire</a> 和由 Uber 推出的 <a href="https://github.com/uber-go/dig">dig</a>。当然还有其它的一些实现，但是时间精力有限，我就先看这两个✨数量比较高的。</p>
+<p>从各自文档以及示例中可以看出两个仓库虽然实现方式不同，但总的工作逻辑还是相同的，都是基于预设的基础依赖项，解析并填充关联的依赖项，直到最终的入口点。</p>
+<p><code>wire</code> 是通过代码生成完成的依赖分析与注入， <code>dig</code> 则是运行时通过“反射”进行依赖分析与注入，明显前者性能要比后者好，所以我选择用前者。</p>
+<h2 id="wire">wire</h2>
+<p>在接入 wire 之前，我先从现有代码结构上观察，哪些是需要（且能够）进行依赖分析注入的。我从 “奋斗社” 的代码中，找出了需要依赖注入的地方</p>
+<ul>
+<li>控制器 Controller</li>
+<li>数据服务 Service</li>
+</ul>
+<p>其它的比如模型、钩子函数、纯函数之类的，无法用代码生成的形式处理依赖问题，只能手写。</p>
+<p>为了达到为控制器注入依赖的目的，我为每个控制器结构添加了一个构造函数，比如用户控制器的构造函数如下</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#8b008b;font-weight:bold">func</span> <span style="color:#008b45">NewUserController</span>() runtime.Controller {
+</span></span><span style="display:flex;"><span>	wire.<span style="color:#008b45">Build</span>(
+</span></span><span style="display:flex;"><span>		pkg.ApplicationSet,
+</span></span><span style="display:flex;"><span>		wire.<span style="color:#008b45">Struct</span>(<span style="color:#658b00">new</span>(User), <span style="color:#cd5555">&#34;*&#34;</span>),
+</span></span><span style="display:flex;"><span>		wire.<span style="color:#008b45">Bind</span>(<span style="color:#658b00">new</span>(runtime.Controller), <span style="color:#658b00">new</span>(*User)),
+</span></span><span style="display:flex;"><span>	)
+</span></span><span style="display:flex;"><span>	<span style="color:#8b008b;font-weight:bold">return</span> <span style="color:#8b008b;font-weight:bold">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>通过在同级目录下执行 <code>wire</code> 命令，自动生成同名函数，外部可直接调用并获取注入完依赖的控制器实例。</p>
+<p>然后在将 <code>控制器</code> 注入到 <code>路由器</code> 时，遇到问题了。每个控制器都是一个 Provider，如果要为控制器注册相应路由规则，那么就需要另一个 Provider 依赖一个控制器，这样的话，有多少个控制器就要写多少个相应的 Provider。最大的问题是，wire 不支持同一个类型作为入参与出参，也不支持没有出参，所以无法直接使用它来处理路由规则的注册。</p>
+<p>为了处理路由规则注册的问题，我为项目添加了一个接口 <code>runtime.Controller</code> ，这个接口要求结构必须实现一个函数 <code>RegisterRoute</code> ，在这个函数中注册控制器下的各个方法到路由。然后我们就可以在提供者（Provider）中声明，需要注入控制器切片（[]runtime. Controller）类型的依赖项。</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2020-08-16
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    8 min
+    
+    9 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/container/%E4%B8%89%E8%8A%82%E7%82%B9k3s%E9%9B%86%E7%BE%A4%E9%83%A8%E7%BD%B2gitea%E8%AE%B0%E5%BD%95/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                三节点K3S集群部署Gitea记录
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <p>接前文所言，记录下gitea的搭建过程，处理Longhorn存储系统挂载失败的问题，并且处理老数据迁移问题。</p>
+<h2 id="gitea">Gitea</h2>
+<p>Gitea 是一个开源社区驱动的轻量级代码托管解决方案，后端采用 Go 编写，采用 MIT 许可证.</p>
+<h2 id="部署">部署</h2>
+<p>Gitea文档中并未提供K8S部署相关的说明，但是我从其github仓库中找到了官方提供的YAML部署文件，地址是 <code>https://github.com/go-gitea/gitea/blob/master/contrib/k8s/gitea.yml</code> ，直接下载到本地，然后根据需要进行修改即可。下面是我修改后的</p>
+<p><em>gitea.yaml</em></p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#008b45;text-decoration:underline">---</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>v1<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>PersistentVolumeClaim<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">metadata</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">name</span>:<span style="color:#bbb"> </span>gitea-data<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">namespace</span>:<span style="color:#bbb"> </span>gitea<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">spec</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">accessModes</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span>- ReadWriteOnce<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">storageClassName</span>:<span style="color:#bbb"> </span>longhorn<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">resources</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">requests</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span><span style="color:#8b008b;font-weight:bold">storage</span>:<span style="color:#bbb"> </span>1Gi<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008b45;text-decoration:underline">---</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>apps/v1<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>Deployment<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">metadata</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">name</span>:<span style="color:#bbb"> </span>gitea<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">namespace</span>:<span style="color:#bbb"> </span>gitea<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">labels</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">app</span>:<span style="color:#bbb"> </span>gitea<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">spec</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">replicas</span>:<span style="color:#bbb"> </span><span style="color:#b452cd">1</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">template</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">metadata</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span><span style="color:#8b008b;font-weight:bold">name</span>:<span style="color:#bbb"> </span>gitea<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span><span style="color:#8b008b;font-weight:bold">labels</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span><span style="color:#8b008b;font-weight:bold">app</span>:<span style="color:#bbb"> </span>gitea<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">spec</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span><span style="color:#8b008b;font-weight:bold">containers</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span>- <span style="color:#8b008b;font-weight:bold">name</span>:<span style="color:#bbb"> </span>gitea<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span><span style="color:#8b008b;font-weight:bold">image</span>:<span style="color:#bbb"> </span>gitea/gitea:1.12<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span><span style="color:#8b008b;font-weight:bold">imagePullPolicy</span>:<span style="color:#bbb"> </span>Always<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span><span style="color:#8b008b;font-weight:bold">volumeMounts</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">          </span>- <span style="color:#8b008b;font-weight:bold">mountPath</span>:<span style="color:#bbb"> </span><span style="color:#cd5555">&#34;/data&#34;</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span><span style="color:#8b008b;font-weight:bold">name</span>:<span style="color:#bbb"> </span><span style="color:#cd5555">&#34;data&#34;</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span><span style="color:#8b008b;font-weight:bold">ports</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">          </span>- <span style="color:#8b008b;font-weight:bold">containerPort</span>:<span style="color:#bbb"> </span><span style="color:#b452cd">22</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span><span style="color:#8b008b;font-weight:bold">name</span>:<span style="color:#bbb"> </span>ssh<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span><span style="color:#8b008b;font-weight:bold">protocol</span>:<span style="color:#bbb"> </span>TCP<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">          </span>- <span style="color:#8b008b;font-weight:bold">containerPort</span>:<span style="color:#bbb"> </span><span style="color:#b452cd">3000</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span><span style="color:#8b008b;font-weight:bold">name</span>:<span style="color:#bbb"> </span>http<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span><span style="color:#8b008b;font-weight:bold">protocol</span>:<span style="color:#bbb"> </span>TCP<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span><span style="color:#8b008b;font-weight:bold">restartPolicy</span>:<span style="color:#bbb"> </span>Always<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span><span style="color:#8b008b;font-weight:bold">securityContext</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span><span style="color:#8b008b;font-weight:bold">fsGroup</span>:<span style="color:#bbb"> </span><span style="color:#b452cd">1000</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span><span style="color:#8b008b;font-weight:bold">volumes</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span>- <span style="color:#8b008b;font-weight:bold">name</span>:<span style="color:#bbb"> </span><span style="color:#cd5555">&#34;data&#34;</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span><span style="color:#8b008b;font-weight:bold">persistentVolumeClaim</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">          </span><span style="color:#8b008b;font-weight:bold">claimName</span>:<span style="color:#bbb"> </span>gitea-data<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">selector</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">matchLabels</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span><span style="color:#8b008b;font-weight:bold">app</span>:<span style="color:#bbb"> </span>gitea<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008b45;text-decoration:underline">---</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>v1<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>Service<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">metadata</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">name</span>:<span style="color:#bbb"> </span>gitea-web<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">namespace</span>:<span style="color:#bbb"> </span>gitea<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">labels</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">app</span>:<span style="color:#bbb"> </span>gitea-web<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">spec</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">ports</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span>- <span style="color:#8b008b;font-weight:bold">port</span>:<span style="color:#bbb"> </span><span style="color:#b452cd">80</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">targetPort</span>:<span style="color:#bbb"> </span><span style="color:#b452cd">3000</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">name</span>:<span style="color:#bbb"> </span>http<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">selector</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">app</span>:<span style="color:#bbb"> </span>gitea<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008b45;text-decoration:underline">---</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>v1<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>Service<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">metadata</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">name</span>:<span style="color:#bbb"> </span>gitea-ssh<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">namespace</span>:<span style="color:#bbb"> </span>gitea<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">labels</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">app</span>:<span style="color:#bbb"> </span>gitea-ssh<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">spec</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">ports</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span>- <span style="color:#8b008b;font-weight:bold">port</span>:<span style="color:#bbb"> </span><span style="color:#b452cd">22</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">targetPort</span>:<span style="color:#bbb"> </span><span style="color:#b452cd">22</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">nodePort</span>:<span style="color:#bbb"> </span><span style="color:#b452cd">30022</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">name</span>:<span style="color:#bbb"> </span>ssh<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">selector</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">app</span>:<span style="color:#bbb"> </span>gitea<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">type</span>:<span style="color:#bbb"> </span>NodePort<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#008b45;text-decoration:underline">---</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">apiVersion</span>:<span style="color:#bbb"> </span>extensions/v1beta1<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">kind</span>:<span style="color:#bbb"> </span>Ingress<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">metadata</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">name</span>:<span style="color:#bbb"> </span>gitea<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">namespace</span>:<span style="color:#bbb"> </span>gitea<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">annotations</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">cert-manager.io/cluster-issuer</span>:<span style="color:#bbb"> </span><span style="color:#cd5555">&#34;acme-prod&#34;</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">kubernetes.io/ingress.class</span>:<span style="color:#bbb"> </span><span style="color:#cd5555">&#34;nginx&#34;</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#8b008b;font-weight:bold">spec</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">tls</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span>- <span style="color:#8b008b;font-weight:bold">hosts</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span>- git.example.org<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">secretName</span>:<span style="color:#bbb"> </span>gitea-web<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span><span style="color:#8b008b;font-weight:bold">rules</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">  </span>- <span style="color:#8b008b;font-weight:bold">host</span>:<span style="color:#bbb"> </span>git.example.org<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#8b008b;font-weight:bold">http</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span><span style="color:#8b008b;font-weight:bold">paths</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">      </span>- <span style="color:#8b008b;font-weight:bold">backend</span>:<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">          </span><span style="color:#8b008b;font-weight:bold">serviceName</span>:<span style="color:#bbb"> </span>gitea-web<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">          </span><span style="color:#8b008b;font-weight:bold">servicePort</span>:<span style="color:#bbb"> </span><span style="color:#b452cd">80</span><span style="color:#bbb">
+</span></span></span></code></pre></div><p>首先是声明了数据存储所用的PVC，因为我之前的部署是使用的SQLite，这里依旧沿用，不需要外部数据库，那么这个PVC就将存储所有数据。因为Longhorn存储是允许动态扩容的，所以先声明1G容量，不够再加。</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2020-07-09
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    6 min
+    
+    45 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/linux/%E5%9F%BA%E4%BA%8Ewireguard%E8%99%9A%E6%8B%9F%E5%B1%80%E5%9F%9F%E7%BD%91%E7%BB%84%E5%BB%BAk3s%E9%9B%86%E7%BE%A4/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                基于WireGuard虚拟局域网组建k3s集群
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <p>上一篇文章记录了在VPS上通过 WireGuard 组建虚拟局域网的过程，也提到是在为搭建k3s集群做准备，这两天总算是搞定了 <code>Longhorn</code> 存储系统的问题，可以把搭建的流程以及所需的 YAML 文件都贴出来，也方便以后再用到时查找。</p>
+<h2 id="k3s">k3s</h2>
+<p><code>k3s</code> (官网是 <a href="https://k3s.io">k3s.io</a>)是一个精简版本的 Kubernetes(k8s)，也是用于实现容器编排与管理功能，但它更加轻量，精简了许多复杂的内容，却能达到与k8s差不多的功能。官网上写着 “The certified Kubernetes distribution built for IoT &amp; Edge computing”，但是个人项目或者小型项目也是可以用用的，比较相对于k8s所需的硬件配置，它的需求简直不值一提。</p>
+<h2 id="环境初始化">环境初始化</h2>
+<ul>
+<li>VPC: 阿里云国际站 轻量服务器 新加坡节点 2C2G80G30M</li>
+<li>OS: CentOS 7 with kernel 5.7</li>
+</ul>
+<p>配置好 WireGuard 后，根据 Rancher 官方文档中的 <a href="https://rancher2.docs.rancher.cn/docs/best-practices/optimize/os/_index/">节点调优</a> 小节，处理系统参数的优化、打开流量转发等工作。</p>
+<h2 id="安装记录">安装记录</h2>
+<p>根据官方文档的说明，安装主控节点，个人使用不考虑主控的高可用，单主即可。然后添加被控，参数改改就行，非常简单。</p>
+<h3 id="主控">主控</h3>
+<p>由于我此次使用了阿里云的VPC，又通过WireGuard进行了虚拟组网，因此需要设置部分初始化参数，以兼容当前环境。最终调整后的结果如下所示</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -sfL https://get.k3s.io | sh -s - --node-label <span style="color:#00688b">region</span>=sg --node-external-ip 149.172.63.24 --advertise-address 149.172.63.24 --disable traefik --node-ip 10.20.30.1 --flannel-iface wg0
+</span></span></code></pre></div><p>解释下上述参数的作用</p>
+<ul>
+<li><code>--node-label region=sg</code> 为节点打上region标签，这样在创建部署时，就可以根据业务需要，调整Pod或其它资源分布的节点。</li>
+<li><code>--node-external-ip 149.172.63.24</code> 为节点设置外部IP，阿里云VPC的外网IP并未直接绑定到虚拟机网卡上，所以我要设置这个参数，避免k3s组件在设置loadbalance时，将内网IP当作公网IP使用。</li>
+<li><code>--advertise-address 149.172.63.24</code> 用于设置kubectl工具以及子节点进行通讯使用的地址，可以是IP，也可以是域名，在创建apiserver证书时会将此设置到有效域中。</li>
+<li><code>--disable traefik</code> k3s自带Ingress组件 Traefik，但是并不好用，我使用后无法正常生成 ACME 免费证书，所以禁用它，换成 ingress-nginx 与 certmanager 的组合。</li>
+<li><code>--node-ip 10.20.30.1</code> 如果不设置这个参数，那么第一张网卡设备上的IP就会被选中，所以这个IP常是内网IP。但我自行组建了虚拟局域网，所以需要指定虚拟局域网的IP（也就是WireGuard的IP）。</li>
+<li><code>--flannel-iface wg0</code> wg0是WireGuard创建的网卡设备，我需要使用虚拟局域网来进行节点间的通信，所以这里需要指定为wg0。</li>
+</ul>
+<p>另外就是，由于WireGuard的所有流量都是加密传输的，通过它来进行节点间的通信，就已经能够保证通信安全，也就没有必要改用其它的CNI驱动，使用默认的就可以了。</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2020-07-07
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    9 min
+    
+    58 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/linux/%E4%BD%BF%E7%94%A8wireguard%E6%90%AD%E5%BB%BA%E5%AF%B9%E7%AD%89%E7%BD%91%E7%BB%9C%E9%80%9A%E9%81%93/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                使用WireGuard搭建对等网络通道
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <p>由于阿里云国际站停止了新手套餐2.0的续费，导致我自建的代码仓库、持续集成、容器镜像存储与代理等系统，全部需要迁移到轻量服务器上。之前是用 Docker Swarm 作为容器编排工具，这次正好换成 Kubernetes 的简化版——k3s。</p>
+<p>由于轻量服务器内网是不互通的，为了便于以后增加服务器、扩容资源啥的，就试着用 WireGuard 来进行组网。它轻量、便捷、高效，而且数据全程加密传输，是依托公网组建虚拟局域网的优秀选择。</p>
+<h2 id="安装">安装</h2>
+<p>安装流程非常简单，目前是可以参照官网的<a href="https://www.wireguard.com/install/">安装指南</a>进行安装，也可以选择更新系统内核，它已经被合并到内核中了。</p>
+<p>我这里是直接将 CentOS 内核更新到目前最新的 5.7 版本，其中就已经包含了 WireGuard 的内核模块，只需要安装 <code>wireguard-tools</code> 这个 yum 包就行了。</p>
+<h2 id="配置">配置</h2>
+<p><code>wireguard-tools</code> 包提供了我们所需的工具 <code>wg</code> 和 <code>wg-quick</code> ，可以使用它们来分别完成手动部署和自动部署。</p>
+<p>先按照官方文档描述的形式，生成好 <em>主机A</em> 用于加密解密的密钥，其实就只需一行命令</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>wg genkey | tee privatekey | wg pubkey &gt; publickey
+</span></span></code></pre></div><p>这样在当前目录下就生成了 <code>privatekey</code> 和 <code>publickey</code> 两个文件，其中密钥是配置到本机的，而公钥是配置到其它机器里的。</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ cat privatekey &amp;&amp; cat publickey
+</span></span><span style="display:flex;"><span><span style="color:#00688b">6TpHfNWc2H2NuM6ajQMMLkUWTgCf3xlwTTCiayz7Jmo</span>=
+</span></span><span style="display:flex;"><span><span style="color:#00688b">kUWTgCf3xlwTTCiayz7Jmo6TpHfNWc2H2NuM6ajQMML</span>=
+</span></span></code></pre></div><p>假如现在有一台需要与上述主机对等联网的 <em>主机B</em>，其公网IP（或者内网IP，只要能与上述主机通信即可）是 172.17.3.1，我们首先依照上面的流程安装 WireGuard 并生成好主机B的密钥。</p>
+<p>然后编写 <em>主机A</em> 完整的配置文件，以供 <code>wg-quick</code> 使用，在主机A的 <code>/etc/wireguard/wg0.conf</code> 中写入</p>
+<pre tabindex="0"><code>[Interface]
+PrivateKey = 6TpHfNWc2H2NuM6ajQMMLkUWTgCf3xlwTTCiayz7Jmo=
+Address = 10.0.0.1
+ListenPort = 51820
+
+[Peer]
+PublicKey = 主机B的publickey
+EndPoint = 172.17.3.1:51820
+AllowedIPs = 10.0.0.2/32
+</code></pre><p>及其简单的配置了，一看就懂。Interface 小节是属于主机A（也就是本机）的配置，其中 <code>Address</code> 是你给这台主机分配的虚拟IP，而 <code>ListenPort</code> 是主机之间通讯使用的端口，是 <em>UDP</em> 协议的。</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2020-07-04
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    6 min
+    
+    50 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/container/k8s%E4%B8%ADdrone-kube-runner%E5%AE%B9%E5%99%A8%E6%97%A0%E7%BD%91%E7%BB%9C%E9%97%AE%E9%A2%98/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                k8s中drone-kube-runner容器无网络问题
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <h2 id="起因">起因</h2>
+<p>用腾讯云CVM组的K8S集群跑drone的drone-kube-runner，执行项目的容器镜像构建逻辑，但是出现构建流程卡住的问题。
+多重试几次，偶尔还能正常构建起来。但是今天重试了好几次，一直卡住。卡住的地方还都一样， <code>apk update</code> 这里。
+因为基础镜像是用的 <em>alpine</em>，就将其自带的apk的更新地址换为了华中科大的镜像站，并没有多少改善，还是卡住。
+然后又换到阿里云的镜像站，最后换到腾讯云的镜像站，一直都这样，很奇怪。
+实在没招，直接 <code>kubectl exec</code> 进容器里看看到底啥情况。
+进去之后下意识执行了 <code>apk update</code> ，发现报了几个网络错误。然后又看了下容器的IP地址、网卡配置，都没啥问题。
+尝试 <code>ping</code> 了下百度，无用。又看了 NS 服务器的配置，也正常，但是执行 <code>nslookup</code> 报错。
+彻底没招，谷歌走起……</p>
+<h2 id="搜集资料">搜集资料</h2>
+<p>谷歌搜了下 <code>k8s drone no network</code> ，第一条记录就引起了我的注意：<a href="https://discourse.drone.io/t/drone-in-kubernetes-has-network-issue/6244">Drone in Kubernetes has network issue</a>。
+查看了下这个帖子，其中一条说他自己的解决方案的，我感觉有可能也是这个问题，遂跟着对方给的连接看了过去。
+然后又在自己的容器内外查看、对比了下情况，发现我的网卡 MTU 设置跟他的一样，问题定位到了。
+当然为了确保判断正确，我还是手动执行了下 <code>ifconfig docker0 mtu 1440 up</code> 来测试网络是否正常，当然结果确实是正常了。</p>
+<h2 id="解决它">解决它</h2>
+<p>找到问题，人家回复中又给出了修正的方法，那不必多说，直接拷贝其给出的环境变量配置到项目的 <code>.drone.yaml</code> 文件中，提交完事儿！</p>
+<pre tabindex="0"><code>environment:
+    PLUGIN_MTU: 1440
+</code></pre><p>为了方便我是直接设置的 Pipeline 等级的环境变量。</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2020-03-05
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    2 min
+    
+    39 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/container/%E8%85%BE%E8%AE%AF%E4%BA%91cvm%E6%90%AD%E5%BB%BA%E6%9C%80%E6%96%B0k8s%E9%9B%86%E7%BE%A4%E8%BF%87%E7%A8%8B%E8%AE%B0%E5%BD%95/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                腾讯云CVM搭建最新K8S集群过程记录
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <h2 id="说明">说明</h2>
+<p><em>穷人专用的</em>在腾讯云不同账号下的CVM上搭建K8S集群。</p>
+<h2 id="原料">原料</h2>
+<ol>
+<li><a href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/">官方指南一份</a></li>
+<li>腾讯云CVM一份（配置2C4G5M）（运行CentOS 7.4）</li>
+<li><a href="https://mirror.azure.cn/help/gcr-proxy-cache.html">微软CN提供的gcr.io镜像一份</a></li>
+<li><a href="https://developer.aliyun.com/mirror/kubernetes">阿里云提供的k8s镜像一份</a></li>
+</ol>
+<h2 id="烹饪">烹饪</h2>
+<ol>
+<li>根据 <a href="https://kubernetes.io/zh/docs/setup/production-environment/">容器运行时</a> 文档介绍选择中意的容器运行时程序，跟以往不同，我没有选择 <em>docker</em>，而是选择了 <em>containerd</em>，差别请前往 <a href="https://cloud.tencent.com/document/product/457/35747">如何选择 Containerd 和 Docker</a> 这篇文档。</li>
+</ol>
+<blockquote>
+<p>腾讯云连 Docker 的源太慢了，还是用阿里提供的镜像吧。</p>
+</blockquote>
+<blockquote>
+<p>需要注意的是，当我们根据文档中的说明生成了默认的 <em>containerd</em> 配置文件后，我们需要手动将其中的 <code>plugins.cri.sandbox_image</code> 的地址改为微软CN提供的 <em>镜像</em> 的地址，否则下载不到沙盒镜像，集群将无法正常启动。</p>
+</blockquote>
+<blockquote>
+<p>还需要注意的是，containerd 的 CLI 工具是 <code>crictl</code> ，常用命令与 docker 一致，具体需要查询官网。安装好 containerd 后是无法直接使用 crictl 查看容器信息的，会报错连接超时。原因是 crictl 默认的后端地址是 <code>unix:///var/run/dockershim.sock</code> ，而 containerd 使用的地址是 <code>unix:///run/containerd/containerd.sock</code> ，可以设置环境变量 <code>CONTAINER_RUNTIME_ENDPOINT</code> 来便于使用。</p>
+</blockquote>
+<blockquote>
+<p>编辑 containerd 的配置文件，使用 docker registry 的镜像地址 <code>https://dockerhub.azk8s.cn</code> 来加速镜像拉取。</p>
+</blockquote>
+<ol start="2">
+<li>根据 <a href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/">官方文档</a> 安装 kubeadm，安装过程中使用阿里云k8s镜像来加速安装 kubeadm、kubelet、kubectl 等软件。</li>
+</ol>
+<blockquote>
+<p>安装前需要根据文档做系统初始化，打开流量转发等功能。记得一定要执行 <code>modprobe br_netfilter</code> ，否则预检会报错 /proc/sys/net/bridge/bridge-nf-call-iptables contents are not set to 1。</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2020-02-05
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    5 min
+    
+    24 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/linux/nginx-proxy%E5%B0%86%E8%AF%81%E4%B9%A6%E5%BA%94%E7%94%A8%E5%88%B0%E9%9D%9Ehttps%E5%AE%B9%E5%99%A8%E9%97%AE%E9%A2%98%E5%A4%84%E7%90%86%E8%AE%B0%E5%BD%95/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                nginx-proxy将证书应用到非HTTPS容器问题处理记录
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <h2 id="问题描述">问题描述</h2>
+<p>某台 ECS 实例之前就以 docker + nginx-proxy + letsencrypt-nginx-proxy-companion 的形式托管了数个 WEB 服务，但是因为前端挂了 CDN 的缘故，都没有做证书配置等操作。这次由于将另外一台服务器的 gitea 代码管理服务迁移过来，考虑到要提供 SSH 协议的代码克隆服务，故前端没有使用 CDN，而是通过 let&rsquo;s encrypt 组件自动申请的证书来配置 HTTPS。</p>
+<p>然而在配置完整个环境并完成数据迁移后，gitea 是可以正常以 HTTPS 协议访问了，之前本就存在的服务却全都无法正常访问，浏览器不断跳转以至于警告并自动停止请求。查看了 nginx-proxy 的容器日志，发现请求并没有到达此处，于是就在想是不是 CDN 出了问题。在临时取消了 CDN 接入后，依旧不能正常访问，只不过错误形式由原有的循环跳转变成了连接不安全！</p>
+<p>看了具体错误信息，才发现在取消 CDN 接入后，本该是 HTTP 协议的请求，变成了使用 gitea 容器所用证书的 HTTPS 协议的加密请求。那么就要看看是不是配置错误了……</p>
+<h2 id="探索发现">探索发现</h2>
+<p>反复查看 nginx-proxy 与 letsencrypt-nginx-proxy-companion 的文档，也并没有发觉有使用方式上的问题，在创建 gitea 容器的时候，也只是依照文档说明指定了 <code>VIRTUAL_HOST</code>  <code>VIRTUAL_PORT</code>  <code>LETSENCRYPT_HOST</code>  <code>LETSENCRYPT_EMAIL</code> 这几个环境变量，并无再多设置。那么为何会有这种情况呢……</p>
+<p>是不是域名的问题？gitea 服务我绑定的域名是 <code>t.cn</code> (privacy protected)，而其余服务都是该域名的二级域名，是否是该原因导致在 nginx 配置生成过程中，产生了错误的判断？</p>
+<p>终于……文档中出现了这段话 <a href="https://github.com/jwilder/nginx-proxy#wildcard-certificates">wildcard-certificates</a>：</p>
+<blockquote>
+<p>Wildcard certificates and keys should be named after the domain name with a .crt and .key extension. For example VIRTUAL_HOST=foo.bar.com would use cert name bar.com.crt and bar.com.key.</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2019-03-17
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    3 min
+    
+    21 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+            <a href="/misc/%E7%BD%91%E7%AB%99%E6%8E%A5%E5%85%A5cloudflare%E5%90%8E%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90%E5%8A%A0%E8%BD%BD%E5%A4%B1%E8%B4%A5%E9%97%AE%E9%A2%98/" class="a-block">
+                <div class="post-item-wrapper">
+                    <div class="post-item post-item-no-divider">
+                        <div class="post-item-info-wrapper">
+                            <div class="post-item-title">
+                                网站接入Cloudflare后静态资源加载失败问题
+                            </div>
+                            <div class="post-item-summary">
+                                
+                                    <h2 id="发现问题">发现问题</h2>
+<p>将一个新建的图片站接入了 Cloudflare，可是访问后却发现页面不正常，就是静态资源没有加载成功一样。网站系统基于 Django 框架开发，通过 uwsgi 在容器中部署，静态资源也是通过框架在管理，本以为是配置出错导致的 404 错误，结果手动访问静态资源却是正常的。</p>
+<p>迷一般的问题……</p>
+<p>打开控制台，发现打印出了几个类似的错误，大概就是</p>
+<pre tabindex="0"><code>指向 &#34;/static/js/app.js&#34; 的 &lt;script&gt; 加载失败。
+</code></pre><p>这个样子的错误信息，刷新了页面，通过网络记录发现出现错误的静态文件的 mime 类型都是 <code>application/x-unknown-type-content</code> ，就很奇怪了，记忆中浏览器会自动通过文件内容猜测其类型才对，就算没有类型也不会出现这种问题的。</p>
+<p>于是又搜索了下相关资料，发现有提到 CSP 这个词，在 MDN 看了相关文档，发现并不是该设置的问题。于是找了一个报未知文件类型的请求记录，一一查看其响应的头信息。在其中找到了 <code>X-Content-Type-Options: nosniff</code> 这个指令，查了下其资料后得知，这指令会 <code>导致浏览器停止类型探测</code> ，我想就是它了。</p>
+<h2 id="解决问题">解决问题</h2>
+<p>知道可能是什么原因导致的问题就好，跑到 CF 的网站仔细找了下，最后在 HSTS 设置引导中找到了相关的设置。在停用了该特性之后，网站恢复正常加载。</p>
+<p>技术发展日新月异，稍微慢一点，就会让头发少几根，想想还是痛苦。</p>
+                                
+                            </div>
+                            <div class="post-item-meta">
+    2019-03-17
+    &emsp;
+    
+    
+    <i class="material-icons" style="font-size:10px">schedule</i>
+    
+
+    
+    
+
+    
+    2 min
+    
+    9 s
+    
+    
+    &emsp;
+    
+</div>
+
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+        
+        </a>
+    </div>
+
+
+                    </div>
+            </div><div id="sideContainer" class="side-container">
+    
+    <a class="a-block nav-head active" href="http://localhost:1313/">
+    
+        <div class="nav-title">
+            LAEO
+        </div>
+        
+        <div class="nav-subtitle">
+            桀桀桀
+        </div>
+        
+    </a>
+
+    <div class="nav-link-list">
+        
+        
+    </div>
+
+    
+
+    <div class="nav-footer">
+        
+Hugo Theme <a href="https://github.com/amazingrise/hugo-theme-diary">Diary</a> by <a href="https://risehere.net/">Rise</a>
+<br>
+移植自 <a href="https://mak1t0.cc/" target="_blank" rel="noreferrer noopener">Makito</a>'s <a href="https://github.com/SumiMakito/hexo-theme-journal/" target="_blank" rel="noreferrer noopener">Journal.</a> <br>
+<br>
+
+&copy;
+	
+	2020 LAEO
+	
+
+    </div>
+    
+</div><div id="extraContainer" class="extra-container">
+    <div class="toc-wrapper">
+        
+
+        
+    </div>
+    <div class="pagination">
+        <a id="globalBackToTop" class="pagination-action animated-visibility" href="#top"
+            :class="{ invisible: scrollY == 0 }">
+            <i class="material-icons pagination-action-icon">
+                keyboard_arrow_up
+            </i>
+        </a>
+        
+        <a type="button" class="pagination-action" id="darkModeToggleButton">
+            <span class="material-icons pagination-action-icon" id="darkModeToggleIcon">
+                dark_mode
+            </span>
+        </a>
+        
+        
+        
+
+        <a class="pagination-action" 
+            style="visibility:hidden">
+            
+            <i class="material-icons pagination-action-icon">
+                chevron_left
+            </i>
+        </a>
+
+        <div class="pagination-indicator">
+            <span style="text-align: center">
+                1<br>
+                <div style="display: inline-block; transform: rotate(-28deg)">-</div><br>3
+            </span>
+        </div>
+
+
+        <a class="pagination-action"  href="/page/2/">
+            
+            <i class="material-icons pagination-action-icon">
+                chevron_right
+            </i>
+        </a>
+        
+        
+    </div>
+</div>
+
+
+<div class="pagination">
+    
+    <a class="pagination-action" style="opacity:0">
+    
+        <i class="material-icons pagination-action-icon">
+            chevron_left
+        </i>
+    </a>
+
+        <div class="pagination-indicator">
+            <span>1/3</span>
+        </div>
+
+        
+        <a class="pagination-action" href="/page/2/"
+           style="opacity:1">
+        
+                <i class="material-icons pagination-action-icon">
+                    chevron_right
+                </i>
+            </a>
+</div>
+
+
+
+<div id="single-column-footer">
+Hugo Theme <a href="https://github.com/amazingrise/hugo-theme-diary">Diary</a> by <a href="https://risehere.net/">Rise</a>
+<br>
+移植自 <a href="https://mak1t0.cc/" target="_blank" rel="noreferrer noopener">Makito</a>'s <a href="https://github.com/SumiMakito/hexo-theme-journal/" target="_blank" rel="noreferrer noopener">Journal.</a> <br>
+<br>
+
+&copy;
+	
+	2020 LAEO
+	
+</div>
+            </div>
+    
+    <script src="/js/journal.js"></script></body>
+</html>

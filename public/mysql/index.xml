@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Mysqls on LAEO</title>
+    <link>http://localhost:1313/mysql/</link>
+    <description>Recent content in Mysqls on LAEO</description>
+    <generator>Hugo</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Wed, 31 Oct 2018 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/mysql/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>从MySQL的事务开始探寻锁的实现原理</title>
+      <link>http://localhost:1313/mysql/%E4%BB%8Emysql%E7%9A%84%E4%BA%8B%E5%8A%A1%E5%BC%80%E5%A7%8B%E6%8E%A2%E5%AF%BB%E9%94%81%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</link>
+      <pubDate>Wed, 31 Oct 2018 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/mysql/%E4%BB%8Emysql%E7%9A%84%E4%BA%8B%E5%8A%A1%E5%BC%80%E5%A7%8B%E6%8E%A2%E5%AF%BB%E9%94%81%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</guid>
+      <description>&lt;h2 id=&#34;mysql-事务的四大特性&#34;&gt;MySQL 事务的四大特性&lt;/h2&gt;&#xA;&lt;p&gt;MySQL 事务的四大特性分别为：原子性、一致性、隔离性、持久性，英文简写 &lt;code&gt;ACID&lt;/code&gt; 。在深入该部分知识的过程中，突然想到 “锁” 在事务中的作用，进而又思考起 “锁” 的实现原理起来。&lt;/p&gt;&#xA;&lt;h2 id=&#34;mysql-事务中的锁&#34;&gt;MySQL 事务中的锁&lt;/h2&gt;&#xA;&lt;p&gt;在实现事务的过程中，为了独占某资源，一定离不开锁的使用。对资源加锁，在 MySQL 中存在两种类型的锁，即 “共享锁” 和 “独享锁”。在数据记录上调用共享锁后，其它事务仍然可以继续为其添加共享锁，但是不能添加独享锁。这意味着，不同事务可以同时锁定并读取相同的数据记录。而独享锁则是事务独占该条数据记录，独享锁是用于修改数据的。&lt;/p&gt;&#xA;&lt;p&gt;那么，锁是如何实现的呢？&lt;/p&gt;&#xA;&lt;h2 id=&#34;锁的实现&#34;&gt;“锁”的实现&lt;/h2&gt;&#xA;&lt;p&gt;从代码层面来讲，如果要纯手动实现一个锁，那么无非就是在内存中存储一个记录，用于标记锁的开关状态。但是仔细想想，用于操作该记录的操作，是否是原子的呢？操作系统层面来讲，它如何保证我在多线程环境下对该 “锁” 的操作的原子性？&lt;/p&gt;&#xA;&lt;p&gt;如果我们的 CPU 是单核心的，那么可以猜到，所有指令都是一条一条执行的，那么我们在内存中标记一个锁，就可以认为从操作系统层面来讲，该锁的状态切换是原子性的。然而事实并非如此，因为指令的执行是可以中断的。假设我们在读取到锁的状态后，即将对该状态进行判断的一瞬间，操作被中断了，操作系统自动调度了其它线程，刚好该线程也来进行加锁。结果就是两个线程都加锁成功，所以就算是单核心也无法使用这种姿势来实现原子锁。&lt;/p&gt;&#xA;&lt;p&gt;而在多核心环境下，甚至不需要等到操作被中断，只需要多个核心同时进行加锁操作，锁的原子性瞬间毁灭。&lt;/p&gt;&#xA;&lt;p&gt;那么到底如何实现真正的原子锁呢？最终还是需要硬件来提供特性支持。查询资料得知，硬件层面的 CPU 提供了锁内存总线的功能，只要在锁内存总线的状态下执行原子操作即可实现原子锁。果然最终还是得靠硬件层面的支持，上层的所有锁实现都基于此。&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>一道面试时遇到的MySQL索引题</title>
+      <link>http://localhost:1313/mysql/%E4%B8%80%E9%81%93%E9%9D%A2%E8%AF%95%E6%97%B6%E9%81%87%E5%88%B0%E7%9A%84mysql%E7%B4%A2%E5%BC%95%E9%A2%98/</link>
+      <pubDate>Thu, 27 Oct 2016 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/mysql/%E4%B8%80%E9%81%93%E9%9D%A2%E8%AF%95%E6%97%B6%E9%81%87%E5%88%B0%E7%9A%84mysql%E7%B4%A2%E5%BC%95%E9%A2%98/</guid>
+      <description>&lt;h2 id=&#34;题目内容&#34;&gt;题目内容&lt;/h2&gt;&#xA;&lt;p&gt;假设有一个整数类型的字段 &lt;code&gt;status&lt;/code&gt; ，其用来存储一条记录的状态，状态的数量是有限个，这里我们就当做一共有10种不同的状态。现在因为查询速度的原因，需要对MySQL进行优化。请问，该字段是否需要加上索引？已知该字段频繁被读取和修改。&lt;/p&gt;&#xA;&lt;h2 id=&#34;我的回答&#34;&gt;我的回答&lt;/h2&gt;&#xA;&lt;p&gt;在我的记忆中，热点数据一般需要做缓存和索引，一遍提高查询速度。我当时一听，需要频繁读写，那肯定也是热点数据啊，那肯定要加啊，于是就回答需要加。&lt;/p&gt;&#xA;&lt;h2 id=&#34;面试官的回答&#34;&gt;面试官的回答&lt;/h2&gt;&#xA;&lt;p&gt;实际上是不需要的。面试官很耐心的给我解释了为什么不需要，大概意思如下：&lt;/p&gt;&#xA;&lt;blockquote&gt;&#xA;&lt;p&gt;索引相当于书籍的目录，同样的书籍复制多少遍，目录都是一样，条目指向的文章页码都是相同的。在题目设定中，字段 &lt;code&gt;status&lt;/code&gt; 的数据内容是有限个，也就是不管有多少条表记录，该字段存储的值总是只有那么寥寥十个可选。如果表中有一千万条记录，那么没有加索引之前，数据库需要从一千万条记录中找到那一条。而加了索引之后，数据库可以通过索引先排除其余九种状态的记录，只留下那一种状态的记录集，然后再从里面查询。这其中节省的时间是非常小的，所以无需加上索引。&lt;/p&gt;&#xA;&lt;/blockquote&gt;&#xA;&lt;h2 id=&#34;思考&#34;&gt;思考&lt;/h2&gt;&#xA;&lt;p&gt;在回来的路上，我是没有心情去琢磨这问题的，但是我一直牢记其结论，方便回家后做记录。因为我对数据库研究得不够深，不清楚其索引具体是怎么实现的。&lt;/p&gt;&#xA;&lt;p&gt;面试官在解释的时候实际是说“可以通过索引把查询的范围缩小到一百万条记录，实际上这种情况下一千万和一百万的查询速度差距是非常小的”，但是现在仔细想想，如果是缩小到十万呢？一千万和十万，差距还是挺大的。&lt;/p&gt;&#xA;&lt;h2 id=&#34;总结&#34;&gt;总结&lt;/h2&gt;&#xA;&lt;p&gt;这或许就是我之前看到的一些文章里面介绍的，enum之类的类型不需要加索引的原因，因为它的数据相似度是非常高的，加了索引起到的作用微乎其微，反而会占用不少空间，所以不需要加上索引。&lt;/p&gt;&#xA;&lt;p&gt;只要同字段中存储的数据的相似度足够的小，索引起到的缩小检索范围的作用就会足够大。&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
